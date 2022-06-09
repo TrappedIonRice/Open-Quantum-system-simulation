@@ -200,7 +200,7 @@ def Axialfreq(N,fz):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
 
@@ -218,7 +218,7 @@ def Axialmode(N,fz):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
 
@@ -232,11 +232,12 @@ def Axialmode(N,fz):
 def Transfreq(N,fz,fx):
     '''
     compute the eigenfrequencies of transverse oscillation, multiply by wz to get real frequency [Hz]
-    input(N,fz,fx)
+    input(N,fz,fx), note if the transverse trapping frequency is close to the axial frequency, the system
+    would become unstable and complex frequencies would arise.
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
     fx : float
@@ -259,7 +260,7 @@ def Transmode(N,fz,fx):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
     fx : float
@@ -284,7 +285,7 @@ def Jt(fr,fb,N,fz,fx,delta0):
     fb : float
         blue side band rabi-frequency [kHz]
     N : TYPE
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
     fx : float
@@ -365,7 +366,7 @@ def Hps(J,N,B0):
     J : np array
         np array object that represents N by N matrix J, output of function Jt
     N : int
-        number of ions in the system    
+        number of ions in the system, N > 1    
     B0 : float
         effective field strength
 
