@@ -109,7 +109,7 @@ def Htot(H0,fr,fb,N,fz,fx,delta,clevel):
     fb : float
         blue side band rabi-frequency [kHz]
     N : TYPE
-        number of ions in the system
+        number of ions in the system, N > 1
     fz : float
         axial frequency of the ion trap, [MHz]
     fx : float
