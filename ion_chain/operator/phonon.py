@@ -31,7 +31,7 @@ def up(m,clevel,N):
     Parameters
     ----------
     m : int
-        python index of the ion that the operator acts on
+        python index of the ion that the operator acts on, from 0 to N-1
     clevel : int
         cut off level of the harmonic ocsillator eigenenergy
     N : int
@@ -60,7 +60,7 @@ def down(m,clevel,N):
     Parameters
     ----------
     m : int
-        python index of the ion that the operator acts on
+        python index of the ion that the operator acts on, from 0 to N-1
     clevel : int
         cut off level of the harmonic ocsillator eigenenergy
     N : int
