@@ -115,7 +115,6 @@ def E_position(N,fz,scale):
         return np.array(lc(fz)*esol)
     else:
         return np.array(esol)
-#print(E_position(1, 3))
 def Aele(N0,m,n,epos):
     #compute of matrix A at index m 
     ele_val = 0 
