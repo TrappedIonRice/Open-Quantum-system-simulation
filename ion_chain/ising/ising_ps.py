@@ -336,5 +336,5 @@ def Hps(J0,N,B0z):
         for j in range(i):
             submat = submat + J0[i,j]*spin.sx(N,i)*spin.sx(N,j)
         H = H + submat
-    return 2*np.pi*H +  HBz(B0z)
+    return 2*np.pi*H + HBz(N,B0z)
  
