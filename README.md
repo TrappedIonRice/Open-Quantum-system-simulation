@@ -18,5 +18,4 @@ Hamiltonian under pure spin approximation
 
 ising\ising_c:Compute the complete Hamiltonian for the ising coupling system
 
-use list_func() to see the documentations of each package, for instance, use spin.list_func()
-to see documentations for subpackage operator\spin 
+Example 0 gives the basic commands to use the modules 
