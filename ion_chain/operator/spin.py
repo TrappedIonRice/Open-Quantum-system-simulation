@@ -30,7 +30,7 @@ def sx(N,i):
         N: int
             number of ions in the system
         i: int 
-            python index of the ion that the operator acts on
+            python index of the ion that the operator acts on, from 0 to N-1
     Output:
         Qutip Operator    
     '''
@@ -50,7 +50,7 @@ def sy(N,i):
         N: int
             number of ions in the system
         i: int 
-            python index of the ion that the operator acts on
+            python index of the ion that the operator acts on, from 0 to N-1
     Output:
         Qutip Operator    
     '''
@@ -70,7 +70,7 @@ def sz(N,i):
         N: int
             number of ions in the system
         i: int 
-            python index of the ion that the operator acts on
+            python index of the ion that the operator acts on, from 0 to N-1
     Output:
         Qutip Operator    
     '''
@@ -141,7 +141,7 @@ def phid(N):
     return istate
 def phiup(N):
     """
-    construct a state with all N ions in spin down
+    construct a state with all N ions in spin up
     input(N)
     Parameters
     ----------
