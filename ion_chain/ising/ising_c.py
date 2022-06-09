@@ -115,7 +115,7 @@ def Htot(H0,fr,fb,N,fz,fx,delta,clevel):
     fx : float
         transverse frequency of the ion trap, [MHz]
     delta : float
-        detuning, [kHz]
+        detuning, defined as the deviation from transverse COM frequency [kHz]
     clevel : int
         cut off  level of the harmonic ocsillator eigenenergy
 
