@@ -291,7 +291,7 @@ def Jt(fr,fb,N,fz,fx,delta0):
     fx : float
         transverse frequency of the ion trap, [MHz]
     delta0 : float
-        detuning, [kHz]
+        detuning, defined as the deviation from transverse COM frequency [kHz]
 
     Returns
     -------
