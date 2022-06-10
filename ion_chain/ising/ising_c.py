@@ -98,7 +98,7 @@ def Htot(H0,fr,fb,N,fz,fx,delta,clevel,phase):
     '''
     Genearte the total Hamiltonian in the format required by the Qutip solver (string method),
     with ising coupling constructed only with sx and magentic field coupled with sz
-    input(H0,fr,fb,N,fz,fx,delta,clevel)
+    input(H0,fr,fb,N,fz,fx,delta,clevel,phase)
     Parameters
     ----------
     H0 : qutip operator
