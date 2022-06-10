@@ -28,7 +28,7 @@ def sx(N,i):
     in the system of N ions
     Input: 
         N: int
-            number of ions in the system
+            number of ions in the system, N > 1
         i: int 
             python index of the ion that the operator acts on, from 0 to N-1
     Output:
@@ -48,7 +48,7 @@ def sy(N,i):
     in the system of N ions
     Input: 
         N: int
-            number of ions in the system
+            number of ions in the system, N > 1
         i: int 
             python index of the ion that the operator acts on, from 0 to N-1
     Output:
@@ -68,7 +68,7 @@ def sz(N,i):
     in the system of N ions
     Input: 
         N: int
-            number of ions in the system
+            number of ions in the system, N > 1
         i: int 
             python index of the ion that the operator acts on, from 0 to N-1
     Output:
@@ -89,7 +89,7 @@ def zero_op(N):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
 
     Returns
     -------
@@ -107,7 +107,7 @@ def sI(N):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
 
     Returns
     -------
@@ -128,7 +128,7 @@ def phid(N):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
 
     Returns
     -------
@@ -146,7 +146,7 @@ def phiup(N):
     Parameters
     ----------
     N : int
-        number of ions in the system
+        number of ions in the system, N > 1
 
     Returns
     -------
