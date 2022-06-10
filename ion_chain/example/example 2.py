@@ -25,6 +25,7 @@ fsb = 30 #side band rabi frequency kHz
 fzz = 10 #ZigZag detuning frequency, kHz 
 Bz = 0 #Effective magnetic field
 delta = float(input("Enter detuning frequency (kHz): "))
+phase0 = np.pi/2
 def printpar():
     print('number of ions', N)
     print('axial COM (Confining) frequency ',fa,' MHz')
@@ -40,7 +41,7 @@ pcut = 3 #truncation of phonon energy
 #construct Hamiltonian 
 #time indepenedent part
 H0 = tensor(iscp.HBz(N,Bz),phon.pI(pcut,N))
-Heff,arg0 = iscc.Htot(H0,fsb,fsb,N,fa,ft,delta,pcut)
+Heff,arg0 = iscc.Htot(H0,fsb,fsb,N,fa,ft,delta,pcut,phase0)
 #construct initial state
 nlist0 = [0,0,0]
 psi1 = tensor(spin.phid(N),phon.phip(pcut,N,nlist0))
