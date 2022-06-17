@@ -15,17 +15,14 @@ spin.summary()
 #print the documentation for function sx
 help(spin.sx)
 #%% this part illustrates how to use 'class' 
-#import the electron transfer subpackage from ion_chain.ising and call it "etrans" for futher usage 
-import ion_chain.ising.etransfer as etrans
-#%%
-#list all functions and classes:
-etrans.summary()
+#import all functions of ion_system.py from ion_chain.ising 
+from  ion_chain.ising.ion_system import *
 #%% see the documents for ions class
-help(etrans.ions)
+help(ions)
 #read document for a specific function in this class
-help(etrans.ions.n_bar)
+help(ions.n_bar)
 #%% construct a ions class object
-ions1 = etrans.ions()
+ions1 = ions()
 ions1.list_para() #list defaut value of parameters
 #%% change the value of parameter
 ions1.pcut = 20
