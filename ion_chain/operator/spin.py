@@ -11,6 +11,9 @@ def summary():
     print("function: sx,sy,sz")
     print("generate the sigmax,y,z operator acting on the ith (python index) spin 1/2 in the system of N ions")
     print("____________________________________________________________________")
+    print("function: up,down")
+    print("generate the sigma+- operator acting on the ith (python index) spin 1/2 in the system of N ions")
+    print("____________________________________________________________________")
     print("function: zero_op")
     print("generate zero operator on N ion spin space")
     print("____________________________________________________________________")
@@ -82,6 +85,32 @@ def sz(N,i):
         else:
             opsz = tensor(opsz, op_list[m])
     return opsz
+def up(N,i):
+    '''
+    generate the sigma+ operator acting on the ith (python index) spin 1/2
+    in the system of N ions
+    Input: 
+        N: int
+            number of ions in the system
+        i: int 
+            python index of the ion that the operator acts on
+    Output:
+        Qutip Operator    
+    '''
+    return 0.5*(sx(N,i)+1j*sy(N,i))
+def down(N,i):
+    '''
+    generate the sigma- operator acting on the ith (python index) spin 1/2
+    in the system of N ions
+    Input: 
+        N: int
+            number of ions in the system
+        i: int 
+            python index of the ion that the operator acts on
+    Output:
+        Qutip Operator    
+    '''
+    return 0.5*(sx(N,i)-1j*sy(N,i))
 def zero_op(N):
     """
     generate zero operator on N ion spin space
