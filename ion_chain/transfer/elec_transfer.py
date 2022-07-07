@@ -3,7 +3,8 @@
 Created on Wed Jun  1 15:47:46 2022
 
 @author: zhumj
-Compute electron transition rate in quantum region for 2 body system
+Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum system used to simulation electron transition between acceptor and donor state
+
 """
 
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ def summary():
     print('compute the activation energy to reasonance conformation')
     print('___________________________________________________________________')
     print('Htot')
-    print('construct Hamiltonian and collpase operators of the system in the reasonant rotating frame Parameters using a single mode, or double mode system')
+    print('construct Hamiltonian and collpase operators of the system in the reasonant rotating frame using a single mode, or double mode system')
     print('___________________________________________________________________')
     print('rho_ini')
     print('Construct initial density matrix according to a thermal distribution')
@@ -52,8 +53,9 @@ def U(Omegaz,lambda0):
     return (Omegaz - lambda0)**2 / (4*lambda0)
 def Htot(Omegaz, ion0 , single_mode):
     '''
-    construct Hamiltonian and collpase operators of the system in the reasonant rotating frame
-    Parameters using a single mode, or double mode system
+    construct Hamiltonian and collpase operators of the system in the reasonant rotating frame 
+    using a single mode, or double mode system
+    Parameters 
     ----------
     Omegaz : float
         rabi frequency due to coupling to magenetic field, energy splitting between
