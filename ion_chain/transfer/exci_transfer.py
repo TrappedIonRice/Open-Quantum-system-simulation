@@ -3,7 +3,7 @@
 Created on Wed Jun  1 15:47:46 2022
 
 @author: zhumj
-Compute excitation transition rate for 3 ion system
+ Construct Hamiltonian in reasonate rotating frame for the 3 ion open qunatum system used to simulate excitation transition between 2 molecules
 """
 
 import matplotlib.pyplot as plt
@@ -36,15 +36,18 @@ def summary():
 def Htot(J23, E2, E3, ion0 ):
     '''
     construct Hamiltonian and collpase operators of the system in the reasonant rotating frame
-    Parameters using a single mode, or double mode system
+   
+    Parameters 
     ----------
-    Omegaz : float
-        rabi frequency due to coupling to magenetic field, energy splitting between
-        the donor and acceptor state, [kHz]
+    J12 : float
+       coupling between ion1 and ion2 [kHz]
+    E1 : float
+       site energy ion1 [kHz]  
+    E2 : float
+       site energy ion2 [kHz]      
     ion0: ions class object
         the object that represent the system to be simulated
-    single_mode : bool
-        use COM mode only if true
+
     Returns
     -------
     H
