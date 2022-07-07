@@ -20,6 +20,14 @@ Hamiltonian under pure spin approximation
 
 ising\ising_c:Compute the complete Hamiltonian for the ising coupling system
 
-ising\etransfer:Compute the complete Hamiltonian for electron transfer simulation
+ising\ising_ce:Compute the complete Hamiltonian for the 2 ion open qunatum system used to simulation electron transition between acceptor and donor state
+
+ising\ising_cex: Compute the complete Hamiltonian for the 3 ion open qunatum system used to simulate excitation transition between 2 molecules
+
+sub-package transfer:
+
+transfer\elec_transfer: Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum system used to simulation electron transition between acceptor and donor state
+
+transfer\exci_transfer: Construct Hamiltonian in reasonate rotating frame for the 3 ion open qunatum system used to simulate excitation transition between 2 molecules
 
 Example 0 gives the basic commands to use the modules 
