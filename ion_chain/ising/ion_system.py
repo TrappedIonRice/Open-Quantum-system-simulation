@@ -156,5 +156,5 @@ class ions:
         coeff = iscp.eta(self.wmlist())*self.Omega()
         garray = np.array([])
         for i in range(self.N):
-            garray = np.append(garray,coeff[i]*emat[0,i])
+            garray = np.append(garray,coeff[i]*emat[i,0])
         return garray
