@@ -33,11 +33,10 @@ def summary():
     print('rho_ini')
     print('Construct initial density matrix according to a thermal distribution')
 
-def Htot(J23, E2, E3, ion0 ):
+def Htot(J12, E1, E2, ion0 ):
     '''
     construct Hamiltonian and collpase operators of the system in the reasonant rotating frame
-   
-    Parameters 
+    Parameters using a single mode, or double mode system
     ----------
     J12 : float
        coupling between ion1 and ion2 [kHz]
@@ -47,7 +46,6 @@ def Htot(J23, E2, E3, ion0 ):
        site energy ion2 [kHz]      
     ion0: ions class object
         the object that represent the system to be simulated
-
     Returns
     -------
     H
@@ -78,10 +76,10 @@ def Htot(J23, E2, E3, ion0 ):
         term2 = term2 + dm[m]*tensor(spin.sI(Ns),phon.up(m, ion0.pcut, ion0.N)*phon.down(m, ion0.pcut, ion0.N))
     #phonnic mode
     sop3 = tensor(spin.up(Ns,0)*spin.down(Ns,1),phon.pI(pcut,Np))
-    term3 = w(J23) * (sop3+sop3.dag())
+    term3 = w(J12) * (sop3+sop3.dag())
     #vibrational harmonic oscillator potential
-    term4 = (w(E2) * tensor(spin.sz(Ns,0),phon.pI(pcut,Np))+
-             w(E3) * tensor(spin.sz(Ns,1),phon.pI(pcut,Np)))
+    term4 = (w(E1) * tensor(spin.sz(Ns,0),phon.pI(pcut,Np))+
+             w(E2) * tensor(spin.sz(Ns,1),phon.pI(pcut,Np)))
     #coherent coupling of the donor and acceptor states
     c1 =  tensor(spin.sI(Ns), phon.down(1, ion0.pcut, ion0.N))
     c2 =  tensor(spin.sI(Ns), phon.down(2, ion0.pcut, ion0.N))
