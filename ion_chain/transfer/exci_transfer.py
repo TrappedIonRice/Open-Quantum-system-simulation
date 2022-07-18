@@ -36,7 +36,7 @@ def summary():
 def Htot(J12, E1, E2, ion0 ):
     '''
     construct Hamiltonian and collpase operators of the system in the reasonant rotating frame
-    Parameters using a single mode, or double mode system
+    for excitation transfer simulation, with ion3 (on the side) simulating coupling to the environment
     ----------
     J12 : float
        coupling between ion1 and ion2 [kHz]
