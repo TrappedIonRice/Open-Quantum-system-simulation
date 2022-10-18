@@ -33,8 +33,8 @@ def up(m,clevel,N):
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+    clevel : np array of int
+        cut off level of each phonon space 
     N : int
         number of ions in the system
 
@@ -43,16 +43,18 @@ def up(m,clevel,N):
     Qutip Operator
 
     '''
-    if N == 1:
-        lup = create(clevel)
+    if N == 1: 
+        lup = create(clevel[0])
     else:
-        op_list = [qeye(clevel)]*N
-        op_list[m] = create(clevel)
         for j in range(N):
-            if j == 0:
-                lup = op_list[j]
+            if j == m:
+                nextop = create(clevel[j])
             else:
-                lup = tensor(lup,op_list[j])
+                nextop = qeye(clevel[j])
+            if j == 0:
+                lup = nextop
+            else:
+                lup = tensor(lup,nextop)
     return lup
 def down(m,clevel,N):
     '''
@@ -62,8 +64,8 @@ def down(m,clevel,N):
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+    clevel :  np array of int
+        cut off level of each phonon space 
     N : int
         number of ions in the system
     
@@ -72,25 +74,28 @@ def down(m,clevel,N):
     Qutip Operator
 
     '''
-    if N == 1:
-        ldown = destroy(clevel)
+    if N == 1: 
+        ldown = destroy(clevel[0])
     else:
-        op_list = [qeye(clevel)]*N
-        op_list[m] = destroy(clevel)
         for j in range(N):
-            if j == 0:
-                ldown = op_list[j]
+            if j == m:
+                nextop = destroy(clevel[j])
             else:
-                ldown = tensor(ldown,op_list[j])
-    return ldown   
+                nextop = qeye(clevel[j])
+            if j == 0:
+               ldown = nextop
+            else:
+               ldown = tensor(ldown,nextop)
+    return ldown
+    
 def zero_op(clevel,N):
     '''
     generate the zero operator acting on the system of N ions
     Input: (clevel,N)
     Parameters
     ----------
-    clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+    clevel :  np array of int
+        cut off level of each phonon space 
     N : int
         number of ions in the system
     
@@ -99,9 +104,9 @@ def zero_op(clevel,N):
     Qutip Operator
 
     '''
-    mat = qzero(clevel)
+    mat = qzero(clevel[0])
     for i in range(N-1):
-        mat = tensor(mat,qzero(clevel))
+        mat = tensor(mat,qzero(clevel[i+1]))
     return mat    
 def phip(clevel,N,nlist):
     '''
@@ -109,8 +114,8 @@ def phip(clevel,N,nlist):
     Input: (clevel,N,nlist)
     Parameters
     ----------
-    clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+    clevel :  np array of int
+        cut off level of each phonon space 
     N : int
         number of ions in the system
     nlist : list of int
@@ -122,9 +127,9 @@ def phip(clevel,N,nlist):
 
     '''
     #compute initial phonon state with state energy specified by nlist
-    istate = basis(clevel,nlist[0])
+    istate = basis(clevel[0],nlist[0])
     for i in range(1,N):
-        istate = tensor(istate, basis(clevel,nlist[i]))
+        istate = tensor(istate, basis(clevel[i],nlist[i]))
     return istate
 def pI(clevel,N):
     '''
@@ -132,8 +137,8 @@ def pI(clevel,N):
     Input: (clevel,N)
     Parameters
     ----------
-    clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+    clevel :  np array of int
+        cut off level of each phonon space 
     N : int
         number of ions in the system
     
@@ -142,19 +147,19 @@ def pI(clevel,N):
     Qutip Operator
 
     '''
-    Iden = qeye(clevel)
+    Iden = qeye(clevel[0])
     for i in range(N-1):
-        Iden = tensor(Iden,qeye(clevel))
+        Iden = tensor(Iden,qeye(clevel[i+1]))
     return Iden    
 def inip_thermal(clevel,wm,Etot):
     '''
-    generate the initial density operator for the phonon space of 1 ion
+    generate the initial density operator for the phonon space of a single ion
     composed with pure states with population following a thermal distribution 
     input(clevel,N,wm,Etot)
     Parameters
     ----------
     clevel : int
-        cut off level of the harmonic ocsillator eigenenergy
+        cut off level of phonon space
     wm : float
         energy frequency of the phonon states
     Etot : float
