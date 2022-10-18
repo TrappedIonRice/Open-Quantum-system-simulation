@@ -43,8 +43,8 @@ def Him(fr,fb,N,fz,fx,pcut,atype,i,m,phase):
     else:
         opa = phon.up(m,pcut,N)
     H = tensor(sigma_phi(N,i,phase),opa)
-    eta_im = isc.eta(wlist[m])*emat[m,i]
-    return 2* np.pi*coeff*eta_im*H 
+    ita_im = isc.Ita(wlist[m])*emat[m,i]
+    return 2* np.pi*coeff*ita_im*H 
 def tstring(N,atype):
     #generate the string list for time dependent part
     mstring = []
@@ -65,7 +65,7 @@ def argdic(N,atype,wlist,mu):
     for i in range(N):
         adic[slist[i]] = wlist[i]
     return adic    
-def Htd(ion0,atype,): 
+def Htd(fr,fb,N,fz,fx,delta,pcut,atype,phase): 
     '''
     Compute the list of H correponding to time dependent part of H of the
     system as input for qutip solver
@@ -79,10 +79,6 @@ def Htd(ion0,atype,):
         pcut, int, cut off  level of the harmonic ocsillator eigenenergy
         opa, phonon opeartor type, 0 for destroy, 1 for create
     '''
-    fr = ion0.fr; fb=ion0.fb
-    N = ion0.N; pcut =ion0.pcut
-    fz = ion0.fz; fx = ion0.fx
-    phase = ion0.phase; delta = ion0.delta
     Hlist = []
     wlist0 = 1j*np.array(isc.Transfreq(N,fz,fx))* fz * 2000* np.pi #this is used to compute deltam in kHz
     mu = (1000*fx + delta)* 2* np.pi #kHz 
@@ -98,7 +94,7 @@ def Htd(ion0,atype,):
 '''
 function to use
 ''' 
-def Htot(H0,ion0):
+def Htot(H0,fr,fb,N,fz,fx,delta,clevel,phase):
     '''
     Genearte the total Hamiltonian in the format required by the Qutip solver (string method),
     with ising coupling constructed only with sx and magentic field coupled with sz
@@ -107,8 +103,22 @@ def Htot(H0,ion0):
     ----------
     H0 : qutip operator
        time independent part of the Hamiltonian
-    ion0: ions class object
-        contains all parameters of the ion-chain system
+    fr : float
+        red side band rabi-frequency [kHz]
+    fb : float
+        blue side band rabi-frequency [kHz]
+    N : TYPE
+        number of ions in the system
+    fz : float
+        axial frequency of the ion trap, [MHz]
+    fx : float
+        transverse frequency of the ion trap, [MHz]
+    delta : float
+        detuning, [kHz]
+    clevel : int
+        cut off  level of the harmonic ocsillator eigenenergy
+    phase: float
+        phase of the driving laser, rad
     Returns
     -------
     Heff : list
@@ -117,7 +127,7 @@ def Htot(H0,ion0):
     Hargd : dictionary
       dictionary that records the value of coefficients for time dependent functions
     '''
-    Hlistd,Hargd = Htd(ion0,0)
-    Hlistu,Hargu = Htd(ion0,1)
+    Hlistd,Hargd = Htd(fr,fb,N,fz,fx,delta,clevel,0,phase)
+    Hlistu,Hargu = Htd(fr,fb,N,fz,fx,delta,clevel,1,phase)
     Heff = [H0] + Hlistd + Hlistu
     return Heff, Hargd
