@@ -30,7 +30,7 @@ ion_sys.fb  = 30
 pcut = [3,3]
 ion_sys.pcut = pcut #truncation of phonon 
 #delta = float(input("Enter detuning frequency (kHz): "))
-ion_sys.delta_ref = 0 
+ion_sys.delta_ref = 1 
 delta = 100 #detuning from com mode
 ion_sys.delta = delta
 ion_sys.list_para() #print parameters of the system
@@ -77,6 +77,7 @@ plt.yticks(fontsize = 14)
 plt.xticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.grid()
+plt.show()
 #%% extract frequency of oscillation for the complete evolution
 dlist = ion_sys.dmlist()/(2*np.pi)
 f, Pxx_den = signal.periodogram(p1-p2, 10000)
