@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This example intends to show how to import modules and read the documentation of functions in this package
+Please run one line each time in the console
 """
 #%%
 #import the spin subpackage from ion_chain.operator and call it "spin" for futher usage
