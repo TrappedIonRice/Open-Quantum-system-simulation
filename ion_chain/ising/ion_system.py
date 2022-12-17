@@ -19,18 +19,33 @@ MYb171 = 0.171 / (6.02214076*10**23) #mass of Yb ion, kg
 qe = 1.60218 * 10**(-19) #charge of electron, C
 eps0 = 8.85418781 * 10**(-12) #vacuum dielectric constant,SI
 Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) 
-#difference in wavevector projection of the 2 lasers m-1
+#difference in wavevector projection of the 2 lasers [m-1]
 R = (h*Dk**2) / (2*MYb171) #recoil frequency constant, SI 
+def fr_conv(f,unit):
+    '''
+    convert frequency to radial frequency 
+    Parameters
+    ----------
+    f : float
+        input frequency, in Hz, kHz, or MHz
+    unit : str
+        specify the unit, can be 'hz', 'khz', 'mhz'
+    Returns
+    -------
+    f_out : float
+        output radial frequency, unit of 2pi Hz
+
+    '''
+    factor = {'hz':0,'khz':3,'mhz':6}
+    f_out = 2*np.pi * f*10**(factor[unit])
+    return f_out
 '''
 subfunction
 '''
-def w(f):
-    #convert frequency Hz to angular frequency rad/s
-    return 2*np.pi*f
 def X0(f0):
     #compute the characteristic length scale of the motional mode, [m]
     #input in MHz
-    return np.sqrt(h / (2*MYb171* w(f0)))
+    return np.sqrt(h / (2*MYb171* fr_conv(f0,'mhz')))
 #Compute Transverse and Axial Matrix, eigen modes of the system
 def mask_p(m,N0):
     #generate a mask array for calculating mth diagonal element
@@ -126,7 +141,7 @@ def lc(fz):
     float, unit SI
 
     '''
-    return (qe**2/ (4*np.pi * eps0 * MYb171 * w(fz)**2))**(1/3)
+    return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'mhz')**2))**(1/3)
 def eta(f):
     '''
     Compute single ion Lamb-Dicke parameter for the a transvers mode.
@@ -158,7 +173,7 @@ def Omega(fs,fx):
     float, unit SI
 
     '''
-    return 2*np.pi*10**3*fs / eta(fx)  
+    return fr_conv(fs,'khz') / eta(fx)  
 def summary():
     '''
     give a summary of all functions and classes defined in this module
@@ -217,7 +232,7 @@ class ions:
     phase = 0
     Omegax =  0.1 * 20
     gamma = [0.1 * 20, 0.1*20]
-    Etot = 1000*w(0.217*2)
+    Etot = fr_conv(0.217*2,'khz')
     pcut = [15,15] #cutoff of phonon energy for distinctive modes
     delta_ref = 1 #reference frequency index, 0 for com frequency
     def list_para(self):
@@ -302,6 +317,8 @@ class ions:
 
         '''
         e_val = np.linalg.eig(Amatrix(self.N,self.fz))[0]
+        order = np.argsort(e_val)
+        e_val = e_val[order]
         return np.sqrt(e_val)
     def Axialmode(self):
         '''
@@ -312,7 +329,9 @@ class ions:
         np array object that represents N by N matrix, each row is an axial eigenmode
 
         '''
-        e_array = np.linalg.eig(Amatrix(self.N,self.fz))[1]
+        e_val = np.linalg.eig(Amatrix(self.N,self.fz))[0]
+        order = np.argsort(e_val)
+        e_array = np.linalg.eig(Amatrix(self.N,self.fz))[1][order]
         return np.transpose(e_array)
     def Transfreq(self):
         '''
@@ -324,6 +343,8 @@ class ions:
 
         '''
         e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
+        order = np.argsort(e_val)
+        e_val = e_val[order]
         #check if the matrix is positive-definite
         if np.min(e_val) < 0:
             print("Negtive transverse frequency, the system is unstable")
@@ -346,7 +367,9 @@ class ions:
         np array object that represents N by N matrix, each row is an transverse eigenmode
 
         '''
-        e_array = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[1]
+        e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
+        order = np.argsort(e_val)
+        e_array = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[1][order]
         return np.transpose(e_array)    
     def wmlist(self):
         '''
@@ -382,7 +405,7 @@ class ions:
         float, no unit
 
         '''
-        return 1/(np.exp(1000*w(self.fx)/self.Etot)-1)
+        return 1/(np.exp(1000*(2*np.pi)*(self.fx)/self.Etot)-1)
     def w0(self):
         '''
         compute the time scale of the system, defined as 2pi*delta
@@ -391,7 +414,7 @@ class ions:
         -------
         float, 2pi kHz
         '''
-        return w(np.abs(self.delta))
+        return (2*np.pi)*np.abs(self.delta)
     def Omega(self):
         '''
         compute the rabi rate of the system
@@ -412,7 +435,7 @@ class ions:
         float, 2pi kHz
         '''
         emat = self.Transmode()
-        coeff = self.eta(self.wmlist())*self.Omega()
+        coeff = eta(self.wmlist())*self.Omega()
         garray = np.array([])
         for i in range(self.N):
             garray = np.append(garray,coeff[i]*emat[i,0])
