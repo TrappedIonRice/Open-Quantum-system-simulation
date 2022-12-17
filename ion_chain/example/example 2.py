@@ -2,6 +2,8 @@
 """
 Compute the time evolution of a 2 ion system contructed to simulate electron transfer 
 with 1 mode or 2 modes
+Reproduce the result in Schlawin et. al. PRXQuantum Paper
+https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.010314
 @author: zhumj
 """
 import numpy as np
@@ -11,72 +13,45 @@ import ion_chain.operator.spin as spin
 import ion_chain.operator.phonon as phon
 import ion_chain.ising.ising_ps as iscp
 import ion_chain.ising.ising_c as iscc
-import ion_chain.ising.etransfer as etrans
+import ion_chain.transfer.elec_transfer as etrans
+import ion_chain.ising.ising_ce as isce
 from  ion_chain.ising.ion_system import *
 #%%
 '''
-    parameters of the system
+parameters of the system, use the same parameter in quantum regime 
 '''    
 ion_sys = ions() #construct a two ion system using class ions 
-#ion_sys.list_para() #list default parameters of the system
-#modify the cooling rate and cut off
-ion_sys.fr = 6.5; ion_sys.fb = 6.5
-ion_sys.pcut = 30
-ion_sys.gamma = 0.01*ion_sys.delta
+ion_sys.delta_ref = 1 
+ion_sys.delta = -20
+ion_sys.Omegax = 0.01*np.abs(ion_sys.delta)
+ion_sys.fr = 70; ion_sys.fb = 70
+ion_sys.gamma = 0.05*np.abs(ion_sys.delta)/(2*np.pi)
 ion_sys.list_para() #print parameters
+deltaE = 5*ion_sys.delta #note site energy difference is negative by definition
+print('g = ',ion_sys.g(),'kHz')
 #%%  
 '''
-simulation with 1 mode
+simulation with 1 mode, reproduce curve C in Fig 3(B)
 '''
+ion_sys.pcut = [20]
+elist = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,1))]
 #solve time evolution for a single energy splitting
-deltaE = -2*ion_sys.delta
 H0, clist1 = etrans.Htot(deltaE,ion_sys,True)
 rho0 = etrans.rho_ini(ion_sys,True)
-tplot = np.arange(0,100,0.1)
+tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/ion_sys.w0()
 print("solving time evolution (1 mode) for deltaE =", deltaE)
-result = mesolve(H0,rho0,times,clist1,[],progress_bar=True,options=Options(nsteps=10000))
+result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
 #%%
 #extract ground state population
-rhoee1 = np.array([])
-for i in range(len(result.states)):
-    esum = 0
-    for j in range(ion_sys.pcut):
-        esum = esum + np.absolute(result.states[i][j,j])
-    rhoee1 = np.append(rhoee1,esum)
+rhoee1 = 0.5*result.expect[0]+0.5
 plt.clf()
-plt.plot(tplot,rhoee1,label=r'$\rho_{ee} 1 mode$')
-title = r'$\Delta E = $' + str(deltaE/ion_sys.delta)
-plt.xlabel(r'$\omega_0t/(2\pi)$')
-plt.ylabel(r'$p_{tot}$')
+plt.plot(tplot,rhoee1)
+title = r'$\Delta E = $' + str(deltaE/ion_sys.delta)+r'$\delta_{com}$'
+plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 14)
+plt.ylabel(r'$P_{\uparrow}$',fontsize = 14)
 plt.title(title)
 plt.grid()   
-plt.legend()    
-#%%
-#simulation with 2 modes
-ion_sys.pcut = 15
-ion_sys.list_para() 
-#solve time evolution for a single energy splitting
-H0, clist1 = etrans.Htot(deltaE,ion_sys,False)
-rho0 = etrans.rho_ini(ion_sys,False)
-print("solving time evolution (2 mode) for deltaE =", deltaE)
-result = mesolve(H0,rho0,times,clist1,[],progress_bar=True,options=Options(nsteps=10000))
-#%%
-#extract ground state population
-rhoee2 = np.array([])
-for i in range(len(result.states)):
-    esum = 0
-    for j in range(ion_sys.pcut**2):
-        esum = esum + np.absolute(result.states[i][j,j])
-    rhoee2 = np.append(rhoee2,esum)
-#%%    
-#plot result    
-plt.clf()
-plt.plot(tplot,rhoee1,'+',label=r'$\rho_{ee} 1 mode$')
-plt.plot(tplot,rhoee2,label=r'$\rho_{ee} 2 mode$')
-title = r'$\Delta E = $' + str(deltaE/ion_sys.w0())
-plt.xlabel(r'$\omega_0t/(2\pi)$')
-plt.ylabel(r'$p_{tot}$')
-plt.title(title)
-plt.grid()   
-plt.legend()
+plt.yticks(fontsize = 13)
+plt.xticks(fontsize = 13)
+plt.show()
