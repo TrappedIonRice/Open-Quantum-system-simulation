@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Compute the time evolution of a 2 ion system contructed to simulate electron transfer 
-with 1 mode or 2 modes
+with 1 mode
 Reproduce the result in Schlawin et. al. PRXQuantum Paper
 https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.010314
 @author: zhumj
