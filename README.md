@@ -1,7 +1,7 @@
 # Open-Quantum-system-simulation
 package: ion_chain
 
-dependnence pakcage: Qutip
+dependence pakcage: Qutip
 
 Installation: copy the file ion_chain to C:\users\"your username"\.ipython
 
