@@ -296,6 +296,7 @@ class ions:
         plt.xlabel(r'frequecny kHz')
         plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
         plt.legend()
+        plt.show()
     def Equi_posi(self):
         '''
         compute the equilibrium position of 1-D ion-chain
