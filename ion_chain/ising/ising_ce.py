@@ -13,7 +13,7 @@ from  ion_chain.ising.ion_system import *
 def summary():
     print("____________________________________________________________________")
     print("function: Htot")
-    print("Genearte the total Hamiltonian in the format required by the Qutip solver (string method), with ising coupling constructed only with sx and magentic field coupled with sz")
+    print("Genearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame")
 '''
 subfunctions
 '''    
@@ -84,25 +84,37 @@ def Htd(ion0,atype):
 '''
 function to use
 ''' 
-def Htot(H0,ion0):
+def Htot(Omegaz,ion0):
     '''
-    Genearte the total Hamiltonian in the format required by the Qutip solver (string method)
-    input(H0,fr,fb,N,fz,fx,delta,clevel)
+    GGenearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame
+    in the format required by the Qutip solver (string method) and collapse operators
+    input(Omegaz,ion0)
     Parameters
     ----------
-    H0 : qutip operator
-       time independent part of the Hamiltonian
+    Omegaz : float
+        rabi frequency due to coupling to magenetic field, energy splitting between
+        the donor and acceptor state, [kHz]
     ion0: ions class object
         contains all parameters of the ion-chain system
     Returns
     -------
     Heff : list
         list of Qutip Operator and string expressions for time dependent functions, 
-        format required by the Qutip solver
+        format required by the Qutip solver, this list represents the time-dependent 
+        Hamiltonian of the system in ordinary frame
     Hargd : dictionary
       dictionary that records the value of coefficients for time dependent functions
+    clist : list
+         list of Qutip operators required by qutip solver
     '''
+    term2 = -0.5 * 2 * np.pi*(Omegaz) * tensor(spin.sz(1,0),phon.pI(ion0.pcut,ion0.N))
+    term3 = 2 * np.pi*(ion0.Omegax) * tensor(spin.sx(1,0),phon.pI(ion0.pcut,ion0.N)) 
+    H0 = term2+term3
     Hlistd,Hargd = Htd(ion0,0)
     Hlistu,Hargu = Htd(ion0,1)
     Heff = [H0] + Hlistd + Hlistu
-    return Heff, Hargd
+    c0 =  tensor(spin.sI(1), phon.down(1, ion0.pcut, ion0.N))
+    clist = []
+    clist.append(np.sqrt( 2 * np.pi * ion0.gamma*(1+ion0.n_bar()))*c0)
+    clist.append(np.sqrt( 2 * np.pi * ion0.gamma*ion0.n_bar())*c0.dag())
+    return Heff, Hargd, clist
