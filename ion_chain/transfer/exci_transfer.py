@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jun  1 15:47:46 2022
-
+Compute the Hamiltonian in reasonant interaction frame of 3 ion open qunatum system
+used to simulate excitation transition between 2 sites
+function: Htot
 @author: zhumj
-Compute excitation transition rate for 3 ion system
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
 import ion_chain.operator.spin as spin
 import ion_chain.operator.phonon as phon
-from astropy.io import ascii
-from astropy.table import Table
 from qutip import *
 from  ion_chain.ising.ion_system import *
 #subfunction
@@ -29,8 +28,9 @@ def summary():
 
 def Htot(J12, E1, E2, Vx, ion0, config):
     '''
-    construct Hamiltonian and collpase operators of the system in reasonant rotating frame
-    for excitation transfer simulation, with ion3 (on the side) simulating coupling to the environment
+    construct Hamiltonian in reasonant rotating frame and collpase operators of 3 ion system 
+    used for simulating excitation transfer between 2 sites
+    Input
     ----------
     J12 : float
        coupling between ion1 and ion2 [kHz]
