@@ -32,6 +32,10 @@ transfer\elec_transfer: Construct Hamiltonian in reasonate rotating frame for th
 
 transfer\exci_transfer: Construct Hamiltonian in reasonate rotating frame for the 3 ion open qunatum system used tosimulate excitation transition between 2 sites
 
+sub-package transfer: eigendiagram
+
+eigendiagram\exci_diagram: Plot energydiagram under a semi-classical approximation 
+
 Example codes
 
 Example 0 gives the basic commands to use the modules 
