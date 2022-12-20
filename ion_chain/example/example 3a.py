@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Compute the time evolution of a 3 ion system contructed to simulate excitation transfer 
-between 2 sites
+between 2 sites in reasonant interaction frame
 @author: zhumj
 """
 import numpy as np
