@@ -2,7 +2,7 @@
 """
 Compute the time evolution of a 3 ion system contructed to simulate excitation transfer 
 between 2 sites in reasonant interaction frame and using time-dependent Hamiltonian in
-ordinary interaction.
+ordinary interaction frame.
 verify the results are the same.
 @author: zhumj
 """
