@@ -15,8 +15,6 @@ from qutip import *
 import matplotlib.pyplot as plt
 import ion_chain.operator.spin as spin
 import ion_chain.operator.phonon as phon
-import ion_chain.ising.ising_ps as iscp
-import ion_chain.ising.ising_c as iscc
 import ion_chain.transfer.elec_transfer as etrans
 import ion_chain.ising.ising_ce as isce
 from  ion_chain.ising.ion_system import *
@@ -40,36 +38,37 @@ print('g = ',ion_sys.g(),'kHz')
 simulation with 1 mode
 '''
 ion_sys.pcut = [10]
-elist = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,1))]
+elist1 = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,1))]
 #solve time evolution for a single energy splitting
 H0, clist1 = etrans.Htot(deltaE,ion_sys,True)
 rho0 = etrans.rho_ini(ion_sys,True)
+print("__________________________________________________________")
 print("solving time evolution (1 mode) for deltaE =", deltaE)
-result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=10000))
-rhoee1 = 0.5*result.expect[0]+0.5
+result1 = mesolve(H0,rho0,times,clist1,elist1,progress_bar=True,options=Options(nsteps=10000))
+rhoee1 = 0.5*result1.expect[0]+0.5
 #%%
 #simulation with 2 modes, use cutoff 2 for first mode because we are only cooling com mode
 ion_sys.pcut = [2,10]
-elist = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
+elist2 = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
 ion_sys.list_para() 
 #solve time evolution for a single energy splitting
 H0, clist1 = etrans.Htot(deltaE,ion_sys,False)
 rho0 = etrans.rho_ini(ion_sys,False)
+print("__________________________________________________________")
 print("solving time evolution (2 mode) for deltaE =", deltaE)
-result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=10000))
-rhoee2 = 0.5*result.expect[0]+0.5
+result2 = mesolve(H0,rho0,times,clist1,elist2,progress_bar=True,options=Options(nsteps=10000))
+rhoee2 = 0.5*result2.expect[0]+0.5
 #%%
 #simulation with complete H, solving time dependent H cost more time
 ion_sys.pcut = [2,10]
-elist = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
+elist3 = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
 ion_sys.list_para()
-H0c = 2*np.pi*(-0.5 * deltaE * tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,ion_sys.N))
-       + ion_sys.Omegax *   tensor(spin.sx(1,0),phon.pI(ion_sys.pcut,ion_sys.N))) 
 rho0 = etrans.rho_ini(ion_sys,False)
-Hce, arg0 = isce.Htot(H0c,ion_sys)
-print("solving time evolution (2 mode) for deltaE =", deltaE)
-result = mesolve(Hce,rho0,times,clist1,elist,args=arg0,progress_bar=True,options=Options(nsteps=10000))
-rhoee3 =  0.5*result.expect[0]+0.5
+Hce, arg0,clist3 = isce.Htot(deltaE,ion_sys)
+print("__________________________________________________________")
+print("solving time evolution using time-dependent H in ordinary frame, for deltaE =", deltaE)
+result3 = mesolve(Hce,rho0,times,clist3,elist3,args=arg0,progress_bar=True,options=Options(nsteps=10000))
+rhoee3 =  0.5*result3.expect[0]+0.5
 #%%    
 #plot result    
 plt.clf()
@@ -81,6 +80,7 @@ plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 14)
 plt.ylabel(r'$P_{\uparrow}$',fontsize = 14)
 plt.title(title)
 plt.grid()   
+plt.xlim(0,20)
 plt.yticks(fontsize = 13)
 plt.xticks(fontsize = 13)
 plt.legend()
