@@ -2,7 +2,7 @@
 """
 Compute the time evolution of a 3 ion system contructed to simulate excitation transfer 
 between 2 sites in reasonant interaction frame and using time-dependent Hamiltonian in
-ordinary interaction frame.
+ordinary interaction.
 verify the results are the same.
 @author: zhumj
 """
@@ -20,13 +20,13 @@ parameters of the system, in this example, we compute the evoluation at type 1
 reasonance at Delta E = 1*delta_rock
 '''       
 ion_sys = ions() 
-ion_sys.delta_ref = 0
+ion_sys.delta_ref = 2
 ion_sys.N = 3
 ion_sys.delta = -100
 ion_sys.fr = 50; ion_sys.fb = 50
-ion_sys.pcut = np.array([5,2,2]) 
+ion_sys.pcut = np.array([2,2,5]) 
 ion_sys.phase = np.pi/2
-ion_sys.gamma = [10,0,0] #cool the rocking mode only
+ion_sys.gamma = [0,0,10] #cool the rocking mode only
 ion_sys.list_para() #print parameters
 ion_sys.plot_freq()
 #%%
@@ -73,7 +73,7 @@ pplot1 =  result1.expect[0]
 pplot2 =  result2.expect[0]
 plt.figure(0)
 plt.plot(tplot0,0.5*pplot1+0.5,'-',label='special frame')
-plt.plot(tplot0,0.5*pplot2+0.5,'+',label=r'ordinary frame')   
+plt.plot(tplot0,0.5*pplot2+0.5,'x',label=r'ordinary frame',markersize=2)   
 plt.xlabel(r'$\omega_0t/(2\pi)$')
 plt.ylabel(r'$p_{tot}$')
 title = r'$\delta_{rock} = -100kHz, \Delta E = $'+str(E1) + r'$kHz , J=$'+str(J23)+r'$kHz$'

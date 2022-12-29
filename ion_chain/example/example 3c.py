@@ -19,7 +19,7 @@ reasonance at Delta E = 1*delta_rock
 ion_sys = ions()  
 ion_sys.N = 3
 ion_sys.delta = -100
-ion_sys.delta_ref = 0
+ion_sys.delta_ref = 2
 ion_sys.phase = np.pi/2
 fsb = 50
 ion_sys.fr = fsb; ion_sys.fb = fsb
@@ -74,8 +74,8 @@ plt.show()
 #%%plot energy level
 Nlev = 10
 min1 = np.min(eige2); min2 = np.min(eige3)
-elevel1 = eigd.elevel(ion_sys,min1,Nlev,0)
-elevel2 = eigd.elevel(ion_sys,min2,Nlev,0) #0 for rocking mode
+elevel1 = eigd.elevel(ion_sys,min1,Nlev,2)
+elevel2 = eigd.elevel(ion_sys,min2,Nlev,2) #2 for rocking mode
 plt.figure(0)
 plt.plot(xplot,eige2,label = r'$\downarrow\!\!\!\!\uparrow$')
 plt.plot(xplot,eige3,label = r'$\uparrow\!\!\!\!\downarrow$')
