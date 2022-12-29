@@ -175,7 +175,7 @@ def energy_diagram_2d(ion_sys,J12,E1,E2,V,xarray):
     eigeu = np.array([])
     factor = 2*np.pi 
     for x in xlist:
-        tempx = [x,0,0]
+        tempx = [0,0,x]
         Heff = Hspin(J12,E1,E2,V,tempx,ion_sys)
         state = Heff.eigenstates()
         neige = sort(state)
