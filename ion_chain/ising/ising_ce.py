@@ -113,7 +113,7 @@ def Htot(Omegaz,ion0):
     Hlistd,Hargd = Htd(ion0,0)
     Hlistu,Hargu = Htd(ion0,1)
     Heff = [H0] + Hlistd + Hlistu
-    c0 =  tensor(spin.sI(1), phon.down(1, ion0.pcut, ion0.N))
+    c0 =  tensor(spin.sI(1), phon.down(0, ion0.pcut, ion0.N))
     clist = []
     clist.append(np.sqrt( 2 * np.pi * ion0.gamma*(1+ion0.n_bar()))*c0)
     clist.append(np.sqrt( 2 * np.pi * ion0.gamma*ion0.n_bar())*c0.dag())
