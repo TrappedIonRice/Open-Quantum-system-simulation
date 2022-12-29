@@ -448,7 +448,6 @@ class ions:
         '''
         e_val, e_array= np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))
         order = np.argsort(e_val)[::-1]
-        print('order of eigenvalues', order)
         return np.transpose(e_array)[order]    
     def wmlist(self):
         '''
