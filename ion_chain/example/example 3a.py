@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Compute the time evolution of a 3 ion system contructed to simulate excitation transfer 
-between 2 sites using Hamiltonian in reasonant interaction frame
+Compute the time evolution of a 3 ion system constructed to simulate excitation transfer
+between 2 sites using Hamiltonian in resonant interaction frame
 @author: zhumj
 """
 import numpy as np
@@ -13,8 +13,8 @@ import ion_chain.transfer.exci_transfer as extrans
 from  ion_chain.ising.ion_system import *
 #%%
 '''
-parameters of the system, in this example, we compute the evoluation at type 1
-reasonance at Delta E = 1*delta_rock
+parameters of the system, in this example, we compute the evolution at type 1
+resonance at Delta E = 1*delta_rock
 '''       
 ion_sys = ions() 
 ion_sys.delta_ref = 2
