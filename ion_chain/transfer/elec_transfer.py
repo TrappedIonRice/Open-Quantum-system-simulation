@@ -65,14 +65,14 @@ def Htot(Omegaz, ion0 , single_mode):
     dm = ion0.dmlist()
     g = ion0.g()
     if single_mode:
-        term1 = (-1)*(dm[1]* 
+        term1 = (-1)*(dm[0]* 
                  tensor(spin.sI(1), phon.up(1, ion0.pcut, 1)*phon.down(1, ion0.pcut, 1)))
         #phonnic mode
         term2 = (2 * np.pi)*-0.5 * Omegaz * tensor(spin.sz(1,0),phon.pI(ion0.pcut,1))
         #site energy difference
         term3 = (2 * np.pi) *ion0.Omegax * tensor(spin.sx(1,0),phon.pI(ion0.pcut,1)) 
         #coupling between the sites
-        term4 = 0.5*g[1]*tensor(spin.sz(1,0),(phon.up(1, ion0.pcut, 1)+phon.down(1, ion0.pcut, 1)))   
+        term4 = 0.5*g[0]*tensor(spin.sz(1,0),(phon.up(1, ion0.pcut, 1)+phon.down(1, ion0.pcut, 1)))   
         #electron-phonon coupling
         c0 =  tensor(spin.sI(1), phon.down(1, ion0.pcut, 1))
         #collapse operator
@@ -89,7 +89,7 @@ def Htot(Omegaz, ion0 , single_mode):
         termp4 = 0.5*g[1]*tensor(spin.sz(1,0),(phon.up(1, ion0.pcut, ion0.N)+phon.down(1, ion0.pcut, ion0.N))) 
         term4 = (termp3+termp4)
         #a linear potential in the reaction coordinate z
-        c0 =  tensor(spin.sI(1), phon.down(1, ion0.pcut, ion0.N))
+        c0 =  tensor(spin.sI(1), phon.down(0, ion0.pcut, ion0.N))
         #collapse operator
     H = (term1+term2+term3+term4) 
     clist = []
