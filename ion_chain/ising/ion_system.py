@@ -138,7 +138,7 @@ def lc(fz):
 
     Returns
     -------
-    float, unit SI
+    float, unit of m
 
     '''
     return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'mhz')**2))**(1/3)
@@ -233,13 +233,14 @@ class ions:
     Omegax =  0.1 * 20
     gamma = [0.1 * 20, 0.1*20]
     Etot = fr_conv(0.217*2,'khz')
-    pcut = [15,15] #cutoff of phonon energy for distinctive modes
+    pcut = [15,15] #cutoff of phonon energy for distinctive modes, sorted by eigenfrequency in increasing order
     delta_ref = 1 #reference frequency index, 0 for com frequency
     def list_para(self):
         '''
         list basic physical parameters of the system
 
         '''
+        freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
         print('________________________________________________________________')
         print('number of ions', self.N)
         print('number of laser drives applied', self.n_laser)
@@ -247,7 +248,8 @@ class ions:
         print('avearge phonon number ', np.round(self.n_bar(),4))
         print('axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
         print('transverse COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
-        print('detuning delta (measured as deviation from transverse COM freq) ',np.round(self.delta,2)," [kHz]")
+        print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
+              ,np.round(self.delta,2)," [kHz]")
         print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
         print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
         print('spin phase phis',np.round(self.phase*180/np.pi,2))
@@ -296,7 +298,15 @@ class ions:
         plt.xlabel(r'frequecny kHz')
         plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
         plt.legend()
-        plt.show()
+    def l0(self):
+        '''
+        compute the chracteristic length scale of the system
+
+        Returns
+        -------
+        float, unit of m
+        '''
+        return lc(self.fz)
     def Equi_posi(self):
         '''
         compute the equilibrium position of 1-D ion-chain
@@ -307,6 +317,70 @@ class ions:
 
         '''
         return E_position(self.N,self.fz,False,0) 
+    def C(self,m,n,p):
+        '''
+        Compute the anharmonic tensor in the classical Lagrangian 
+
+        Parameters
+        ----------
+        m, n, p : index
+        python index from 0~N-1
+
+        Returns
+        -------
+        float
+        tensor element m, n, p
+        '''
+        if (m==n) and (n==p):
+            Cmnp = 0
+            for q in range(self.N):
+                if q!=m:
+                    Cmnp = (Cmnp + 
+                            np.sign(q-m)/(self.Equi_posi()[q]-self.Equi_posi()[m])**4)
+        elif (m!=n) and (n!=p) and (m!=p):
+            Cmnp = 0
+        else:
+            #exchange variable if m=n is not statisfied 
+            if m == p:
+                p0 = n ; m0 = m 
+            elif m == n: 
+                p0 = p ; m0 = m 
+            else:
+                p0 = m ; m0 = p 
+            #only needs m,p to compute this     
+            Cmnp = -1*np.sign(p0-m0) / (self.Equi_posi()[p0]-self.Equi_posi()[m0])**4
+        return Cmnp
+    def D(self,p,q,r):
+        '''
+        Compute the anharmonic tensor for mode-mode coupling   
+        
+        Parameters
+        ----------
+        p, q, r : index
+        python index from 0~N-1
+
+        Returns
+        -------
+        float
+        tensor element p, q, r
+        '''
+        #implement the summation over 3 index
+        Dpqr = 0
+        N0 = self.N
+        Amat = self.Axialmode()
+        #this matrix adjust the sign of the eigenmodes such that all eigenvectors
+        #has positive sign at index N (or N-1 in terms of python index)
+        sigs = np.sign(Amat[:,N0-1])
+        sigmat = np.zeros([N0,N0])
+        for i in range(N0):
+            sigmat[i,i] = sigs[i] 
+        Amat = np.transpose(np.matmul(np.transpose(Amat), sigmat))
+        for l in range(N0):
+            for m in range(N0):
+                for n in range(N0):
+                    nterm = self.C(l,m,n) * Amat[p,l] * Amat[q,m] * Amat[r,n]
+                    Dpqr = Dpqr + nterm
+        return Dpqr             
     def Axialfreq(self):
         '''
         compute the eigenfrequencies of axial oscillation, multiply by wz to get real frequency [Hz]
@@ -314,8 +388,9 @@ class ions:
        
         Returns
         -------
-        np array object, each index is an axial eigenfrequency
-
+        np array object, each index is an eigenvalue for axial mode [unit of 1]
+        The eigenvalues are arranged in an increasing order, such that the first 
+        one correpond to COM mode frequency
         '''
         e_val = np.linalg.eig(Amatrix(self.N,self.fz))[0]
         order = np.argsort(e_val)
@@ -328,24 +403,25 @@ class ions:
         Returns
         -------
         np array object that represents N by N matrix, each row is an axial eigenmode
+        The eigenmode are arranged in an increasing order of eigenvalues, such that the first 
+        one correpond to COM mode
 
         '''
-        e_val = np.linalg.eig(Amatrix(self.N,self.fz))[0]
+        e_val,e_array = np.linalg.eig(Amatrix(self.N,self.fz))
         order = np.argsort(e_val)
-        e_array = np.linalg.eig(Amatrix(self.N,self.fz))[1][order]
-        return np.transpose(e_array)
+        return (np.transpose(e_array))[order]
     def Transfreq(self):
         '''
         compute the eigenfrequencies of transverse oscillation, multiply by wz to get real frequency [Hz]
         input(N,fz,fx)
         Returns
         -------
-        np array object, each index is an transverse eigenfrequency
+        np array object, each index is an eigenvalue for Transverse mode [unit of 1]
 
         '''
         e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
         order = np.argsort(e_val)
-        e_val = e_val[order]
+        e_val = e_val[order][::-1]
         #check if the matrix is positive-definite
         if np.min(e_val) < 0:
             print("Negtive transverse frequency, the system is unstable")
@@ -366,12 +442,14 @@ class ions:
         Returns
         -------
         np array object that represents N by N matrix, each row is an transverse eigenmode
+        The eigenmode are arranged in an increasing order of eigenvalues, such that the first 
+        one correpond to COM mode
 
         '''
-        e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
-        order = np.argsort(e_val)
-        e_array = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[1][order]
-        return np.transpose(e_array)    
+        e_val, e_array= np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))
+        order = np.argsort(e_val)[::-1]
+        print('order of eigenvalues', order)
+        return np.transpose(e_array)[order]    
     def wmlist(self):
         '''
         compute transverse eigenfrequencies of the system
@@ -382,7 +460,7 @@ class ions:
         return self.Transfreq()*self.fz
     def dmlist(self):
         '''
-        compute the detuning from the two modes, decreasing order
+        compute the detuning from the two modes, increasing order
         Returns
         -------
         float 2pi kHz (angular)
@@ -455,3 +533,14 @@ class ions:
         float [J/10**6]
         '''
         return self.g()**2/np.abs(self.w0())
+    def epsilon(self):
+        '''
+        Compute the anharmonic coefficient epsilon = sqrt(hbar/(2 m fz)/(4l))
+        -------
+        Returns
+        -------
+        float unit of 1
+
+        '''
+        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'khz')))
+        return  sigma0 / (4*self.l0())
