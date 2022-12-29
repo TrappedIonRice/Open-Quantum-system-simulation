@@ -350,13 +350,13 @@ class ions:
             #only needs m,p to compute this     
             Cmnp = -1*np.sign(p0-m0) / (self.Equi_posi()[p0]-self.Equi_posi()[m0])**4
         return Cmnp
-    def D(self,p,q,r):
+    def D(self,p0,q,r):
         '''
         Compute the anharmonic tensor for mode-mode coupling   
         
         Parameters
         ----------
-        p, q, r : index
+        p0, q, r : index
         python index from 0~N-1
 
         Returns
@@ -376,9 +376,9 @@ class ions:
             sigmat[i,i] = sigs[i] 
         Amat = np.transpose(np.matmul(np.transpose(Amat), sigmat))
         for l in range(N0):
-            for m in range(N0):
-                for n in range(N0):
-                    nterm = self.C(l,m,n) * Amat[p,l] * Amat[q,m] * Amat[r,n]
+            for m0 in range(N0):
+                for n0 in range(N0):
+                    nterm = self.C(l,m0,n0) * Amat[p0,l] * Amat[q,m0] * Amat[r,n0]
                     Dpqr = Dpqr + nterm
         return Dpqr             
     def Axialfreq(self):
@@ -541,5 +541,22 @@ class ions:
         float unit of 1
 
         '''
-        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'khz')))
+        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'mhz')))
         return  sigma0 / (4*self.l0())
+    def ah_couple(self, m,n,p):
+        '''
+        Compute the anharmonic coupling strength for index m , n, p
+
+        Parameters
+        ----------
+        m,n,p: python index
+        m,n for transverse modes, p for axial mode
+
+        Returns
+        -------
+        float, anharmonic coupling strength
+
+        '''
+        tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2
+        freq_factor = (tfreq[m]*tfreq[n]*afreq[p])**0.25
+        return -3*self.epsilon()*self.D(m,n,p)/freq_factor
