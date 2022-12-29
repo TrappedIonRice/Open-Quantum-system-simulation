@@ -234,7 +234,7 @@ class ions:
     gamma = [0.1 * 20, 0.1*20]
     Etot = fr_conv(0.217*2,'khz')
     pcut = [15,15] #cutoff of phonon energy for distinctive modes, sorted by eigenfrequency in increasing order
-    delta_ref = 1 #reference frequency index, 0 for com frequency
+    delta_ref = 0 #reference frequency index, 0 for com frequency
     def list_para(self):
         '''
         list basic physical parameters of the system
@@ -270,18 +270,18 @@ class ions:
         visualize eigenfreqencies and laser frequency
         '''
         wmlist  = self.wmlist()*1000
-        lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
+        lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
         lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
-        lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
+        lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
         froc =  [wmlist[2], wmlist[2]]
         ftil =  [wmlist[1], wmlist[1]]
         fcom =  [wmlist[0], wmlist[0]]
         ylist = [0,1]
         title = r'$\delta = $' + str(self.delta) + 'kHz, reference: '+str(self.delta_ref)
         plt.figure(0)
-        plt.plot(froc,ylist,label = lab0)
+        plt.plot(fcom,ylist,label = lab0)
         plt.plot(ftil,ylist,label = lab1)
-        plt.plot(fcom,ylist,label = lab2)
+        plt.plot(froc,ylist,label = lab2)
         if self.n_laser == 1:
             las = wmlist[self.delta_ref]+self.delta    
             labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
