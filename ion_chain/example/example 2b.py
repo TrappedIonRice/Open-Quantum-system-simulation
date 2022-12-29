@@ -23,7 +23,7 @@ from  ion_chain.ising.ion_system import *
 parameters of the system, use the same parameter in quantum regime 
 '''    
 ion_sys = ions() #construct a two ion system using class ions 
-ion_sys.delta_ref = 1 
+ion_sys.delta_ref = 0
 ion_sys.delta = -20
 ion_sys.Omegax = 0.01*np.abs(ion_sys.delta)
 ion_sys.fr = 70; ion_sys.fb = 70
@@ -48,7 +48,7 @@ result1 = mesolve(H0,rho0,times,clist1,elist1,progress_bar=True,options=Options(
 rhoee1 = 0.5*result1.expect[0]+0.5
 #%%
 #simulation with 2 modes, use cutoff 2 for first mode because we are only cooling com mode
-ion_sys.pcut = [2,10]
+ion_sys.pcut = [10,2]
 elist2 = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
 ion_sys.list_para() 
 #solve time evolution for a single energy splitting
@@ -60,7 +60,7 @@ result2 = mesolve(H0,rho0,times,clist1,elist2,progress_bar=True,options=Options(
 rhoee2 = 0.5*result2.expect[0]+0.5
 #%%
 #simulation with complete H, solving time dependent H cost more time
-ion_sys.pcut = [2,10]
+ion_sys.pcut = [10,2]
 elist3 = [tensor(spin.sz(1,0),phon.pI(ion_sys.pcut,2))]
 ion_sys.list_para()
 rho0 = etrans.rho_ini(ion_sys,False)
@@ -72,7 +72,7 @@ rhoee3 =  0.5*result3.expect[0]+0.5
 #%%    
 #plot result    
 plt.clf()
-plt.plot(tplot,rhoee1,'+',label='1 mode')
+plt.plot(tplot,rhoee1,'x',label='1 mode')
 plt.plot(tplot,rhoee3,'.',label=r'2 mode ordinary frame')
 plt.plot(tplot,rhoee2,label=r'2 mode special frame')
 title = r'$\Delta E = $' + str(deltaE/ion_sys.delta)+r'$\delta_{com}$'

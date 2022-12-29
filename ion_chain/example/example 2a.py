@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Compute the time evolution of a 2 ion system contructed to simulate electron transfer 
-with 1 mode
 Reproduce the result in Schlawin et. al. PRXQuantum Paper
 https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.010314
 @author: zhumj
@@ -21,7 +20,7 @@ from  ion_chain.ising.ion_system import *
 parameters of the system, use the same parameter in quantum regime 
 '''    
 ion_sys = ions() #construct a two ion system using class ions 
-ion_sys.delta_ref = 1 
+ion_sys.delta_ref = 0 
 ion_sys.delta = -20
 ion_sys.Omegax = 0.01*np.abs(ion_sys.delta)
 ion_sys.fr = 70; ion_sys.fb = 70
