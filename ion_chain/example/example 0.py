@@ -5,7 +5,7 @@ Please run one line each time in the console
 """
 #%%
 #import the spin subpackage from ion_chain.operator and call it "spin" for futher usage
-import ion_chain.operator.spin as spin
+import Qsim.ion_chain.operator.spin as spin
 #%%
 #print the discription of the package and list the name of all functions
 print(spin.__doc__)
@@ -17,7 +17,7 @@ spin.summary()
 help(spin.sx)
 #%% this part illustrates how to use 'class' 
 #import all functions of ion_system.py from ion_chain.ising 
-from  ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ising.ion_system import *
 #%% see the documents for ions class
 help(ions)
 #read document for a specific function in this class
