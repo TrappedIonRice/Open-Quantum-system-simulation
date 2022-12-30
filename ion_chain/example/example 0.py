@@ -5,7 +5,7 @@ Please run one line each time in the console
 """
 #%%
 #import the spin subpackage from ion_chain.operator and call it "spin" for futher usage
-import Qsim.ion_chain.operator.spin as spin
+import Qsim.operator.spin as spin
 #%%
 #print the discription of the package and list the name of all functions
 print(spin.__doc__)
