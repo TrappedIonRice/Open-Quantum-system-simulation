@@ -3,7 +3,8 @@ package: ion_chain
 
 dependence pakcage: Qutip
 
-Installation: copy the file ion_chain to C:\users\"your username"\.ipython
+Installation: clone the repository to C:\users\"your username"\.ipython\Qsim
+The module should be import using import Qsim... as .
 
 Functions:
 
