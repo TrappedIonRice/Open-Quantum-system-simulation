@@ -9,11 +9,11 @@ verify the results are the same.
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-import ion_chain.transfer.exci_transfer as extrans
-import ion_chain.ising.ising_cex as iscex
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
+import Qsim.ion_chain.transfer.exci_transfer as extrans
+import Qsim.ion_chain.ising.ising_cex as iscex
+from  Qsim.ion_chain.ising.ion_system import *
 #%%
 '''
 parameters of the system, in this example, we compute the evoluation at type 1

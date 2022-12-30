@@ -10,11 +10,11 @@ compare the result under a pure spin interaction approximation
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-import ion_chain.ising.ising_ps as iscp
-import ion_chain.ising.ising_c as iscc
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
+import Qsim.ion_chain.ising.ising_ps as iscp
+import Qsim.ion_chain.ising.ising_c as iscc
+from  Qsim.ion_chain.ising.ion_system import *
 from scipy import signal
 #%%
 '''
@@ -30,7 +30,7 @@ ion_sys.fb  = 30
 pcut = [3,3]
 ion_sys.pcut = pcut #truncation of phonon 
 #delta = float(input("Enter detuning frequency (kHz): "))
-ion_sys.delta_ref = 1 
+ion_sys.delta_ref = 0 
 delta = 100 #detuning from com mode
 ion_sys.delta = delta
 ion_sys.list_para() #print parameters of the system

@@ -5,7 +5,7 @@ Created on Wed Dec 28 17:28:18 2022
 Compute basic quantities of the anharmonic coupling terms 
 """
 
-from  ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ising.ion_system import *
 import numpy as np
 import matplotlib.pyplot as plt
 #%%

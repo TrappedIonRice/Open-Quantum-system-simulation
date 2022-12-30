@@ -7,9 +7,9 @@ function: Htot
 """
 import numpy as np
 from qutip import *
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
+from  Qsim.ion_chain.ising.ion_system import *
 def summary():
     print("____________________________________________________________________")
     print("function: Htot")

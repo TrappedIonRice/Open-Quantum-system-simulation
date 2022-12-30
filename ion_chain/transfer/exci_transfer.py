@@ -9,10 +9,10 @@ function: Htot
 
 import matplotlib.pyplot as plt
 import numpy as np
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
 from qutip import *
-from  ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ising.ion_system import *
 #subfunction
 
 def summary():

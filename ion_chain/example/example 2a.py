@@ -8,13 +8,10 @@ https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.010314
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-import ion_chain.ising.ising_ps as iscp
-import ion_chain.ising.ising_c as iscc
-import ion_chain.transfer.elec_transfer as etrans
-import ion_chain.ising.ising_ce as isce
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
+import Qsim.ion_chain.transfer.elec_transfer as etrans
+from  Qsim.ion_chain.ising.ion_system import *
 #%%
 '''
 parameters of the system, use the same parameter in quantum regime 

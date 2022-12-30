@@ -8,8 +8,8 @@ functions: lc, eta, Omega, Axialfreq, Axialmode, Transfreq, Transmode, Jt, plotj
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+from  Qsim.ion_chain.ising.ion_system import *
 '''
 Define phyiscal constants of the system
 '''

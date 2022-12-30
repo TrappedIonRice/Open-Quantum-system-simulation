@@ -7,12 +7,8 @@ used to compute eigenenergy diagrams for excitation transfer prototype simulator
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-import ion_chain.ising.ising_ps as iscp
-import ion_chain.ising.ising_c as iscc
-import ion_chain.transfer.exci_transfer as extrans
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+from  Qsim.ion_chain.ising.ion_system import *
 from scipy.optimize import curve_fit
 oplist = [spin.sz(2,0),spin.sz(2,1)]
 '''

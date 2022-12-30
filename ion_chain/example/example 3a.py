@@ -7,10 +7,10 @@ between 2 sites using Hamiltonian in resonant interaction frame
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.operator.spin as spin
-import ion_chain.operator.phonon as phon
-import ion_chain.transfer.exci_transfer as extrans
-from  ion_chain.ising.ion_system import *
+import Qsim.operator.spin as spin
+import Qsim.operator.phonon as phon
+import Qsim.ion_chain.transfer.exci_transfer as extrans
+from  Qsim.ion_chain.ising.ion_system import *
 #%%
 '''
 parameters of the system, in this example, we compute the evolution at type 1

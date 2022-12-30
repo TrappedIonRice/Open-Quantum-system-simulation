@@ -7,9 +7,8 @@ under semi-classical approximation
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import ion_chain.transfer.exci_transfer as extrans
-import ion_chain.eigendiagram.exci_diagram as eigd
-from  ion_chain.ising.ion_system import *
+import Qsim.ion_chain.eigendiagram.exci_diagram as eigd
+from  Qsim.ion_chain.ising.ion_system import *
 from scipy.optimize import curve_fit
 #%%
 '''
