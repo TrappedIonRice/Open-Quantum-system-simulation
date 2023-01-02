@@ -233,8 +233,13 @@ class ions:
     Omegax =  0.1 * 20
     gamma = [0.1 * 20, 0.1*20]
     Etot = fr_conv(0.217*2,'khz')
-    pcut = [15,15] #cutoff of phonon energy for distinctive modes, sorted by eigenfrequency in increasing order
+    pcut = [15,15] #cutoff of phonon energy for distinctive modes, first index is always for com mode
     delta_ref = 0 #reference frequency index, 0 for com frequency
+    laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
+    active_phonon = [[0,1,2]] #index phonon space that will be considered, if more than 1 space,
+    #the first list will be set for axial vibration
+    #for instance, [[1,2],[0,2]] means consider the tilt, rock mode for axial motion
+    #com, rock mode for 1 radial modtion
     def list_para(self):
         '''
         list basic physical parameters of the system
@@ -243,7 +248,8 @@ class ions:
         freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
         print('________________________________________________________________')
         print('number of ions', self.N)
-        print('number of laser drives applied', self.n_laser)
+        print('number of laser drives applied: ', self.n_laser)
+        print('index of ions that couple to the laser field: ',laser_couple)
         print('phonon cutoff ', self.pcut)
         print('avearge phonon number ', np.round(self.n_bar(),4))
         print('axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
@@ -265,6 +271,27 @@ class ions:
         print('________________________________________________________________')
         print('electronic coupling strength, or rabi frequency Omega_x ',np.round(self.Omegax,2), ' [kHz]')
         print('state adaptive dipole force g, or eta*Omega ', np.round(self.g()/(2*np.pi),2),' [kHz]')
+    def df_phonon(self):
+        '''
+        output parameteres to construct phonon space
+        Returns
+        -------
+        ph_space : list 
+            the first element is the number of degree of freedoms considered.
+            the second second element is list in which each element is the 
+            number of phonon space to be considered for a specfic degreea of freedom
+            for instance [2, [3, 3]] means 2 degreee of freedom to be considered
+            and 3 phonon spaces for each degree of freedom
+
+        '''
+        print(self.active_phonon)
+        ph_space = [len(self.active_phonon)]
+        ph_N  = []
+        for ph_i in range(len(self.active_phonon)):
+            ph_N.append(len(self.active_phonon[ph_i]))
+        ph_space.append(ph_N)
+        return ph_space
+    
     def plot_freq(self):
         '''
         visualize eigenfreqencies and laser frequency
