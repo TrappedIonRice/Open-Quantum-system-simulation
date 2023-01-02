@@ -53,3 +53,10 @@ Example 3b:Compute the time evolution of a 3 ion system contructed to simulate e
 
 Example 3c: plot the energy diagram for excitation transfer Hamiltonian under semi-classical approximation
 
+Example 4a: Generate list of site energy differences for multicore parallel computation
+
+Example 4b: Simulate the time evolution of excitation transfer at different Delta E with multi cores parallel coumputation
+
+Example 4c: Simulate the time evolution of excitation transfer at different dissipation gammawith multi cores parallel coumputation
+
+Example 5a: Compute basic quantities of the anharmonic coupling terms 
