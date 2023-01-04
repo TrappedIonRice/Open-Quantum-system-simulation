@@ -11,6 +11,7 @@ from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
+import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import Qsim.ion_chain.ising.ising_cex as iscex
 from  Qsim.ion_chain.ising.ion_system import *
@@ -24,17 +25,20 @@ ion_sys.delta_ref = 2
 ion_sys.N = 3
 ion_sys.delta = -100
 ion_sys.fr = 50; ion_sys.fb = 50
-ion_sys.pcut = np.array([2,2,5]) 
+ion_sys.pcut = [2,2,5]
+ion_sys.coolant = [2] #use ion 2 as coolent 
 ion_sys.phase = np.pi/2
 ion_sys.gamma = [0,0,10] #cool the rocking mode only
+ion_sys.laser_couple = [0,1] #laser couples to ion 0, 1
+ion_sys.active_phonon = [[0,1,2]] #consider all 3 radial modes
 ion_sys.list_para() #print parameters
 ion_sys.plot_freq()
 #%%
 '''
 define operators for measurement
 '''
-oplist = [tensor(spin.sz(2,0),phon.pI(ion_sys.pcut,ion_sys.N)),
-          tensor(spin.sz(2,1),phon.pI(ion_sys.pcut,ion_sys.N)),] #spin population
+oplist = [tensor(spin.sz(2,0),exop.p_I(ion_sys)),
+          tensor(spin.sz(2,1),exop.p_I(ion_sys))] #spin population
 #%%    
 '''
 parameters of the system, in this example, we compute the evoluation at type 1
@@ -50,7 +54,7 @@ print('coupling strength between ion 1 and 2', J23, ' kHz *h')
 print('site energy difference ', E1-E2, ' kHz *h')
 configuration = 0 #0 for cooling ion on the side
 tscale = J23      #use J as time scale
-rho0 = extrans.rho_ini(ion_sys,True) #initial state
+rho0 = exop.rho_ini(ion_sys) #initial state
 tplot0 = np.arange(0,1,0.01)
 times0 =tplot0/tscale
 #%%
@@ -63,9 +67,10 @@ result1 = mesolve(H1,rho0,times0,clist1,oplist,progress_bar=True,options=Options
 '''
 Use complete Hamiltonian in ordinary interaction frame 
 '''
+ion_sys.active_phonon = [[1,2]] #consider all 3 radial modes
 print("__________________________________________________________")
 print('simulating with time-dependent H in ordinary interaction frame')
-H2, arg0, clist2 = iscex.Htot(J23,(E1-E2)/2,0,V,ion_sys,0) #generate Hamiltonian
+H2, arg0, clist2 = iscex.Htot(J23,(E1-E2)/2,0,V,ion_sys,1) #generate Hamiltonian
 #result = mesolve(H0,rho0,times,clist1,[],progress_bar=True,options=Options(nsteps=10000))
 result2 = mesolve(H2,rho0,times0,clist1,oplist,args= arg0,progress_bar=True,options=Options(nsteps=100000))
 #%% plot spin popluation

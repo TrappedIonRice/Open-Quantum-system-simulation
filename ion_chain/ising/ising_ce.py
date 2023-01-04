@@ -31,7 +31,7 @@ def Him(ion0,atype,i,m):
     '''
     pcut = ion0.pcut
     coeff = ion0.Omega()    
-    wlist = ion0.wmlist() #kHz
+    wlist = ion0.wmlist()[1] #kHz
     emat = ion0.Transmode()
     if atype == 0:
         opa = phon.down(m,pcut,ion0.N)
@@ -71,7 +71,7 @@ def Htd(ion0,atype):
     N = ion0.N; pcut =ion0.pcut
     fx = ion0.fx; delta = ion0.delta
     Hlist = []
-    wlist0 = 1j*ion0.wmlist()* (2000*np.pi) #this is used to compute deltam in kHz
+    wlist0 = 1j*ion0.wmlist()[1]* (2000*np.pi) #this is used to compute deltam in kHz
     mu = (1000*fx + delta)* 2* np.pi #kHz 
     Hstr, Hexpr = tstring(N,atype) #kHz
     Harg = argdic(N,atype,wlist0,mu)

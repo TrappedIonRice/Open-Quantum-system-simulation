@@ -62,7 +62,7 @@ def Htot(J12, E1, E2, Vx, ion0, config):
     #spin phonon coupling
     term1 =  tensor(spin.zero_op(Ns),phon.zero_op(pcut,Np)) 
     emat = ion0.Transmode()
-    coeff = eta(ion0.wmlist())
+    coeff = eta(ion0.wmlist()[1])
     if config == 0:
         ilist = [0,1]
     else:
@@ -145,31 +145,7 @@ def ereasonance(ion0,nmax1,nmax2):
     #print(uindex)
     umix_mn = mix_mn[uindex]    
     return rock_el/2, tilt_el/2, umix_el/2,umix_mn     
-def rho_ini(ion0,single_mode):
-    '''
-    Construct initial density matrix according to a thermal distribution
 
-    Parameters
-    ----------
-    ion0: ions class object
-       the object that represent the system to be simulated
-    single_mode : bool
-       use COM mode only if true
-
-    Returns
-    -------
-    Qutip operator
-
-    '''
-    isket = tensor(fock(2,0),fock(2,1)) # ion 1 in excited state
-    ini_sdm = isket*isket.dag()
-    pho0 = tensor(phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.fx,'khz'),ion0.Etot),
-                  phon.inip_thermal(ion0.pcut[1],fr_conv(ion0.fx,'khz'),ion0.Etot),
-                  phon.inip_thermal(ion0.pcut[2],fr_conv(ion0.fx,'khz'),ion0.Etot))
-    #dmat = fock(ion0.pcut,0)*fock(ion0.pcut,0).dag()
-    #pho0 = tensor(dmat,dmat,dmat)
-    rho0 = tensor(ini_sdm,pho0)
-    return rho0    
         
     
     

@@ -9,6 +9,7 @@ import numpy as np
 from qutip import *
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
+import Qsim.ion_chain.transfer.exci_operators as exop
 from  Qsim.ion_chain.ising.ion_system import *
 def summary():
     print("____________________________________________________________________")
@@ -18,37 +19,39 @@ def summary():
 subfunctions
 '''    
 
-def Him(ion0,atype,i,m,sindex):
+      
+def Him(ion0,atype,i,m,sindex,mindex,df):
     '''
     Compute H with index i,m for time dependent part 
     Input: 
        
         atype, phonon opeartor type, 0 for destroy, 1 for create
         pcut, int, cut off  level of the harmonic ocsillator eigenenergy
-        i, python index 
-        m, pytho index
-        sindex, index of spin operator 
+        i, ion index 
+        m, phonon space index
+        sindex, index to construct spin operator
+        mindex, index to construct phonon operator
+        mode, phonon space that couples to the laser, 0: axial, 1: radial
     Output:
         Hamiltonina H im, Qobj
     '''
-    N = ion0.N
-    pcut = ion0.pcut
     coeff = ion0.Omega()   
-    wlist = ion0.wmlist()
-    emat = ion0.Transmode()
-    if atype == 0:
-        opa = phon.down(m,pcut,N)
+    wlist = ion0.wmlist()[df]
+    #set coefficient constants according to the coupling degree of freedom
+    if df == 0:
+        emat = ion0.Axialmode()
     else:
-        opa = phon.up(m,pcut,N)
-    H = tensor(spin.sz(N-1,sindex),opa)
+        emat = ion0.Transmode()
+    p_opa = exop.p_ladder(ion0,df,mindex,atype)
+    H = tensor(spin.sz(ion0.df_spin(),sindex),p_opa)
     eta_im = eta(wlist[m])*emat[m,i]
     return coeff*eta_im*H 
 def tstring(N,atype):
     #generate the string list for time dependent part
     mstring = []
     fstring = []
-    for mindex in range(1,N+1):
-        newm = "m" + str(mindex)
+    for mi in range(1,N+1):
+        newm = "m" + str(mi)
         mstring.append(newm)
         if atype == 1:
             fstring.append('cos(t * u) * exp(t * ' + newm +")")
@@ -60,10 +63,10 @@ def argdic(N,atype,wlist,mu):
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
     adic = {"u":mu}
     slist, fs = tstring(N,atype) 
-    for i in range(N):
-        adic[slist[i]] = wlist[i]
+    for argi in range(N):
+        adic[slist[argi]] = wlist[argi]
     return adic    
-def Htd(ion0,atype,config): 
+def Htd(ion0,atype,df): 
     '''
     Compute the list of H correponding to time dependent part of H of the
     system as input for qutip solver
@@ -74,30 +77,29 @@ def Htd(ion0,atype,config):
             the configuration of the chain, if config = 0, cool the ion on the side
             if config = 1, cool the ion in the center.
     '''
-    N = ion0.N; pcut =ion0.pcut
+    N = ion0.N
+    Np = exop.pnum(ion0,df)
     delta = ion0.delta
     Hlist = []
-    wlist0 = 1j*ion0.wmlist() * 2000* np.pi #this is used to compute deltam in kHz
-    mu = (1000*ion0.wmlist()[ion0.delta_ref] + delta)* 2* np.pi #kHz 
+    wlist0 = 1j*ion0.wmlist()[df] * 2000* np.pi #this is used to compute deltam in kHz
+    mu = (1000*ion0.wmlist()[df][ion0.delta_ref] + delta)* 2* np.pi #kHz 
     Hstr, Hexpr = tstring(N,atype) #kHz
-    Harg = argdic(N,atype,wlist0,mu)
-    if config == 0:
-        ilist = [0,1]
-    else:
-        ilist = [0,2]               
+    Harg = argdic(N,atype,wlist0,mu)            
     #compute the mth element by summing over i for Him for destroy operators
-    for m in range(N):
-        sindex = 0 #this index is used for spin operators  
-        subH = tensor(spin.zero_op(N-1),phon.zero_op(pcut,N))
-        for i in ilist:
-            subH = subH + Him(ion0,atype,i,m,sindex)
+    mindex = 0 #this index is used for phonon operators
+    for m in exop.ph_list(ion0,df):
+        sindex = 0 #this index is used for spin operators
+        subH = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0))
+        for i in ion0.laser_couple:
+            subH = subH + Him(ion0,atype,i,m,sindex,mindex,df)
             sindex = sindex + 1
+        mindex = mindex+1
         Hlist.append([subH,Hexpr[m]]) 
     return Hlist, Harg
 '''
 function to use
 ''' 
-def Htot(J12, E1, E2, Vx, ion0, config):
+def Htot(J12, E1, E2, Vx, ion0, df):
     '''
     Compute the complete time-dependent Hamiltonian and collapse operators for the 3 ion open qunatum system
     used to simulate excitation transition between 2 sites, and the collpase operators
@@ -129,28 +131,28 @@ def Htot(J12, E1, E2, Vx, ion0, config):
         list of Qutip operators required by qutip solver
         collapse operators to describe coupling to the evironment
     '''
-    Np = ion0.N #of ions to be considered for phonon space
-    Ns = ion0.N-1 #of ions to be considered for spin space
-    pcut = ion0.pcut
-    Hlistd,Hargd = Htd(ion0,0,config)
-    Hlistu,Hargu = Htd(ion0,1,config)
+    Ns = ion0.df_spin() #of ions to be considered for spin space
+    Hlistd,Hargd = Htd(ion0,0,df)
+    Hlistu,Hargu = Htd(ion0,1,df)
     #phonnic mode
-    sop3 = tensor(spin.up(Ns,0)*spin.down(Ns,1),phon.pI(pcut,Np))
+    pI= exop.p_I(ion0)
+    sop3 = tensor(spin.up(Ns,0)*spin.down(Ns,1),pI)
     term3 = fr_conv(J12,'hz') * (sop3+sop3.dag())
     #vibrational harmonic oscillator potential
-    term4 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),phon.pI(pcut,Np))+
-             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),phon.pI(pcut,Np)))
+    term4 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),pI)+
+             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),pI))
     #coherent coupling of the donor and acceptor states
     term5 = (fr_conv(Vx,'hz') * 
-             tensor(spin.sx(Ns,0)+spin.sx(Ns,1),phon.pI(pcut,Np)))
+             tensor(spin.sx(Ns,0)+spin.sx(Ns,1),pI))
     H0 = term3+term4+term5
     #collapse operator
     clist = []
-    i = config
     emat = ion0.Transmode()
-    for m in range(Np):
-        cm = tensor(spin.sI(Ns), phon.down(m, ion0.pcut, ion0.N))
-        clist.append(emat[m,i]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*(1+ion0.n_bar()))*cm)
-        clist.append(emat[m,i]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*ion0.n_bar())*cm.dag())
+    mindex = 0
+    for m in exop.ph_list(ion0,df):
+        cm = tensor(spin.sI(Ns), exop.p_ladder(ion0,df,mindex,0))
+        clist.append(emat[m,ion0.coolant[0]]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*(1+ion0.n_bar()))*cm)
+        clist.append(emat[m,ion0.coolant[0]]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*ion0.n_bar())*cm.dag())
+        mindex = mindex + 1
     Heff = [H0] + Hlistd + Hlistu    
     return Heff, Hargd, clist

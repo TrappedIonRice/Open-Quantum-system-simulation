@@ -114,10 +114,10 @@ def rho_ini(ion0,single_mode):
     '''
     ini_sdm = Qobj([[1,0], [0,0]])
     if single_mode:
-        rho0 = tensor(ini_sdm,phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.wmlist()[0],'khz'),ion0.Etot))
+        rho0 = tensor(ini_sdm,phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.fx,'khz'),ion0.Etot))
     else:
-        pho0 = tensor(phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.wmlist()[0],'khz'),ion0.Etot),
-                      phon.inip_thermal(ion0.pcut[1],fr_conv(ion0.wmlist()[1],'khz'),ion0.Etot))
+        pho0 = tensor(phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.fx,'khz'),ion0.Etot),
+                      phon.inip_thermal(ion0.pcut[1],fr_conv(ion0.fx,'khz'),ion0.Etot))
         rho0 = tensor(ini_sdm,pho0)
     return rho0    
         
