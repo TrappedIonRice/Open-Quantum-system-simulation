@@ -61,17 +61,8 @@ def Htot(dE, ion0,df,spterm = True, ah_term=False,ah_op=0):
     else:    
         term5 = 0
     H0 = term3+term4+term5
-    #collapse operator
-    clist = []
-    emat = ion0.Transmode()
-    mindex = 0
-    for m in exop.ph_list(ion0,df):
-        cm = tensor(spin.sI(Ns), exop.p_ladder(ion0,df,mindex,0))
-        clist.append(np.sqrt(fr_conv(ion0.gamma[m],'hz')*(1+ion0.n_bar()))*cm)
-        clist.append(np.sqrt(fr_conv(ion0.gamma[m],'hz')*ion0.n_bar())*cm.dag())
-        mindex = mindex + 1
     Heff = [H0] + Hlistd + Hlistu 
     if spterm:
-        return Heff, Hargd, clist
+        return Heff, Hargd
     else:
         return H0

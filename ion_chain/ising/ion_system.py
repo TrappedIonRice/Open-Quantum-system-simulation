@@ -144,12 +144,13 @@ def lc(fz):
     return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'mhz')**2))**(1/3)
 def eta(f):
     '''
-    Compute single ion Lamb-Dicke parameter for the a transvers mode.
-    input(fx)
+    Compute single ion Lamb-Dicke parameter for vibrational eigenmode correspond to
+    eigenfrequency f
+    input(f)
     Parameters
     ----------
-    fx : float
-        transverse frequency of the ion trap, [MHz]
+    f : float
+       eigenfrequency [MHz]
 
     Returns
     -------
@@ -259,6 +260,8 @@ class ions:
               ,np.round(self.delta,2)," [kHz]")
         print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
         print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
+        print('Estimated spin-phonon coupling strength (Axial):', np.round(self.sp_coeff(0, 0)/(2*np.pi),2),' [kHz]')
+        print('Estimated spin-phonon coupling strength (Radial):', np.round(self.sp_coeff(0, 1)/(2*np.pi),2),' [kHz]')
         print('spin phase phis',np.round(self.phase*180/np.pi,2))
         print('(input in rad but displayed in degs)')
         print('Axial vibrational eigenfrequency', np.round(self.wmlist()[0],2),'MHz')
@@ -530,13 +533,32 @@ class ions:
         return (2*np.pi)*np.abs(self.delta)
     def Omega(self):
         '''
-        compute the rabi rate of the system
+        compute the rabi frequncy of the system
         ----------
         Returns
         -------
         float,2pi kHz
         '''
         return np.sqrt(Omega(self.fr,self.fx)*Omega(self.fb,self.fx))/1000
+    def sp_coeff(self,m,df):
+        '''
+        compute spin-phonon coupling strength \omega*\eta for mode m
+        ----------
+       
+
+        Parameters
+        ----------
+        m : 
+            DESCRIPTION.
+        df : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        float,2pi kHz
+
+        '''
+        return self.Omega()*eta(self.wmlist()[df][m])
     #functions defined to compute electron transfer
     def g(self):
         
@@ -589,7 +611,7 @@ class ions:
 
         Returns
         -------
-        float, anharmonic coupling strength
+        float, anharmonic coupling strength, [2pi kHz]
 
         '''
         tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2

@@ -24,7 +24,6 @@ ion_sys.fr = 70; ion_sys.fb = 70
 ion_sys.gamma = 0.05*np.abs(ion_sys.delta)/(2*np.pi)
 ion_sys.list_para() #print parameters
 deltaE = 5*ion_sys.delta #note site energy difference is negative by definition
-print('g = ',ion_sys.g(),'kHz')
 #%%  
 '''
 simulation with 1 mode, reproduce curve C in Fig 3(B)

@@ -156,14 +156,16 @@ def rho_ini(ion0):
         pho = tensor(pho1,pho2)
     rho0 = tensor(ini_sdm,pho)
     return rho0    
-def ini_zero(ion0,state_type):
+def ini_state(ion0,p_num,state_type):
     '''
-    Construct initial density matrix that has 0 phonon number
+    Construct initial density matrix that has integer phonon number
 
     Parameters
     ----------
     ion0: ions class object
        the object that represent the system to be simulated
+    p_num: int 
+        specified phonon number
     state_type: type of state used
         0 for density matrix
         1 for ket
@@ -181,20 +183,20 @@ def ini_zero(ion0,state_type):
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho = fock(ion0.pcut[0],0)
+                pho = fock(ion0.pcut[0],p_num)
             else:
-                pho = tensor(pho,phon.fock(ion0.pcut[m],0))
+                pho = tensor(pho,phon.fock(ion0.pcut[m],p_num))
     else:
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho1 = fock(ion0.pcut[0][0],0)
+                pho1 = fock(ion0.pcut[0][0],p_num)
             else:
-                pho1 = tensor(pho1,fock(ion0.pcut[0][m],0))
+                pho1 = tensor(pho1,fock(ion0.pcut[0][m],p_num))
         for m in range(ion0.df_phonon()[1][1]):
-           if m == 0:
-               pho2 = fock(ion0.pcut[1][0],0)
-           else:
-               pho2 = tensor(pho1,fock(ion0.pcut[1][m],0))  
+            if m == 0:
+                pho2 = fock(ion0.pcut[1][0],p_num)
+            else:
+                pho2 = tensor(pho2,fock(ion0.pcut[1][m],p_num))  
         pho = tensor(pho1,pho2)       
     dpmat = pho*pho.dag()
     rho0 = tensor(ini_sdm,dpmat)

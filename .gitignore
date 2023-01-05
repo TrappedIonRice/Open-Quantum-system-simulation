@@ -9,3 +9,4 @@ ion_chain/ising/__pycache__/ising_ps.cpython-36.pyc
 ion_chain/operator/__pycache__/__init__.cpython-36.pyc
 ion_chain/operator/__pycache__/phonon.cpython-36.pyc
 ion_chain/operator/__pycache__/spin.cpython-36.pyc
+ion_chain/example/3ion excitation transfer muticore script.py
