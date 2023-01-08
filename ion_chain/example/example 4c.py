@@ -9,10 +9,9 @@ Note: this script must be saved before running if any changes have been made
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import Qsim.operator.spin as spin
-import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import Qsim.ion_chain.transfer.multi_core as mcs
+import Qsim.ion_chain.transfer.exci_operators as exop
 from  Qsim.ion_chain.ising.ion_system import *
 from astropy.io import ascii
 from astropy.table import Table
@@ -36,13 +35,12 @@ J23 = 1
 E2 = 100
 E3 = 0
 V = 0
-ion_sys.pcut = [2,2,5]
 print('coupling strength between ion 1 and 2', J23, ' kHz *h')
 print('site energy of ion 2 ', E3, ' kHz *h')
 configuration = 0 #0 for side cooling
 tscale = J23
 #configure time scale for computation
-end = 0.5    #end of simulation time
+end = 1   #end of simulation time
 tplot = np.arange(0,end,0.01)/tscale
 times = tplot/tscale
 ion_sys.list_para() #print parameters
@@ -58,8 +56,9 @@ ncores = 4 # number of cores to use
 tdict = mcs.generate_task(ncores,glist)
 print('task dictionary', tdict) 
 #%%  define task function
+ion_sys.active_phonon = [[1,2]] #consider com, tilt, and 
 pcut_cri = 5 # critirion to change phonon cut off 
-pcut_list = [[2,2,5],[2,2,6]] #phonon cutoff to be used for different parameters
+pcut_list = [[[3,6]],[[3,8]]] #phonon cutoff to be used for different parameters
 def spin_evolution_g(task,Garray):
     '''
     solve time evolution for a single energy splitting
@@ -67,7 +66,7 @@ def spin_evolution_g(task,Garray):
     ----------
     task : string 
         task name
-    Glist : np array
+    Garray : np array
         input site energy to be computed for the task
 
     Returns
@@ -83,10 +82,12 @@ def spin_evolution_g(task,Garray):
         else: 
             ion_sys.pcut = pcut_list [1]
         ion_sys.gamma = [0,0,g]
-        H0, clist1 = extrans.Htot(J23,E2/2,E3,V,ion_sys,0)
-        oplist = [tensor(spin.sz(2,0),phon.pI(ion_sys.pcut,ion_sys.N))]
+        oplist = [exop.spin_measure(ion_sys,[0,1]),
+                  exop.spin_measure(ion_sys,[1,0])]
         elist = oplist
-        rho0 = extrans.rho_ini(ion_sys,True)
+        rho0 = exop.rho_thermal(ion_sys)
+        H0 = extrans.H_res(J23,E2/2,E3,V,ion_sys)
+        clist1 = exop.c_op(ion_sys)
         result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
         sresult.append(result.expect[0])
     return {task:sresult}   
@@ -117,7 +118,7 @@ if __name__ == '__main__':
     plt.figure(0)
     for i in range(np.size(glist)):
         gamma = glist[i]
-        ndata[str(gamma)] = 0.5*sevl[i]+0.5
+        ndata[str(gamma)] = sevl[i]
         plt.plot(tplot,ndata[str(gamma)],label=r'$\gamma =$'+str(gamma)+'kHz')
     plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 14)
     plt.ylabel(r'$P_{\uparrow\downarrow}$',fontsize = 14)

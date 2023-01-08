@@ -20,8 +20,7 @@ import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
 from  Qsim.ion_chain.ising.ion_system import *
 #%% set up the system using module for anharmonic transfer using 3 ions
 '''
-Set up the system as in example 2b
-parameters of the system, use the same parameter in quantum regime 
+Set up the system  
 '''    
 ion_sys = ions() #construct a 3 ion system using class ions 
 ion_sys.N = 3
@@ -29,7 +28,7 @@ ion_sys.fx = 2
 ion_sys.fz = (20/63)**0.5 * ion_sys.fx #set to resonant condition
 ion_sys.delta_ref = 2
 ion_sys.delta =-200*np.sqrt(2)
-ion_sys.Omegax = 0.25*np.abs(ion_sys.delta)
+Omegax = 0.25*np.abs(ion_sys.delta)
 ion_sys.fr = 0.8*np.abs(ion_sys.delta); ion_sys.fb = 0.8*np.abs(ion_sys.delta)
 ion_sys.gamma = [0,0,0] #no cooling
 ion_sys.laser_couple = [0]
@@ -46,10 +45,7 @@ times = tplot*2*np.pi/t_scale
 measure axial tilt mode and radial rock mode population
 '''
 ket0 = exop.ini_state(ion_sys,1,1)
-ap_op = exop.p_ladder(ion_sys,0,0,1) #axial tilt up
-rp_op = exop.p_ladder(ion_sys,1,0,1) #radial rock up
-elist = [tensor(fock(2,0)*fock(2,0).dag(),exop.p_I(ion_sys)),
-        tensor(spin.sI(1),ap_op*ap_op.dag()),tensor(spin.sI(1),rp_op*rp_op.dag()),
+elist = [exop.spin_measure(ion_sys,[0]),exop.phonon_measure(ion_sys,0,0),exop.phonon_measure(ion_sys,0),
         tensor(ket0*ket0.dag())]
 ion_sys.list_para()
 ion_sys.plot_freq()
@@ -58,11 +54,11 @@ construct anharmonic coupling term
 '''
 print('coupling strenght [kHz]',ion_sys.ah_couple(2,2,1)*ion_sys.fz*1000)
 ah_coef = ion_sys.ah_couple(2,2,1)*fr_conv(ion_sys.fz,'khz') #kHz
-operator_a = phon.up(0,ion_sys.pcut[0],1) #creation operator on tilt axial mode
-operator_b = phon.down(0,ion_sys.pcut[1],1) #destory operator on rock radial mode
-ah_oper =ah_coef*tensor(spin.sI(1),operator_a, operator_b*operator_b)
+operator_a = exop.p_ladder(ion_sys,0,1,0) #creation operator on tilt axial mode
+operator_b =  exop.p_ladder(ion_sys,0,0,1) #destory operator on rock radial mode
+ah_oper =ah_coef*tensor(spin.sI(1),operator_a*operator_b*operator_b)
 #%% simulation without anharmonic terms
-Hce, arg0,clist = ah_t.Htot(deltaE, ion_sys,1,True,False,0)
+Hce, arg0 = ah_t.H_ord(Omegax,deltaE, ion_sys,True,False,0)
 #Hce = ah_t.Htot(deltaE, ion_sys,1,False,False)
 print("__________________________________________________________")
 print("solving time evolution without anharmonic term")
@@ -98,7 +94,7 @@ p2.tick_params(axis='y', labelsize=13)
 p2.legend()
 plt.show()
 #%%
-Hce, arg0,clist = ah_t.Htot(deltaE, ion_sys,1,True,True,ah_oper)
+Hce, arg0 = ah_t.H_ord(Omegax,deltaE, ion_sys,True,True,ah_oper)
 #Hce = ah_t.Htot(deltaE, ion_sys,1,False,False)
 print("__________________________________________________________")
 print("solving time evolution with anharmonic term")

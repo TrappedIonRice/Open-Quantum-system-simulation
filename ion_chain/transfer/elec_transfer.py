@@ -7,8 +7,8 @@ Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum sys
 """
 
 import numpy as np
-import Qsim.operator.spin as spin
-import Qsim.operator.phonon as phon
+import Qsim.ion_chain.interaction.spin_phonon as Isp
+import Qsim.ion_chain.interaction.pure_spin as Is
 from  Qsim.ion_chain.ising.ion_system import *
 from qutip import *
 #subfunction
@@ -20,11 +20,11 @@ def summary():
     print('U')
     print('compute the activation energy to reasonance conformation')
     print('___________________________________________________________________')
-    print('Htot')
-    print('construct Hamiltonian and collpase operators of the system in the reasonant rotating frame Parameters using a single mode, or double mode system')
+    print('H_res')
+    print('Genearte time-independent Hamiltonian for 2 state electron transfer in resonant interaction frame')
     print('___________________________________________________________________')
-    print('rho_ini')
-    print('Construct initial density matrix according to a thermal distribution')
+    print('H_ord')
+    print('Genearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame')
 
 def U(Omegaz,lambda0):
     '''
@@ -43,83 +43,51 @@ def U(Omegaz,lambda0):
 
     '''
     return (Omegaz - lambda0)**2 / (4*lambda0)
-def Htot(Omegaz, ion0 , single_mode):
+def H_res(Omegax, Omegaz, ion0):
     '''
-    construct Hamiltonian and collpase operators of the system in the reasonant rotating frame
-    Parameters using a single mode, or double mode system
-    ----------
-    Omegaz : float
-        rabi frequency due to coupling to magenetic field, energy splitting between
-        the donor and acceptor state, [kHz]
-    ion0: ions class object
-        the object that represent the system to be simulated
-    single_mode : bool
-        use COM mode only if true
-    Returns
-    -------
-    H
-        Qutip operator
-    clist : list
-        list of Qutip operators required by qutip solver
-    '''
-    dm = ion0.dmlist()
-    g = ion0.g()
-    if single_mode:
-        term1 = (-1)*(dm[0]* 
-                 tensor(spin.sI(1), phon.up(1, ion0.pcut, 1)*phon.down(1, ion0.pcut, 1)))
-        #phonnic mode
-        term2 = (2 * np.pi)*-0.5 * Omegaz * tensor(spin.sz(1,0),phon.pI(ion0.pcut,1))
-        #site energy difference
-        term3 = (2 * np.pi) *ion0.Omegax * tensor(spin.sx(1,0),phon.pI(ion0.pcut,1)) 
-        #coupling between the sites
-        term4 = 0.5*g[0]*tensor(spin.sz(1,0),(phon.up(1, ion0.pcut, 1)+phon.down(1, ion0.pcut, 1)))   
-        #electron-phonon coupling
-        c0 =  tensor(spin.sI(1), phon.down(1, ion0.pcut, 1))
-        #collapse operator
-    else:    
-        termp1 = dm[0]*phon.up(0, ion0.pcut, ion0.N)*phon.down(0, ion0.pcut, ion0.N)
-        termp2 = dm[1]*phon.up(1, ion0.pcut, ion0.N)*phon.down(1, ion0.pcut, ion0.N)
-        term1 =  tensor(spin.sI(1),-(termp1+termp2))
-        #phonnic mode
-        term2 = -0.5 * 2 * np.pi*(Omegaz) * tensor(spin.sz(1,0),phon.pI(ion0.pcut,ion0.N))
-        #vibrational harmonic oscillator potential
-        term3 = 2 * np.pi*(ion0.Omegax) * tensor(spin.sx(1,0),phon.pI(ion0.pcut,ion0.N)) 
-        #coherent coupling of the donor and acceptor states
-        termp3 = 0.5*g[0]*tensor(spin.sz(1,0),(phon.up(0, ion0.pcut, ion0.N)+phon.down(0, ion0.pcut, ion0.N))) 
-        termp4 = 0.5*g[1]*tensor(spin.sz(1,0),(phon.up(1, ion0.pcut, ion0.N)+phon.down(1, ion0.pcut, ion0.N))) 
-        term4 = (termp3+termp4)
-        #a linear potential in the reaction coordinate z
-        c0 =  tensor(spin.sI(1), phon.down(0, ion0.pcut, ion0.N))
-        #collapse operator
-    H = (term1+term2+term3+term4) 
-    clist = []
-    clist.append(np.sqrt( 2 * np.pi * ion0.gamma*(1+ion0.n_bar()))*c0)
-    clist.append(np.sqrt( 2 * np.pi * ion0.gamma*ion0.n_bar())*c0.dag())
-    return H, clist
-def rho_ini(ion0,single_mode):
-    '''
-    Construct initial density matrix according to a thermal distribution
+    Genearte time-independent Hamiltonian for 2 state electron transfer in resonant interaction frame
 
     Parameters
     ----------
-    ion0: ions class object
-       the object that represent the system to be simulated
-    single_mode : bool
-       use COM mode only if true
+    Omegax : float 
+        coupling coefficient between the doner and acceptor state [kHz]
+    Omegaz : float
+        energy difference between the doner and acceptor state  [kHz]
+    ion0 : ion class object
 
     Returns
     -------
-    Qutip operator
-
+    Heff: Qutip operator
+        Effective Hamiltonian in resonant frame
     '''
-    ini_sdm = Qobj([[1,0], [0,0]])
-    if single_mode:
-        rho0 = tensor(ini_sdm,phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.fx,'khz'),ion0.Etot))
-    else:
-        pho0 = tensor(phon.inip_thermal(ion0.pcut[0],fr_conv(ion0.fx,'khz'),ion0.Etot),
-                      phon.inip_thermal(ion0.pcut[1],fr_conv(ion0.fx,'khz'),ion0.Etot))
-        rho0 = tensor(ini_sdm,pho0)
-    return rho0    
+    H_s =  Is.single_site(Omegax, Omegaz, ion0) 
+    Heff = H_s+ Isp.H_res(ion0)
+    return Heff
+def H_ord(Omegax, Omegaz, ion0):
+    '''
+    Genearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame
+    in the format required by the Qutip solver (string method) 
+
+    Parameters
+    ----------
+    Omegax : float 
+        coupling coefficient between the doner and acceptor state [kHz]
+    Omegaz : float
+        energy difference between the doner and acceptor state  [kHz]
+    ion0 : ion class object
+
+    Returns
+    -------
+    Heff: list
+        time-dependent Hamiltonian list required by the solver
+    H_arg: dictionary
+        dic of argument parameters
+    '''
+    H_s =  Is.single_site(Omegax, Omegaz, ion0) 
+    Heff = [H_s] + Isp.H_td(ion0,0) + Isp.H_td(ion0,1)
+    H_arg = Isp.H_td_arg(ion0)
+    return Heff, H_arg
+
         
     
     

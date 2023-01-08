@@ -10,9 +10,8 @@ Note: this script must be saved before running if any changes have been made
 import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
-import Qsim.operator.spin as spin
-import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.exci_transfer as extrans
+import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.multi_core as mcs
 from  Qsim.ion_chain.ising.ion_system import *
 from astropy.io import ascii
@@ -31,7 +30,10 @@ ion_sys.delta = -100
 fsb = 50
 ion_sys.fr = fsb; ion_sys.fb = fsb
 ion_sys.phase = np.pi/2
+ion_sys.df_laser = 1 #couple to Radial vibrational modes
 ion_sys.gamma = [0,0,10]
+ion_sys.laser_couple = [0,1] #laser applied to ion 1,2
+ion_sys.coolant = [2] #ion 3 as coolant
 ion_sys.list_para() #print parameters
 ion_sys.plot_freq()
 J23 = 1
@@ -39,7 +41,6 @@ E3 = 0
 V = 0
 print('coupling strength between ion 1 and 2', J23, ' kHz *h')
 print('site energy of ion 2 ', E3, ' kHz *h')
-configuration = 0 #0 for side cooling
 tscale = J23
 #configure time scale for computation
 end = 0.5    #end of simulation time
@@ -52,13 +53,14 @@ Note here deltaE is defined as 2*(E2-E3), when implementing, we need E2/2
 #for this specific example, we only compute 4 points to save computation time
 Elist = [100,200,300,400]
 print('number of total points: ',np.size(Elist))
-#%%
+#%% configure parallel computation task
 ncores = 4 # number of cores to use
 tdict = mcs.generate_task(ncores,Elist)
 print('task dictionary', tdict) 
 #%%  define task function
+ion_sys.active_phonon = [[1,2]] #consider com, tilt, and 
 pcut_cri = 200 # critirion to change phonon cut off 
-pcut_list = [[2,2,5],[2,2,6]] #phonon cutoff to be used for different parameters
+pcut_list = [[[3,6]],[[3,8]]] #phonon cutoff to be used for different parameters
 def spin_evolution(task,Earray):
     '''
     solve time evolution for a single energy splitting
@@ -80,10 +82,12 @@ def spin_evolution(task,Earray):
             ion_sys.pcut = pcut_list[0]
         else:
             ion_sys.pcut = pcut_list[1]
-        oplist = [tensor(spin.sz(2,0),phon.pI(ion_sys.pcut,ion_sys.N))]
+        oplist = [exop.spin_measure(ion_sys,[0,1]),
+                  exop.spin_measure(ion_sys,[1,0])]
         elist = oplist
-        rho0 = extrans.rho_ini(ion_sys,True)
-        H0, clist1 = extrans.Htot(J23,E2/2,E3,V,ion_sys,0)
+        rho0 = exop.rho_thermal(ion_sys)
+        H0 = extrans.H_res(J23,E2/2,E3,V,ion_sys)
+        clist1 = exop.c_op(ion_sys)
         result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
         sresult.append(result.expect[0])
     return {task:sresult}   
@@ -114,7 +118,7 @@ if __name__ == '__main__':
     plt.figure(0)
     for i in range(np.size(Elist)):
         E0 = Elist[i]
-        ndata[str(E0)] = 0.5*sevl[i]+0.5
+        ndata[str(E0)] = sevl[i]
         plt.plot(tplot,ndata[str(E0)],label=r'$\Delta E=$'+str(E0)+'kHz')
     plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 14)
     plt.ylabel(r'$P_{\uparrow\downarrow}$',fontsize = 14)

@@ -9,6 +9,8 @@ function: Htot
 
 import matplotlib.pyplot as plt
 import numpy as np
+import Qsim.ion_chain.interaction.spin_phonon as Isp
+import Qsim.ion_chain.interaction.pure_spin as Is
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 from qutip import *
@@ -20,13 +22,15 @@ def summary():
     give a summary of all functions and classes defined in this module
     '''
     print('___________________________________________________________________')
-    print('Htot')
-    print('construct Hamiltonian and collpase operators for 3 ion excitation transfer in the reasonant rotating frame Parameters ')
+    print('H_res')
+    print('Genearte time-independent Hamiltonian for 2 site excitation transfer in resonant interaction frame')
+    print('___________________________________________________________________')
+    print('H_ord')
+    print('Genearte the time-dependent Hamiltonian for 2 site excitation transfer in ordinary interaction frame')
     print('___________________________________________________________________')
     print('rho_ini')
     print('Construct initial density matrix according to a thermal distribution')
-
-def Htot(J12, E1, E2, Vx, ion0, config):
+def H_ord(J12, E1, E2, Vx, ion0):
     '''
     construct Hamiltonian in reasonant rotating frame and collpase operators of 3 ion system 
     used for simulating excitation transfer between 2 sites
@@ -43,66 +47,43 @@ def Htot(J12, E1, E2, Vx, ion0, config):
     
     ion0: ions class object
         the object that represent the system to be simulated
-    config: integer
-        the configuration of the chain, if config = 0, cool the ion on the side
-        if config = 1, cool the ion in the center.
     Returns
     -------
-    H
+    Heff: list
+        time-dependent Hamiltonian list required by the solver
+    H_arg: dictionary
+        dic of argument parameters
+    '''
+    H_s =  Is.double_site(J12, E1, E2, Vx, ion0)
+    Heff = [H_s]+ Isp.H_td(ion0,0) + Isp.H_td(ion0,1)
+    H_arg = Isp.H_td_arg(ion0)
+    return Heff, H_arg
+def H_res(J12, E1, E2, Vx, ion0):
+    '''
+    construct Hamiltonian in reasonant rotating frame and collpase operators of 3 ion system 
+    used for simulating excitation transfer between 2 sites
+    Input
+    ----------
+    J12 : float
+       coupling between ion1 and ion2 [kHz]
+    E1 : float
+       site energy ion1 [kHz]  
+    E2 : float
+       site energy ion2 [kHz]      
+    Vx：
+       rabi rate Omegax [kHz] 
+    
+    ion0: ions class object
+        the object that represent the system to be simulated
+    Returns
+    -------
+    Heff
         Qutip operator
         Hamiltonian in reasonant rotating frame
-    clist : list
-        list of Qutip operators required by qutip solver
-        collapse operators to describe coupling to the evironment
-    '''
-    Np = ion0.N #of ions to be considered for phonon space
-    Ns = ion0.N-1 #of ions to be considered for spin space
-    pcut = ion0.pcut
-    dm = ion0.dmlist()
-    #spin phonon coupling
-    term1 =  tensor(spin.zero_op(Ns),phon.zero_op(pcut,Np)) 
-    emat = ion0.Transmode()
-    coeff = eta(ion0.wmlist()[1])
-    if config == 0:
-        ilist = [0,1]
-    else:
-        ilist = [0,2]             
-    sindex = 0 #this index is used for spin operators    
-    for i in ilist:
-        subop = tensor(spin.zero_op(Ns),phon.zero_op(pcut,Np))
-        for m in range(Np):
-            #print(i,m)
-            #print(emat[m,i])
-            eta_im = coeff[m]*emat[m,i]#(1/np.sqrt(3))
-            subop = (subop +
-                     0.5 * eta_im* ion0.Omega() * 
-                     tensor(spin.sz(Ns,sindex),(phon.up(m, ion0.pcut, Np)+phon.down(m, ion0.pcut, Np))
-                                                         )
-                     ) 
-        term1 = term1 + subop
-        sindex = sindex + 1
-    #extra term from the transformation to special frame
-    term2 = tensor(spin.zero_op(Ns),phon.zero_op(pcut,Np))
-    for m in range(Np):
-        term2 = term2 + dm[m]*tensor(spin.sI(Ns),phon.up(m, ion0.pcut, ion0.N)*phon.down(m, ion0.pcut, ion0.N))
-    #phonnic mode
-    sop3 = tensor(spin.up(Ns,0)*spin.down(Ns,1),phon.pI(pcut,Np))
-    term3 = fr_conv(J12,'hz') * (sop3+sop3.dag())
-    #vibrational harmonic oscillator potential
-    term4 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),phon.pI(pcut,Np))+
-             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),phon.pI(pcut,Np)))
-    #coherent coupling of the donor and acceptor states
-    term5 = (fr_conv(Vx,'hz') * 
-             tensor(spin.sx(Ns,0)+spin.sx(Ns,1),phon.pI(pcut,Np)))
-    H = term1-term2+term3+term4+term5
-    #collapse operator
-    clist = []
-    i = config
-    for m in range(Np):
-        cm = tensor(spin.sI(Ns), phon.down(m, ion0.pcut, ion0.N))
-        clist.append(emat[m,i]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*(1+ion0.n_bar()))*cm)
-        clist.append(emat[m,i]*np.sqrt(fr_conv(ion0.gamma[m],'hz')*ion0.n_bar())*cm.dag())
-    return H, clist
+    '''   
+    H_s =  Is.double_site(J12, E1, E2, Vx, ion0)
+    Heff = H_s+ Isp.H_res(ion0)
+    return Heff
 
 def ereasonance(ion0,nmax1,nmax2):
     '''

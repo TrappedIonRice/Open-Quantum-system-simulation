@@ -18,8 +18,7 @@ h = 6.62607015 * 10**(-34) / (2*np.pi)
 MYb171 = 0.171 / (6.02214076*10**23) #mass of Yb ion, kg
 qe = 1.60218 * 10**(-19) #charge of electron, C
 eps0 = 8.85418781 * 10**(-12) #vacuum dielectric constant,SI
-Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) 
-#difference in wavevector projection of the 2 lasers [m-1]
+Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) #effective wave vector 355nm laser drive
 R = (h*Dk**2) / (2*MYb171) #recoil frequency constant, SI 
 def fr_conv(f,unit):
     '''
@@ -171,7 +170,7 @@ def Omega(fs,fx):
 
     Returns
     -------
-    float, unit SI
+    float, unit [2pi Hz]
 
     '''
     return fr_conv(fs,'khz') / eta(fx)  
@@ -194,17 +193,11 @@ def summary():
     print("compute side band rabi-rate")
 class ions:
     '''
-    this class is used to store the parameters of a 2 ionsystem used for 
-    electron transition simulation
-    Parameters
-    g : float
-        state adaptive dipole force, correpsonds to eta*Omega in the ion system [kHz]   
-    Omegax : float
-        Rabi frequency, correpond to electronic coupling strength V [kHz]    
+    this class is used to store the parameters of a N ion system couples to a single
+    laser drive in Axial or Radial direction, assuming the two radial directions are equivalent
+    Parameters  
     N : int
         number of ions in the system
-    n_laser: int
-        number of laser drives applied    
     pcut : int
         cut off level of the harmonic ocsillator eigenenergy
     fz : float
@@ -217,6 +210,30 @@ class ions:
          blue side band frequency [kHz] 
     phase: float
         spin phase phis [rad]    
+    active_phonon: list/list of list of int
+        index phonon space that will be considered
+        initialized as a list if only 1 vibration direction is considered
+        initialized as a list of list in form [[axial],[radial]] if both vibrational
+        degree of freedoms are considered
+        0 always means com mode
+        #for instance, [[1,2],[0,2]] means consider the tilt, rock mode for axial motion
+        #com, rock mode for 1 radial modtion
+    pcut: list/list of list of int
+        cutoff of phonon space size for each phonon space being considered, 
+        initialized as a list if only 1 vibration direction is considered
+        initialized as a list of list in form [[axial],[radial]] if both vibrational
+        degree of freedoms are considered
+        Note for the sublist, first index is always for com mode
+        Needs to be consistent with active_phonon
+    coolant: list of int
+        index of coolant    
+    df_laser: int   
+        vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
+    laser_couple: list of int
+        ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
+    delta_ref: int 
+        reference frequency index for defining laser detuning, 0 for com mode
+    
     Etot: float
         total energy of one ion    
     '''
@@ -224,58 +241,73 @@ class ions:
     default value of parameters
     '''
     N = 2  #number of ions
-    n_laser = 1
     delta = 20 #detuning 
     fx = 2 
     fz = 1
     fb = 10
     fr = 10
     phase = 0
-    Omegax =  0.1 * 20
     gamma = [0.1 * 20, 0.1*20]
     Etot = fr_conv(0.217*2,'khz')
-    pcut = [[15,15]] #cutoff of phonon energy for distinctive modes, first index is always for com mode
-    delta_ref = 0 #reference frequency index, 0 for com frequency
-    laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
+    active_phonon = [[0,1,2]]  #index phonon space that will be considered, if more than 1 space,
+    pcut = [[2,2,2]] #cutoff of phonon energy for distinctive modes, first index is always for com mode
     coolant = [2] #index of coolant
-    active_phonon = [[0,1,2]] #index phonon space that will be considered, if more than 1 space,
-    #the first list will be set for axial vibration
-    #for instance, [[1,2],[0,2]] means consider the tilt, rock mode for axial motion
-    #com, rock mode for 1 radial modtion
+    df_laser = 1 #vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
+    laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
+    delta_ref = 0 #reference frequency index, 0 for com frequency
+   
     def list_para(self):
         '''
         list basic physical parameters of the system
 
         '''
+        Coup_dic = {0:'Axial', 1:'Transverse (Radial)'}
         freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
         print('________________________________________________________________')
+        print('********************Setup of the Trap************************')
         print('number of ions', self.N)
-        print('number of laser drives applied: ', self.n_laser)
-        print('index of ions that couple to the laser field: ',self.laser_couple)
-        print('phonon cutoff ', self.pcut)
-        print('avearge phonon number ', np.round(self.n_bar(),4))
         print('axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
         print('transverse COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
+        print('index of ions that couple to the laser field: ',self.laser_couple)
+        print('Axial vibrational eigenfrequency', np.round(self.Axialfreq()*self.fz,2),'MHz')
+        print('Transverse(Radial) vibrational eigenfrequency', np.round(self.Transfreq()*self.fz,2),'MHz')
+
+        print('********************Parameters of Laser Drive************************')
+        print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[1])
         print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
               ,np.round(self.delta,2)," [kHz]")
+        print('detuning from eigenfrequency',np.round(self.dmlist()/(2*np.pi),2),'kHz')
+        print('detuning frequency index: ', self.delta_ref)
         print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
         print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
-        print('Estimated spin-phonon coupling strength (Axial):', np.round(self.sp_coeff(0, 0)/(2*np.pi),2),' [kHz]')
-        print('Estimated spin-phonon coupling strength (Radial):', np.round(self.sp_coeff(0, 1)/(2*np.pi),2),' [kHz]')
+        print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0),2),' [kHz]')
+        
+        print('********************Config of Numeric Calculation************************')
+        print('index of phonon space included in simulation: ',self.active_phonon )
+        print('corresonding phonon space cutoff ', self.pcut)
         print('spin phase phis',np.round(self.phase*180/np.pi,2))
         print('(input in rad but displayed in degs)')
-        print('Axial vibrational eigenfrequency', np.round(self.wmlist()[0],2),'MHz')
-        print('Transverse vibrational eigenfrequency', np.round(self.wmlist()[1],2),'MHz')
         print('cooling rate ', np.round(self.gamma,2)," [kHz]") 
-        print('detuning frequency index: ', self.delta_ref)
-        print('detuning from eigenfrequency',np.round(self.dmlist()/(2*np.pi),2),'kHz')
-    def list_elec_para(self):
+        print('avearge phonon number ', np.round(self.n_bar(),4))
+    def check_phonon(self):
         '''
-        list parameters used for electron transfer
+        Check the consistency in set up of phonon space
+
         '''
-        print('________________________________________________________________')
-        print('electronic coupling strength, or rabi frequency Omega_x ',np.round(self.Omegax,2), ' [kHz]')
-        print('state adaptive dipole force g, or eta*Omega ', np.round(self.g()/(2*np.pi),2),' [kHz]')
+        print('_____________________________________________________________')
+        print('Checking phonon space setup')
+        checker = 1
+        if (len(self.pcut)==len(self.active_phonon)):
+            for i in range(len(self.pcut)):
+                if len(self.pcut[i]) != len(self.active_phonon[i]):
+                    checker = 0
+        else:
+            checker = 0
+        if checker == 0:    
+            print('Inconsistency between active phonon space and assigned phonon cutoff')
+        else:
+            print('consistent')
+        print('_____________________________________________________________')    
     def df_spin(self):
         '''
         number of spin degree of freedom to be considered
@@ -306,35 +338,31 @@ class ions:
         '''
         visualize eigenfreqencies and laser frequency
         '''
-        wmlist  = self.wmlist()[1]*1000
-        lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
-        lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
-        lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
-        froc =  [wmlist[2], wmlist[2]]
-        ftil =  [wmlist[1], wmlist[1]]
-        fcom =  [wmlist[0], wmlist[0]]
-        ylist = [0,1]
-        title = r'$\delta = $' + str(self.delta) + 'kHz, reference: '+str(self.delta_ref)
-        plt.figure(0)
-        plt.plot(fcom,ylist,label = lab0)
-        plt.plot(ftil,ylist,label = lab1)
-        plt.plot(froc,ylist,label = lab2)
-        if self.n_laser == 1:
+        if self.N == 3:
+            wmlist  = self.wmlist()*1000
+            lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
+            lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
+            lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
+            froc =  [wmlist[2], wmlist[2]]
+            ftil =  [wmlist[1], wmlist[1]]
+            fcom =  [wmlist[0], wmlist[0]]
+            ylist = [0,1]
+            title = r'$\delta = $' + str(self.delta) + 'kHz, reference: '+str(self.delta_ref)
+            plt.figure(0)
+            plt.plot(fcom,ylist,label = lab0)
+            plt.plot(ftil,ylist,label = lab1)
+            plt.plot(froc,ylist,label = lab2)
             las = wmlist[self.delta_ref]+self.delta    
             labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
             flas =  [las, las]
-            plt.plot(flas,ylist,'--',label = labl)
-        else:    
-            for i in range(self.n_laser):    
-                las = wmlist[self.delta_ref[i]]+self.delta[i]    
-                labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
-                flas =  [las, las]
-                plt.plot(flas,ylist,'--',label = labl)
-        plt.ylim(0,1)
-        plt.title(title)
-        plt.xlabel(r'frequecny kHz')
-        plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
-        plt.legend()
+            plt.plot(flas,ylist,'--',label = labl)   
+            plt.ylim(0,1)
+            plt.title(title)
+            plt.xlabel(r'frequecny kHz')
+            plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
+            plt.legend()
+        else:
+            print('current module only enables plotting frequency diagram for 3 ion system')
     def l0(self):
         '''
         compute the chracteristic length scale of the system
@@ -420,7 +448,7 @@ class ions:
         return Dpqr             
     def Axialfreq(self):
         '''
-        compute the eigenfrequencies of axial oscillation, multiply by wz to get real frequency [Hz]
+        compute the eigenvalue of axial eigenmode matrix, multiply by fz to get real frequency [Hz]
         input(N,fz)
        
         Returns
@@ -449,7 +477,7 @@ class ions:
         return (np.transpose(e_array))[order]
     def Transfreq(self):
         '''
-        compute the eigenfrequencies of transverse oscillation, multiply by wz to get real frequency [Hz]
+        compute the eigenvalue of transverse eigenmode matrix, multiply by fz to get real frequency [MHz]
         input(N,fz,fx)
         Returns
         -------
@@ -462,7 +490,9 @@ class ions:
         #check if the matrix is positive-definite
         if np.min(e_val) < 0:
             print("Negtive transverse frequency, the system is unstable")
-        return np.sqrt(e_val)
+            return -1
+        else:
+            return np.sqrt(e_val)
     def Transmode(self):
         '''
         compute the eigenmode of transverse oscillation
@@ -494,23 +524,28 @@ class ions:
         list of  list,index 0 for axial (increasing order), 1 for transverse decreasing order
         unit of [MHz]
         '''
-        return [self.Axialfreq()*self.fz,self.Transfreq()*self.fz]
+        if self.df_laser == 0:
+            wlsit = self.Axialfreq()*self.fz
+        else:   
+            wlsit = self.Transfreq()*self.fz
+        return wlsit
+    def mu(self):
+        '''
+        compute band laser frequency mu defined as  omega_{Lb}- omega{hf}
+        -------
+        float 2pi kHz (angular)
+        '''
+        wlist0 = self.wmlist()*1000
+        mu = 2*np.pi*(wlist0[self.delta_ref] + self.delta)
+        return mu
     def dmlist(self):
         '''
-        compute the detuning from the two modes, increasing order
+        compute the detuning from eigenmodes with specified direction, increasing order
         Returns
         -------
         float 2pi kHz (angular)
         '''
-        wlist0 = self.wmlist()[1]*1000
-        if self.n_laser == 1:
-            mu = (wlist0[self.delta_ref] + self.delta)
-            dm = 2*np.pi*(mu - wlist0)
-        else:
-            dm = np.array([])
-            for i in range(self.n_laser):
-                mu = (wlist0[self.delta_ref[i]] + self.delta[i])
-                dm = np.append(dm,2*np.pi*(mu - wlist0))
+        dm = self.mu()-2*np.pi*(self.wmlist()*1000)
         return dm
     def n_bar(self):
         '''
@@ -521,16 +556,7 @@ class ions:
         float, no unit
 
         '''
-        return 1/(np.exp(1000*(2*np.pi)*(self.fx)/self.Etot)-1)
-    def w0(self):
-        '''
-        compute the time scale of the system, defined as 2pi*delta
-        ----------
-        Returns
-        -------
-        float, 2pi kHz
-        '''
-        return (2*np.pi)*np.abs(self.delta)
+        return 1/(np.exp(1000*(2*np.pi)*(self.wmlist())/self.Etot)-1)
     def Omega(self):
         '''
         compute the rabi frequncy of the system
@@ -540,41 +566,28 @@ class ions:
         float,2pi kHz
         '''
         return np.sqrt(Omega(self.fr,self.fx)*Omega(self.fb,self.fx))/1000
-    def sp_coeff(self,m,df):
+    def g(self,i,m):
         '''
-        compute spin-phonon coupling strength \omega*\eta for mode m
-        ----------
-       
-
         Parameters
         ----------
-        m : 
-            DESCRIPTION.
-        df : TYPE
-            DESCRIPTION.
+        i : int
+            ion index
+        m : int
+            eigenmode index
 
         Returns
         -------
-        float,2pi kHz
-
+        g : float
+            [2pi kHz]
         '''
-        return self.Omega()*eta(self.wmlist()[df][m])
-    #functions defined to compute electron transfer
-    def g(self):
         
-        '''
-        compute the state adaptive dipole force g
-        ----------
-        Returns
-        -------
-        float, 2pi kHz
-        '''
-        emat = self.Transmode()
-        coeff = eta(self.wmlist()[1])*self.Omega()
-        garray = np.array([])
-        for i in range(self.N):
-            garray = np.append(garray,coeff[i]*emat[i,0])
-        return garray
+        if self.df_laser == 0:
+            emat = self.Axialmode()
+        else:   
+            emat = self.Transmode()
+        
+        coeff = eta(self.wmlist()[m])*self.Omega()*emat[m,i]
+        return coeff
     def expeak(self):
         '''
         compute the expected peak frequencies

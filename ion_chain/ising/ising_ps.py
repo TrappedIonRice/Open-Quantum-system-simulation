@@ -13,13 +13,7 @@ from  Qsim.ion_chain.ising.ion_system import *
 '''
 Define phyiscal constants of the system
 '''
-h = 6.62607015 * 10**(-34) / (2*np.pi)
-MYb171 = 0.171 / (6.02214076*10**23) #mass of Yb ion, kg
-qe = 1.60218 * 10**(-19) #charge of electron, C
-eps0 = 8.85418781 * 10**(-12) #vacuum dielectric constant,SI
-Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) 
-#difference in wavevector projection of the 2 lasers m-1
-R = (h*Dk**2) / (2*MYb171) #recoil frequency constant, SI 
+
 def summary():
     print("____________________________________________________________________")
     print("function: Jt")
@@ -45,23 +39,18 @@ functions to use
 def Jt(ion0):
     '''
     Compute Ising coupling matrix J
-    Input: (fr,fb,N,fz,fx,delta0)
     Parameters
     ----------
     ion0: ions class object
         contains all parameters of the ion-chain system
     Returns
     -------
-    np array object that represents N by N matrix J
+    np array object that represents N by N matrix J, unit of [kHz]
 
     '''
-    fr = ion0.fr; fb=ion0.fb
-    N = ion0.N; delta0 = ion0.delta
-    fz = ion0.fz; fx = ion0.fx
-    wx = w(fx); wz = w(fz); sdelta = delta0*2*np.pi*10**3
-    Omegar = Omega(fr,fx); Omegab = Omega(fb,fx)
-    Omega0 = Omegar*Omegab
-    print(Omega0)
+    N = ion0.df_spin(); sdelta = ion0.delta*2*np.pi*10**3 #compute in SI unit (2pi Hz)
+    wz = w(ion0.fz);  
+    Omega0 = (ion0.Omega()*1000)**2
     nfreq = ion0.Transfreq();emat = ion0.Transmode()
     J = np.zeros((N,N))
     for i in range(N):
@@ -70,7 +59,7 @@ def Jt(ion0):
                 eij = 0
                 for m in range (N):
                     numer = R*Omega0 * emat[m,i] * emat[m,j]
-                    demon = (sdelta+wx)**2 - (wz*nfreq[m])**2
+                    demon = (sdelta+wz*nfreq[ion0.delta_ref])**2 - (wz*nfreq[m])**2
                     eij = eij + (numer/demon)
                 J[i,j] = eij/(2*np.pi*10**3)    
     return J
@@ -97,14 +86,13 @@ def plotj(J):
     ax1.set_title('Coupling matrix J')
     ax1.set_xlabel('i index')
     ax1.set_ylabel('j index')
-def HBz(N,B0):
+def HBz(ion0,B0):
     '''
     compute the Hamiltonian due to coupling with z magnetic field
     input(N,B0)
     Parameters
     ----------
-    N : int
-        number of ions in the system
+    ion0: ions class object
     B0 : float
         effective field strength
 
@@ -113,11 +101,12 @@ def HBz(N,B0):
     Qutip operator
 
     '''   
-    H = spin.zero_op(N)
-    for i in range(N):
-        H = H + B0 * spin.sz(N,i) 
+    Ns = ion0.df_spin()
+    H = spin.zero_op(Ns)
+    for i in range(Ns):
+        H = H + B0 * spin.sz(Ns,i) 
     return 2*np.pi*H    
-def Hps(J,N,B0):
+def Hps(J,ion0,B0):
     '''
     Compute Hamiltonian under a pure spin approximation, with ising coupling constructed only with sx and magentic field coupled with sz
     input(J,N,B0)
@@ -125,8 +114,7 @@ def Hps(J,N,B0):
     ----------
     J : np array
         np array object that represents N by N matrix J, output of function Jt
-    N : int
-        number of ions in the system    
+    ion0: ions class object
     B0 : float
         effective field strength
 
@@ -135,11 +123,12 @@ def Hps(J,N,B0):
     Qutip operator
 
     ''' 
-    H = spin.zero_op(N)
-    for i in range(1,N):
-        submat = spin.zero_op(N)
+    Ns = ion0.N
+    H = spin.zero_op(Ns)
+    for i in range(1,Ns):
+        submat = spin.zero_op(Ns)
         for j in range(i):
-            submat = submat + J[i,j]*spin.sx(N,i)*spin.sx(N,j)
+            submat = submat + J[i,j]*spin.sx(Ns,i)*spin.sx(Ns,j)
         H = H + submat
-    return 2*np.pi*H +  HBz(N,B0)
+    return 2*np.pi*H + HBz(ion0,B0)
  
