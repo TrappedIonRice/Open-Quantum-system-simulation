@@ -8,7 +8,7 @@ import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.ion_chain.eigendiagram.exci_diagram as eigd
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 from scipy.optimize import curve_fit
 #%%
 '''

@@ -10,7 +10,7 @@ from qutip import *
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.exci_operators as exop
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 
 def single_site(Omegax, Omegaz, ion0):
     '''

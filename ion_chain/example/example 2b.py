@@ -17,7 +17,7 @@ import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
 import Qsim.ion_chain.ising.ising_ce as isce
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 import Qsim.ion_chain.transfer.exci_operators as exop
 #%%
 '''

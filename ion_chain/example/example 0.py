@@ -17,7 +17,7 @@ spin.summary()
 help(spin.sx)
 #%% this part illustrates how to use 'class' 
 #import all functions of ion_system.py from ion_chain.ising 
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #%% see the documents for ions class
 help(ions)
 #read document for a specific function in this class

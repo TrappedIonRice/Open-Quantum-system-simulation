@@ -15,7 +15,7 @@ import Qsim.ion_chain.transfer.elec_transfer as etrans
 import Qsim.ion_chain.ising.ising_ce as isce
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.anharmonic_transfer as an_t
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #%%
 '''
 Set up the system as in example 2b

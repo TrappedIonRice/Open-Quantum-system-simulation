@@ -8,7 +8,7 @@ Compute the ising coupling matrix under a pure spin approximation
 from qutip import *
 import Qsim.ion_chain.ising.ising_ps as iscp
 import Qsim.ion_chain.ising.ising_c as iscc
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #%%
 '''
 set parameters of the system

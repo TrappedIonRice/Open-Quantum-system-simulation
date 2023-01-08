@@ -9,7 +9,7 @@ Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum sys
 import numpy as np
 import Qsim.ion_chain.interaction.spin_phonon as Isp
 import Qsim.ion_chain.interaction.pure_spin as Is
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 from qutip import *
 #subfunction
 def summary():

@@ -9,7 +9,7 @@ import numpy as np
 from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 '''
 Define phyiscal constants of the system
 '''

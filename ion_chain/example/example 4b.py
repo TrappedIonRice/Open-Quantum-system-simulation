@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.multi_core as mcs
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 from astropy.io import ascii
 from astropy.table import Table
 import multiprocessing as mp

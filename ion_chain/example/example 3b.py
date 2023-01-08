@@ -14,7 +14,7 @@ import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import Qsim.ion_chain.ising.ising_cex as iscex
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #%%
 '''
 parameters of the system, in this example, we compute the evoluation at type 1

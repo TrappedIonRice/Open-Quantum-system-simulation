@@ -17,7 +17,7 @@ import Qsim.ion_chain.transfer.elec_transfer as etrans
 import Qsim.ion_chain.ising.ising_ce as isce
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #%% set up the system using module for anharmonic transfer using 3 ions
 '''
 Set up the system  

@@ -10,7 +10,7 @@ import Qsim.ion_chain.ising.ising_ps as iscp
 import Qsim.operator.spin as spin
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.interaction.spin_phonon as Isp
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 
 def summary():
     print("____________________________________________________________________")

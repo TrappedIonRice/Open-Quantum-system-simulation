@@ -12,7 +12,7 @@ from qutip import *
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.interaction.spin_phonon as Isp
 import Qsim.ion_chain.interaction.pure_spin as Is
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 def summary():
     print("____________________________________________________________________")
     print("function: H_ord")

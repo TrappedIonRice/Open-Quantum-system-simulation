@@ -7,7 +7,7 @@ operators used to construct Hamiltonian for excitation transfer
 import numpy as np
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 def ph_list(ion0):
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         mlist = ion0.active_phonon[0]

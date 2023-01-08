@@ -14,7 +14,7 @@ import Qsim.ion_chain.interaction.pure_spin as Is
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 from qutip import *
-from  Qsim.ion_chain.ising.ion_system import *
+from  Qsim.ion_chain.ion_system import *
 #subfunction
 
 def summary():
