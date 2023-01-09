@@ -42,7 +42,7 @@ times = tplot*2*np.pi/t_scale
 '''
 measure axial tilt mode and radial rock mode population
 '''
-ket0 = exop.ini_state(ion_sys,1,1)
+ket0 = exop.ini_state(ion_sys,[0],1,1)
 op1 = exop.phonon_measure(ion_sys,0,0) #axial tilt up
 op2 = exop.phonon_measure(ion_sys,1,0) #axial rock up
 op3 = exop.phonon_measure(ion_sys,0) #radial tilt up
@@ -85,7 +85,6 @@ p1.grid()
 #plt.xlim(0,20)
 p1.tick_params(axis='x', labelsize=13)
 p1.tick_params(axis='y', labelsize=13)
-p1.legend()
 p2 = fig1.add_subplot(122)
 p2.plot(tplot,ph_num1_1,'-',label=r'Axial Tilt')
 p2.plot(tplot,ph_num1_2,'-',label=r'Axial Rock')
@@ -125,7 +124,6 @@ p1.grid()
 #plt.xlim(0,20)
 p1.tick_params(axis='x', labelsize=13)
 p1.tick_params(axis='y', labelsize=13)
-p1.legend()
 p2 = fig1.add_subplot(122)
 p2.plot(tplot,ph_num2_1,'-',label=r'Axial Tilt')
 p2.plot(tplot,ph_num2_2,'-',label=r'Axial Rock')

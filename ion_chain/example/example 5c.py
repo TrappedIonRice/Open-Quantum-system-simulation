@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
-import Qsim.ion_chain.ising.ising_ce as isce
 import Qsim.ion_chain.transfer.exci_operators as exop
 import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
 from  Qsim.ion_chain.ion_system import *
@@ -44,7 +43,7 @@ times = tplot*2*np.pi/t_scale
 '''
 measure axial tilt mode and radial rock mode population
 '''
-ket0 = exop.ini_state(ion_sys,1,1)
+ket0 = exop.ini_state(ion_sys,[0],1,1)
 elist = [exop.spin_measure(ion_sys,[0]),exop.phonon_measure(ion_sys,0,0),exop.phonon_measure(ion_sys,0),
         tensor(ket0*ket0.dag())]
 ion_sys.list_para()
@@ -80,7 +79,6 @@ p1.grid()
 #plt.xlim(0,20)
 p1.tick_params(axis='x', labelsize=13)
 p1.tick_params(axis='y', labelsize=13)
-p1.legend()
 p2 = fig1.add_subplot(122)
 p2.plot(tplot,ph_num1_1,'-',label=r'Axial Tilt')
 p2.plot(tplot,ph_num1_2,'-',label=r'Radial Rock')
@@ -116,7 +114,6 @@ p1.grid()
 #plt.xlim(0,20)
 p1.tick_params(axis='x', labelsize=13)
 p1.tick_params(axis='y', labelsize=13)
-p1.legend()
 p2 = fig1.add_subplot(122)
 p2.plot(tplot,ph_num2_1,'-',label=r'Axial Tilt')
 p2.plot(tplot,ph_num2_2,'-',label=r'Radial Rock')
