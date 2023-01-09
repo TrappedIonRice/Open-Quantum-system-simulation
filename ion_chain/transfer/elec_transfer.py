@@ -21,10 +21,10 @@ def summary():
     print('compute the activation energy to reasonance conformation')
     print('___________________________________________________________________')
     print('H_res')
-    print('Genearte time-independent Hamiltonian for 2 state electron transfer in resonant interaction frame')
+    print('Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame')
     print('___________________________________________________________________')
     print('H_ord')
-    print('Genearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame')
+    print('Genearte the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame')
 
 def U(Omegaz,lambda0):
     '''
@@ -45,7 +45,7 @@ def U(Omegaz,lambda0):
     return (Omegaz - lambda0)**2 / (4*lambda0)
 def H_res(Omegax, Omegaz, ion0):
     '''
-    Genearte time-independent Hamiltonian for 2 state electron transfer in resonant interaction frame
+    Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
     Parameters
     ----------
@@ -65,7 +65,7 @@ def H_res(Omegax, Omegaz, ion0):
     return Heff
 def H_ord(Omegax, Omegaz, ion0):
     '''
-    Genearte the time-dependent Hamiltonian for 2 state electron transfer in ordinary interaction frame
+    Genearte the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame,
     in the format required by the Qutip solver (string method) 
 
     Parameters

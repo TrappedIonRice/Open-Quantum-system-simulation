@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Compute the complete time-dependent Hamiltonian with anharmonic terms
-for  3 ion open qunatum system, under resonant condition which couples
-axial tilt and radial rock mode.  
+for  3 ion open qunatum system
 The laser field is only coupled to the ion on the side.
 function: Htot
 @author: zhumj
@@ -21,7 +20,7 @@ def summary():
 '''
 function to use
 ''' 
-def H_ord(Omegax, Omegaz, ion0,spterm = True, ah_term=False,ah_op=0):
+def H_ord(Omegax, Omegaz, ion0,sp_term = True, ah_term=False,ah_op=0):
     '''
     Compute the complete time-dependent Hamiltonian and collapse operators for the 3 ion open qunatum system
     used to simulate electron of a single site with anharmonicity in ordinary interaction frame 
@@ -33,7 +32,7 @@ def H_ord(Omegax, Omegaz, ion0,spterm = True, ah_term=False,ah_op=0):
         energy difference between the doner and acceptor state  [kHz]
     ion0: ions class object
         the object that represent the system to be simulated
-    spterm: bool:
+    sp_term: bool:
         if spin-phonon interacion term will be included
     an_term: bool
         if anharmonic terms will be included
@@ -57,7 +56,7 @@ def H_ord(Omegax, Omegaz, ion0,spterm = True, ah_term=False,ah_op=0):
     H0 = H_s+term_a
     Heff = [H0] + Isp.H_td(ion0,0) + Isp.H_td(ion0,1)
     H_arg = Isp.H_td_arg(ion0)
-    if spterm:
+    if sp_term:
         return Heff, H_arg
     else:
         return H0

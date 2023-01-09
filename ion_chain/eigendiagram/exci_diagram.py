@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-used to compute eigenenergy diagrams for excitation transfer prototype simulator
+used to generate eigenenergy diagrams for excitation transfer prototype simulator
 @author: zhumj
 """
 
@@ -11,6 +11,17 @@ import Qsim.operator.spin as spin
 from  Qsim.ion_chain.ion_system import *
 from scipy.optimize import curve_fit
 oplist = [spin.sz(2,0),spin.sz(2,1)]
+
+def summary():
+    '''
+    give a summary of all functions and classes defined in this module
+    '''
+    print('___________________________________________________________________')
+    print('function:elevel')
+    print('Compute energy levels of a given mode ')
+    print('___________________________________________________________________')
+    print('function:energy_diagram_2d')
+    print('Compute eigenenergy for excitation transfer system given displacement of rocking mode. ')
 '''
 subfunctions
 '''

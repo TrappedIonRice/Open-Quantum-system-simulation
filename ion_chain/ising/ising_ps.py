@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Compute basic physical quantities of ising coupling system 
-Generate the Hamiltonian under pure spin approximation
-functions: lc, eta, Omega, Axialfreq, Axialmode, Transfreq, Transmode, Jt, plotj, HBz, Hps
+Generate the Hamiltonian for ising coupling system under pure spin approximation
 @author: zhumj
 """
 import numpy as np
@@ -17,13 +15,13 @@ Define phyiscal constants of the system
 def summary():
     print("____________________________________________________________________")
     print("function: Jt")
-    print("Compute Ising coupling matrix J")
+    print("Compute ising coupling matrix J for pure spin approximation")
     print("____________________________________________________________________")
     print("function: plotj")
     print("visiualize the matrix elements in Jt")
     print("____________________________________________________________________")
     print("function: HBz")
-    print("compute the Hamiltonian coupled with z magnetic field    ")
+    print("compute the Hamiltonian coupled with z direction magnetic field    ")
     print("____________________________________________________________________")
     print("function: Hps")
     print("Compute Hamiltonian under a pure spin approximation, with ising coupling constructed only with sx and magentic field coupled with sz")
@@ -38,7 +36,7 @@ functions to use
 #Compute Ising coupling matrix J
 def Jt(ion0):
     '''
-    Compute Ising coupling matrix J
+    Compute ising coupling matrix J for pure spin approximation
     Parameters
     ----------
     ion0: ions class object
@@ -69,7 +67,7 @@ def plotj(J):
     Parameters
     ----------
     J : np array
-        np array object that represents N by N matrix J, output of function Jt
+       ising coupling matrix, output of function Jt
 
     Returns
     -------
@@ -94,7 +92,7 @@ def HBz(ion0,B0):
     ----------
     ion0: ions class object
     B0 : float
-        effective field strength
+        effective field strength in z direction [kHz]
 
     Returns
     -------
@@ -108,15 +106,15 @@ def HBz(ion0,B0):
     return 2*np.pi*H    
 def Hps(J,ion0,B0):
     '''
-    Compute Hamiltonian under a pure spin approximation, with ising coupling constructed only with sx and magentic field coupled with sz
-    input(J,N,B0)
+    Compute Hamiltonian under a pure spin approximation, with ising coupling (sx) and magentic field coupled with sz
+    input(J,ion0,B0)
     Parameters
     ----------
     J : np array
-        np array object that represents N by N matrix J, output of function Jt
+        ising coupling matrix, output of function Jt[kHz]
     ion0: ions class object
     B0 : float
-        effective field strength
+        effective field strength in z direction [kHz]
 
     Returns
     -------

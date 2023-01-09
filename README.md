@@ -8,30 +8,37 @@ The module should be import using import Qsim... as .
 
 Functions:
 
+ion_system: define the class ions that can be used to store all physical parameters of ion-chain system with one laser drive, and compute basic physical quantities of the trapped ion system. 
+
 sub-package opeartor:
 
 operator\spin: generate spin operators acting on the N ion spin space
 
 operator\phonon: generate phonon operators acting on the N ion phonon space
 
-sub-package ising:
+sub-package interaction:
 
-ising\ion_system: define the class ions that can be used to store all physical parameters of ion-chain system and environment, compute basic  
-physical quantities of the trapped ion system. 
+interaction\spin_phonon: Compute ion-laser interaction Hamiltonian in resonant/ordinary interaction frame
+
+interaction\pure_spin: Construct spin interaction Hamiltonian for single-site electron transfer systems and double site-excitation transfer systems
+
+sub-package ising:
 
 ising\ising_ps: Generate the ion-laser Hamiltonian under pure spin approximation
 
-ising\ising_c:Compute the complete time-dependent ion-laser Hamiltonian for the ising coupling system
-
-ising\ising_ce:Compute the complete time-dependent atomic-laser Hamiltonian in ordinary interaction frame for the 2 ion open qunatum system used to simulation electron transfer between acceptor and donor state in one site
-
-ising\ising_cex: Compute the complete time-dependent ion-laser Hamiltonian in ordinary interaction frame for the 3 ion open qunatum system used to simulate excitation transition between 2 sites
+ising\ising_c: Compute the complete time-dependent ion-laser Hamiltonian for the ising coupling system
 
 sub-package transfer:
 
 transfer\elec_transfer: Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum system used to simulation electron transfer between acceptor and donor state in one site
 
-transfer\exci_transfer: Construct Hamiltonian in reasonate rotating frame for the 3 ion open qunatum system used tosimulate excitation transition between 2 sites
+transfer\exci_transfer: Construct Hamiltonian in reasonate rotating frame for the 3 ion open qunatum system used to simulate excitation transition between 2 sites
+
+transfer\exci_operators: Construct quantum operators used in excitation transfer systems 
+
+transfer\exci_operators: Compute the complete time-dependent Hamiltonian with anharmonic terms for  3 ion open qunatum system, laser field is only coupled to the ion on the side
+
+transfer\multicore: Functions for multi-core parallel computation using package multiprocess
 
 sub-package transfer: eigendiagram
 
@@ -60,3 +67,7 @@ Example 4b: Simulate the time evolution of excitation transfer at different Delt
 Example 4c: Simulate the time evolution of excitation transfer at different dissipation gammawith multi cores parallel coumputation
 
 Example 5a: Compute basic quantities of the anharmonic coupling terms 
+
+Example 5b: Compute ordinary frame phonon evolution for a anharmonic simulator of 3 ions, considering both tilt and rock mode for 2 vibrational directions
+
+Example 5c: Compute ordinary frame phonon evolution for a anharmonic simulator of 3 ions, only considering coupled modes

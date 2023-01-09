@@ -23,13 +23,11 @@ def summary():
     '''
     print('___________________________________________________________________')
     print('H_res')
-    print('Genearte time-independent Hamiltonian for 2 site excitation transfer in resonant interaction frame')
+    print('Genearte time-independent Hamiltonian for 2 site excitation transfer system in resonant interaction frame')
     print('___________________________________________________________________')
     print('H_ord')
-    print('Genearte the time-dependent Hamiltonian for 2 site excitation transfer in ordinary interaction frame')
-    print('___________________________________________________________________')
-    print('rho_ini')
-    print('Construct initial density matrix according to a thermal distribution')
+    print('Genearte the time-dependent Hamiltonian for 2 site excitation transfer system in ordinary interaction frame')
+
 def H_ord(J12, E1, E2, Vx, ion0):
     '''
     construct Hamiltonian in reasonant rotating frame and collpase operators of 3 ion system 

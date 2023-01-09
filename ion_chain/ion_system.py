@@ -3,7 +3,7 @@
 Created on Wed Jun  1 15:47:46 2022
 
 @author: zhumj
-basic physical parameters of 1D N ion system with multiple lasers 
+A class that contains basic physical and computational parameters of 1-D N ion system with 1 laser drive
 """
 
 import matplotlib.pyplot as plt
@@ -210,19 +210,17 @@ class ions:
          blue side band frequency [kHz] 
     phase: float
         spin phase phis [rad]    
-    active_phonon: list/list of list of int
+    active_phonon: list of list of int
         index phonon space that will be considered
-        initialized as a list if only 1 vibration direction is considered
-        initialized as a list of list in form [[axial],[radial]] if both vibrational
-        degree of freedoms are considered
+        initialized in form [[axial]]/[[radial]] if only 1 vibration direction is considered
+        initialized in form [[axial],[radial]] if both vibrational degrees of freedoms are considered.
         0 always means com mode
         #for instance, [[1,2],[0,2]] means consider the tilt, rock mode for axial motion
         #com, rock mode for 1 radial modtion
-    pcut: list/list of list of int
+    pcut: list of list of int
         cutoff of phonon space size for each phonon space being considered, 
-        initialized as a list if only 1 vibration direction is considered
-        initialized as a list of list in form [[axial],[radial]] if both vibrational
-        degree of freedoms are considered
+        initialized in form [[axial]]/[[radial]] if only 1 vibration direction is considered
+        initialized in form [[axial],[radial]] if both vibrational degrees of freedoms are considered.
         Note for the sublist, first index is always for com mode
         Needs to be consistent with active_phonon
     coolant: list of int
@@ -271,7 +269,7 @@ class ions:
         print('index of ions that couple to the laser field: ',self.laser_couple)
         print('Axial vibrational eigenfrequency', np.round(self.Axialfreq()*self.fz,2),'MHz')
         print('Transverse(Radial) vibrational eigenfrequency', np.round(self.Transfreq()*self.fz,2),'MHz')
-
+        print('                                                                 ')
         print('********************Parameters of Laser Drive************************')
         print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[1])
         print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
@@ -281,7 +279,7 @@ class ions:
         print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
         print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
         print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0),2),' [kHz]')
-        
+        print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
         print('index of phonon space included in simulation: ',self.active_phonon )
         print('corresonding phonon space cutoff ', self.pcut)
@@ -388,7 +386,7 @@ class ions:
 
         Parameters
         ----------
-        m, n, p : index
+        m, n, p : int
         python index from 0~N-1
 
         Returns
@@ -421,7 +419,7 @@ class ions:
         
         Parameters
         ----------
-        p0, q, r : index
+        p0, q, r : int
         python index from 0~N-1
 
         Returns
@@ -448,9 +446,7 @@ class ions:
         return Dpqr             
     def Axialfreq(self):
         '''
-        compute the eigenvalue of axial eigenmode matrix, multiply by fz to get real frequency [Hz]
-        input(N,fz)
-       
+        compute the eigenvalue of axial eigenmode matrix, multiply by fz to get real frequency
         Returns
         -------
         np array object, each index is an eigenvalue for axial mode [unit of 1]
@@ -464,7 +460,6 @@ class ions:
     def Axialmode(self):
         '''
         compute the eigenmodes of axial oscillation 
-        input(N,fz)
         Returns
         -------
         np array object that represents N by N matrix, each row is an axial eigenmode
@@ -478,10 +473,11 @@ class ions:
     def Transfreq(self):
         '''
         compute the eigenvalue of transverse eigenmode matrix, multiply by fz to get real frequency [MHz]
-        input(N,fz,fx)
         Returns
         -------
-        np array object, each index is an eigenvalue for Transverse mode [unit of 1]
+        np array object, each index is an eigenvalue for Transverse(Radial) mode [unit of 1]
+        The eigenvalues are arranged in an decreasing order, such that the first 
+        one correpond to COM mode frequency
 
         '''
         e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
@@ -496,20 +492,11 @@ class ions:
     def Transmode(self):
         '''
         compute the eigenmode of transverse oscillation
-        input(N,fz,fx)
-        Parameters
-        ----------
-        N : int
-            number of ions in the system
-        fz : float
-            axial frequency of the ion trap, [MHz]
-        fx : float
-            transverse frequency of the ion trap, [MHz]
 
         Returns
         -------
-        np array object that represents N by N matrix, each row is an transverse eigenmode
-        The eigenmode are arranged in an increasing order of eigenvalues, such that the first 
+        np array object that represents N by N matrix, each row is an Transverse (Radial) eigenmode
+        The eigenmode are arranged in an decreasing order of eigenvalues, such that the first 
         one correpond to COM mode
 
         '''
@@ -521,8 +508,7 @@ class ions:
         compute axial , transverse eigenfrequencies of the system
         Returns
         -------
-        list of  list,index 0 for axial (increasing order), 1 for transverse decreasing order
-        unit of [MHz]
+        np array of float, index 0 is always for com mode, [MHz]
         '''
         if self.df_laser == 0:
             wlsit = self.Axialfreq()*self.fz
@@ -543,23 +529,23 @@ class ions:
         compute the detuning from eigenmodes with specified direction, increasing order
         Returns
         -------
-        float 2pi kHz (angular)
+        np array of float, index 0 is always for com mode. 2pi kHz (angular)
         '''
         dm = self.mu()-2*np.pi*(self.wmlist()*1000)
         return dm
     def n_bar(self):
         '''
-        compute the average phonon number for a given set of phonon states
+        compute the average phonon number for each mode for given intial energy
         ----------
         Returns
         -------
-        float, no unit
-
+        np array of float, index 0 is always for com mode, [unit 1]
+        
         '''
         return 1/(np.exp(1000*(2*np.pi)*(self.wmlist())/self.Etot)-1)
     def Omega(self):
         '''
-        compute the rabi frequncy of the system
+        compute the effective rabi frequency of the laser
         ----------
         Returns
         -------
@@ -568,6 +554,7 @@ class ions:
         return np.sqrt(Omega(self.fr,self.fx)*Omega(self.fb,self.fx))/1000
     def g(self,i,m):
         '''
+        Compute the laser-ion coupling strength between ion i and mode m
         Parameters
         ----------
         i : int

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Construct the part of Hamiltonian that only includes spin degree of freedom
+Construct spin interaction Hamiltonian for single-site electron transfer systems 
+and double site-excitation transfer systems
 
 @author: zhumj
 """
@@ -11,11 +12,16 @@ import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.exci_operators as exop
 from  Qsim.ion_chain.ion_system import *
-
+def summary():
+    print("____________________________________________________________________")
+    print("function: single_site")
+    print("Compute Hamiltonian for single site spin interaction between two ionic states")
+    print("function: single_site")
+    print("Compute Hamiltonian for spin interaction of a two site system ")
 def single_site(Omegax, Omegaz, ion0):
     '''
-    compute the Hamiltonian which describes single site spin interaction 
-    between the two ion states
+    Compute Hamiltonian for single site spin interaction 
+    between the two ionic states
 
     Parameters
     ----------
@@ -36,7 +42,7 @@ def single_site(Omegax, Omegaz, ion0):
     return term1+term2
 def double_site(J12, E1, E2, Vx, ion0):
     '''
-    compute the Hamiltonian which describes spin interaction of a two site system 
+    Compute Hamiltonian for spin interaction of a two site system 
     Parameters
     ----------
     J12 : float
@@ -45,10 +51,9 @@ def double_site(J12, E1, E2, Vx, ion0):
        site energy ion1 [kHz]  
     E2 : float
        site energy ion2 [kHz]      
-    Vx：
+    Vx：float
        rabi rate Omegax for a single site [kHz] 
-    ion0:
-        ion class object
+    ion0: ion class object
     Returns
     -------
     Qutip operator

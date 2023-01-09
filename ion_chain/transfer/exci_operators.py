@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-operators used to construct Hamiltonian for excitation transfer
+Construct quantum operators used in excitation transfer systems 
 
 @author: zhumj
 """
@@ -8,12 +8,54 @@ import numpy as np
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 from  Qsim.ion_chain.ion_system import *
+def summary():
+    print("____________________________________________________________________")
+    print("function: ph_list")
+    print("Generate a list of phonon index used in computing laser-ion coupling")
+    print("____________________________________________________________________")
+    print("function: p_num")
+    print("find the number of phonon spaces coupled to the laser")
+    print("____________________________________________________________________")
+    print("function: p_zero")
+    print("Construct the zero operator on phonon spacer")
+    print("____________________________________________________________________")
+    print("function: p_I")
+    print("Construct the identity operator on phonon space")
+    print("____________________________________________________________________")
+    print("function: p_ladder")
+    print("Construct the ladder operator on phonon space")
+    print("____________________________________________________________________")
+    print("function: rho_thermal")
+    print("Construct initial density matrix according to a thermal distribution")
+    print("____________________________________________________________________")
+    print("function: ini_state")
+    print("Construct initial ket/density matrix that has integer phonon number")
+    print("____________________________________________________________________")
+    print("function: c_op")
+    print("Construct the collapse operator for the transfer systems")
+    print("____________________________________________________________________")
+    print("function: spin_measure")
+    print("Construct operators to measure spin evolution for excitation transfer")
+    print("____________________________________________________________________")
+    print("function: phonon_measure")
+    print("Construct operators to measure phonon evolution for excitation transfer")
 def ph_list(ion0):
+    '''
+    Generate a list of phonon index used in computing laser-ion coupling
+
+    Parameters
+    ----------
+    ion0 : ion class object
+    Returns
+    -------
+    list of int
+    '''
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         mlist = ion0.active_phonon[0]
     else:   #two  phonon spaces
        mlist = ion0.active_phonon[ion0.df_laser]
     return mlist    
+
 def pnum(ion0,df=None):
     '''
     find the number of phonon spaces coupled to the laser
@@ -21,14 +63,14 @@ def pnum(ion0,df=None):
     Parameters
     ----------
     ion0 : ion class object
-    df : int
+    df : int, default as none
         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
         Specified if doing computations with a different coupling direction from the direction
         initialized in ion class object
 
     Returns
     -------
-    None.
+    int, number of phonon spaces coupled to the laser
 
     '''
     if df == None:
@@ -40,6 +82,7 @@ def pnum(ion0,df=None):
     else:   #two  phonon spaces
         dim = ion0.df_phonon()[1][df_couple]
     return dim    
+
 def p_zero(ion0):
     '''
     construct the zero operator on phonon space
@@ -49,7 +92,7 @@ def p_zero(ion0):
 
     Returns
     -------
-    None.
+    Qutip Operator
 
     '''
     Np = pnum(ion0)
@@ -60,6 +103,7 @@ def p_zero(ion0):
         pzero = tensor(phon.zero_op(pcut[0],ion0.df_phonon()[1][0]),
                        phon.zero_op(pcut[1],ion0.df_phonon()[1][1]))
     return pzero  
+
 def p_I(ion0):
     '''
     construct the identity operator on phonon space
@@ -69,7 +113,7 @@ def p_I(ion0):
 
     Returns
     -------
-    None.
+    Qutip Operator
 
     '''
     Np = pnum(ion0)
@@ -80,9 +124,10 @@ def p_I(ion0):
         pI = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),
                     phon.pI(pcut[1],ion0.df_phonon()[1][1]))
     return pI
+
 def p_ladder(ion0,mindex,atype,df=None):
     '''
-    construct the identity operator on phonon space
+    construct the ladder operator on phonon space
     Parameters
     ----------
     ion0 : ion class object
@@ -90,13 +135,13 @@ def p_ladder(ion0,mindex,atype,df=None):
         index of phonon space where the ladder operator is acting on    
     atype: int 
         type of phonon operator, 0 for down, 1 for up
-    df : int
+    df : int, default as none
          vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
          Specified if doing computations with a different coupling direction from the direction
          initialized in ion class object    
     Returns
     -------
-    None.
+    Qutip Operator
 
     ''' 
     
@@ -123,6 +168,7 @@ def p_ladder(ion0,mindex,atype,df=None):
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
+
 def rho_thermal(ion0):
     '''
     Construct initial density matrix according to a thermal distribution
@@ -131,7 +177,6 @@ def rho_thermal(ion0):
     ion0: ions class object
        the object that represent the system to be simulated
        
-
     Returns
     -------
     Qutip operator
@@ -172,19 +217,20 @@ def rho_thermal(ion0):
         pho = tensor(pho1,pho2)
     rho0 = tensor(ini_sdm,pho)
     return rho0    
+
 def ini_state(ion0,s_num,p_num,state_type):
     '''
-    Construct initial density matrix that has integer phonon number
+    Construct initial ket/density matrix that has integer phonon number
 
     Parameters
     ----------
     ion0: ions class object
        the object that represent the system to be simulated
     s_num: list of int
-        specify, initial spin state, 0 for up, 1 of down, default as 0
+        specify initial spin state, 0 for up, 1 of down, default as 0
     p_num: int 
-        specified phonon number
-    state_type: type of state used
+        specified phonon number for the state
+    state_type: type of state to be generated 
         0 for density matrix
         1 for ket
     Returns
@@ -222,9 +268,10 @@ def ini_state(ion0,s_num,p_num,state_type):
         return rho0
     else:
         return tensor(isket,pho)
+
 def c_op(ion0,normalized=True):
     '''
-    Generate collapse operator for the system
+    Construct the collapse operator for the transfer systems
     Parameters
     ----------
     ion0 : ion class object
@@ -233,7 +280,7 @@ def c_op(ion0,normalized=True):
         corresponding Eigenmode matrix element
     Returns
     -------
-    None.
+    List of Qutip operator
 
     '''
     clist = []
@@ -252,20 +299,20 @@ def c_op(ion0,normalized=True):
         clist.append(coeff* np.sqrt(ion0.n_bar()[m])*cm.dag())
         mindex = mindex + 1                                            
     return clist
+
 def spin_measure(ion0,index):
     '''
-    Generate the operator to measure spin evolution for excitation transfer systems
+    Generate operators to measure spin evolution for excitation transfer systems
 
     Parameters
     ----------
     ion0 : ion class object
-    index : int/ list of int
+    index : list of int
         specify the spin state to be projected, 0 for spin up, 1 for spin down
         [0,1] means up, down state
     Returns
     -------
     s_op : Qutip operator
-        spin measurement operator as input of qutip solver
 
     '''
     if ion0.df_spin() == 1:
@@ -274,23 +321,22 @@ def spin_measure(ion0,index):
         s_ket = tensor(fock(2,index[0]),fock(2,index[1]))
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
     return s_op
+
 def phonon_measure(ion0,mindex,df=None):
     '''
-    
-
+    Generate operators to measure phonon evolution for excitation transfer systems
     Parameters
     ----------
     ion0 : ion class object
     mindex: int  
         index of phonon space where the ladder operator is acting on    
-    df : int
+    df : int, default as none
          vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
          Specified if doing computations with a different coupling direction from the direction
          initialized in ion class object    
     Returns
     -------
-    p_op : TYPE
-        DESCRIPTION.
+    Qutip operator.
 
     '''
     if df == None:

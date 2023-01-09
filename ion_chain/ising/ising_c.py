@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Compute the complete Hamiltonian for the ising coupling system
+Compute the complete time-dependent Hamiltonian for the ising coupling system
 function: Htot
 @author: zhumj
 """
@@ -14,8 +14,8 @@ from  Qsim.ion_chain.ion_system import *
 
 def summary():
     print("____________________________________________________________________")
-    print("function: Htot")
-    print("Genearte the total Hamiltonian in the format required by the Qutip solver (string method), with ising coupling constructed only with sx and magentic field coupled with sz")
+    print("function: H_ord")
+    print("Genearte the complete time-dependent Hamiltonian for ising coupling (sx,sy) system with magentic field coupled with sz")
 '''
 subfunction
 '''
@@ -25,9 +25,8 @@ function to use
 ''' 
 def H_ord(Bz,ion0):
     '''
-    Genearte the total Hamiltonian in the format required by the Qutip solver (string method),
-    with ising coupling constructed only with sx and magentic field coupled with sz
-    input(H0,fr,fb,N,fz,fx,delta,clevel)
+    Genearte the complete time-dependent Hamiltonian for ising coupling (sx,sy) 
+    system with magentic field coupled with sz
     Parameters
     ----------
     H0 : qutip operator

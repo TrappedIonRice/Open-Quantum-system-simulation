@@ -3,14 +3,23 @@
 Created on Wed Sep 21 13:33:03 2022
 
 @author: zhumj
-functions for multi-core computation using package multiprocess
+functions for multi-core parallel computation using package multiprocess
 """
 
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import numpy as np
 from qutip import *
-import Qsim.operator.spin as spin
-import Qsim.operator.phonon as phon
+
+def summary():
+    '''
+    give a summary of all functions and classes defined in this module
+    '''
+    print('___________________________________________________________________')
+    print('function: generate_flist')
+    print('generate an np array of frequencies that has higher resolution at certain values and lower resolution for other values')
+    print('___________________________________________________________________')
+    print('function:generate_fplist')
+    print('generate an np array of specfied  frequencies')
 def generate_flist(start,end,peaks,sep1,sep2,r):
     '''
     generate an np array of frequencies that has higher resolution at certain values
@@ -59,7 +68,7 @@ def generate_flist(start,end,peaks,sep1,sep2,r):
     return np.unique(farray)    
 def generate_fplist(peaks,sep,r):
     '''
-    generate an np array of frequencies with specfied frequency at certain values
+    generate an np array of specfied  frequencies
     ----------  
     peaks : array of peak posiiton
         expected position of the peaks
