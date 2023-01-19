@@ -228,7 +228,7 @@ def ini_state(ion0,s_num,p_num,state_type):
        the object that represent the system to be simulated
     s_num: list of int
         specify initial spin state, 0 for up, 1 of down, default as 0
-    p_num: int 
+    p_num: list of list of int 
         specified phonon number for the state
     state_type: type of state to be generated 
         0 for density matrix
@@ -247,20 +247,20 @@ def ini_state(ion0,s_num,p_num,state_type):
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho = fock(ion0.pcut[0][0],p_num)
+                pho = fock(ion0.pcut[0][0],p_num[0][m])
             else:
-                pho = tensor(pho,phon.fock(ion0.pcut[0][m],p_num))
+                pho = tensor(pho,phon.fock(ion0.pcut[0][m],p_num[0][m]))
     else:
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho1 = fock(ion0.pcut[0][0],p_num)
+                pho1 = fock(ion0.pcut[0][0],p_num[0][m])
             else:
-                pho1 = tensor(pho1,fock(ion0.pcut[0][m],p_num))
+                pho1 = tensor(pho1,fock(ion0.pcut[0][m],p_num[0][m]))
         for m in range(ion0.df_phonon()[1][1]):
             if m == 0:
-                pho2 = fock(ion0.pcut[1][0],p_num)
+                pho2 = fock(ion0.pcut[1][0],p_num[1][m])
             else:
-                pho2 = tensor(pho2,fock(ion0.pcut[1][m],p_num))  
+                pho2 = tensor(pho2,fock(ion0.pcut[1][m],p_num[1][m]))  
         pho = tensor(pho1,pho2)       
     dpmat = pho*pho.dag()
     rho0 = tensor(ini_sdm,dpmat)

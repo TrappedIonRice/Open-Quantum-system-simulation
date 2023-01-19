@@ -20,10 +20,11 @@ def summary():
 '''
 function to use
 ''' 
-def H_ord(Omegax, Omegaz, ion0,sp_term = True, ah_term=False,ah_op=0):
+def H_ord1(Omegax, Omegaz, ion0,sp_term = True, ah_term=False,ah_op=0):
     '''
     Compute the complete time-dependent Hamiltonian and collapse operators for the 3 ion open qunatum system
-    used to simulate electron of a single site with anharmonicity in ordinary interaction frame 
+    used to simulate electron of a single site with anharmonicity in ordinary interaction frame with a single
+    laser drive
     Input:
     ----------
     Omegax : float 
@@ -60,3 +61,41 @@ def H_ord(Omegax, Omegaz, ion0,sp_term = True, ah_term=False,ah_op=0):
         return Heff, H_arg
     else:
         return H0
+def H_ord2(Omegax, Omegaz, ion1, ion2, ah_term=False,ah_op=0):
+    '''
+    Compute the complete time-dependent Hamiltonian and collapse operators for the 3 ion open qunatum system
+    used to simulate electron of a single site with anharmonicity in ordinary interaction frame with 2 laser drives
+    Input:
+    ----------
+    Omegax : float 
+        coupling coefficient between the doner and acceptor state [kHz]
+    Omegaz : float
+        energy difference between the doner and acceptor state  [kHz]
+    ion1: ions class object
+        used to construct H for laser dirve 1
+    ion2: ions class object
+        used to construct H for laser dirve 2 , ion1 and ion2 should have the same Hilbert Space   
+    an_term: bool
+        if anharmonic terms will be included
+    an_op: Qutip operator
+        anharmonic coupling operator
+    Returns
+    -------
+    Heff : list
+        list of Qutip Operator and string expressions for time dependent functions, 
+        format required by the Qutip solver, this list represents the time-dependent 
+        Hamiltonian of the system in ordinary frame
+    Hargd : dictionary
+        dictionary that records the value of coefficients for time dependent functions
+    '''
+    #phonnic mode
+    H_s =  Is.single_site(Omegax, Omegaz, ion1) 
+    if ah_term:
+        term_a = ah_op + ah_op.dag()
+    else:    
+        term_a = 0
+    H0 = H_s+term_a
+    Heff = ([H0] + Isp.H_td(ion1,0,0,'1') + Isp.H_td(ion1,1,0,'1')
+            + Isp.H_td(ion2,0,0,'2') + Isp.H_td(ion2,1,0,'2'))
+    H_arg = Isp.H_td_arg(ion1,'1')|Isp.H_td_arg(ion2,'2')    
+    return Heff, H_arg

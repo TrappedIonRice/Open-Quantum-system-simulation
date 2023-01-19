@@ -26,7 +26,7 @@ subfunctions
 def sigma_phi(N,i,phase):
     return np.cos(phase)*spin.sx(N,i) + np.sin(phase)*spin.sy(N,i)
 
-def tstring(N,atype):
+def tstring(N,atype,las_label=''):
     '''
     Generate the list of time depedent expression for the Hamiltonian 
 
@@ -36,7 +36,8 @@ def tstring(N,atype):
         total number of ions in the trapped ion system
     atype : int
         type of phonon operators, 0 for down, 1 for up
-
+    las_label: str, default as ''
+        extra label for the laser drive, specify when using more than 1 laser drives
     Returns
     -------
     mstring : list of string
@@ -47,13 +48,14 @@ def tstring(N,atype):
     '''
     mstring = []
     fstring = []
+    ustr = 'u'+las_label
     for mi in range(1,N+1):
-        newm = "m" + str(mi)
+        newm = "m" + las_label + str(mi)
         mstring.append(newm)
         if atype == 1:
-            fstring.append('cos(t * u) * exp(t * ' + newm +")")
+            fstring.append('cos(t * '+ustr+') * exp(t * ' + newm +")")
         else:
-            fstring.append('cos(t * u) * exp(-1 * (t * ' + newm +"))")
+            fstring.append('cos(t * '+ustr+') * exp(-1 * (t * ' + newm +"))")
     return mstring, fstring        
 
 def Him_ord(ion0,atype,i,m,sindex,mindex,i_type=0):
@@ -113,13 +115,15 @@ def Him_res(ion0, i,m,sindex,mindex):
 functions to use
 ''' 
 
-def H_td_arg(ion0):    
+def H_td_arg(ion0,las_label=''):    
     '''
     Generate an argument dictonary which maps parameters in time-dependent 
     expressions to their actual values
     Parameters
     ----------
     ion0: ion class object
+    las_label: str, default as ''
+        extra label for the laser drive, specify when using more than 1 laser drives
     Returns
     -------
     adic : dictionary
@@ -127,14 +131,14 @@ def H_td_arg(ion0):
     '''
     #generate the arg list for solving time dependent SE
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
-    adic = {"u":ion0.mu()}
-    slist, fs = tstring(ion0.N,0)
+    adic = {"u"+las_label:ion0.mu()}
+    slist, fs = tstring(ion0.N,0,las_label)
     wlist0 = 1j*ion0.wmlist() * 2000* np.pi #this is used to compute deltam in kHz
     for argi in range(ion0.N):
         adic[slist[argi]] = wlist0[argi]
     return adic 
 
-def H_td(ion0,atype,i_type = 0): 
+def H_td(ion0,atype,i_type = 0,las_label=''): 
     '''
     Compute the list of H correponding to time-dependent Hamiltonian for ion-lasesr
     interaction with a single drive as a input for qutip solver
@@ -143,9 +147,11 @@ def H_td(ion0,atype,i_type = 0):
         atype: int
             phonon opeartor type, 0 for destroy, 1 for create
         i_type: int default as 0
-            type of interaction, set to 1 for ising interactions    
+            type of interaction, set to 1 for ising interactions 
+        las_label: str, default as ''
+            extra label for the laser drive, specify when using more than 1 laser drives    
     '''
-    Hstr, Hexpr = tstring(ion0.N,atype) #kHz generate time depedent part for all modes and select 
+    Hstr, Hexpr = tstring(ion0.N,atype,las_label) #kHz generate time depedent part for all modes and select 
                                       # modes of interest           
     #compute the mth element by summing over i for Him for destroy operators
     Hlist = []

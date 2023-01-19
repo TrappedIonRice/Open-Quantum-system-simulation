@@ -253,7 +253,7 @@ class ions:
     df_laser = 1 #vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
     laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
     delta_ref = 0 #reference frequency index, 0 for com frequency
-   
+    
     def list_para(self):
         '''
         list basic physical parameters of the system
@@ -271,14 +271,14 @@ class ions:
         print('Transverse(Radial) vibrational eigenfrequency', np.round(self.Transfreq()*self.fz,2),'MHz')
         print('                                                                 ')
         print('********************Parameters of Laser Drive************************')
-        print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[1])
+        print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[self.df_laser])
         print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
               ,np.round(self.delta,2)," [kHz]")
         print('detuning from eigenfrequency',np.round(self.dmlist()/(2*np.pi),2),'kHz')
         print('detuning frequency index: ', self.delta_ref)
         print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
         print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
-        print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0),2),' [kHz]')
+        print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0)/(2*np.pi),2),' [kHz]')
         print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
         print('index of phonon space included in simulation: ',self.active_phonon )
@@ -345,7 +345,7 @@ class ions:
             ftil =  [wmlist[1], wmlist[1]]
             fcom =  [wmlist[0], wmlist[0]]
             ylist = [0,1]
-            title = r'$\delta = $' + str(self.delta) + 'kHz, reference: '+str(self.delta_ref)
+            title = r'$\delta = $' + str(np.round(self.delta,2)) + 'kHz, reference: '+str(self.delta_ref)
             plt.figure(0)
             plt.plot(fcom,ylist,label = lab0)
             plt.plot(ftil,ylist,label = lab1)
@@ -361,6 +361,32 @@ class ions:
             plt.legend()
         else:
             print('current module only enables plotting frequency diagram for 3 ion system')
+    def plot_all_freq(self):
+        '''
+        plot all eigenfrequencies of the sustem
+        '''
+        lab_dic = {0:'com',1:'tilt',2:'rock'}
+        if self.N == 3:
+            wmlist  = self.Axialfreq()*self.fz*1000
+            ylist = [0,1]
+            plt.figure(0)
+            for m in range(3):
+                lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
+                fplot =  [wmlist[m], wmlist[m]]
+                plt.plot(fplot ,ylist,'r-',label = lab) 
+            wmlist  = self.Transfreq()*self.fz*1000
+            plt.figure(0)
+            for m in range(3):
+                lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
+                fplot =  [wmlist[m], wmlist[m]]
+                plt.plot(fplot ,ylist,'b-',label = lab)     
+            plt.ylim(0,1)
+            plt.xlabel(r'frequecny kHz')
+            plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
+            plt.legend()
+        else:
+            print('current module only enables plotting frequency diagram for 3 ion system')
+        
     def l0(self):
         '''
         compute the chracteristic length scale of the system
