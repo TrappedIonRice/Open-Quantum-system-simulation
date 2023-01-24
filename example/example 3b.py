@@ -54,8 +54,8 @@ print('simulating with H in resonant interaction frame')
 ion_sys.pcut = [[2,3,6]]
 ion_sys.active_phonon = [[0,1,2]] #consider com, tilt, and rock
 ion_sys.check_phonon()
-oplist = [exop.spin_measure(ion_sys,[0,1]),
-          exop.spin_measure(ion_sys,[1,0])] #spin population
+oplist = [exop.spin_measure(ion_sys,[0,1]),#spin population
+          exop.phonon_measure(ion_sys,2)] # rock mode population
 clist1 = exop.c_op(ion_sys) #collapse operator
 rho0 = exop.rho_thermal(ion_sys) #initial state
 H1 = extrans.H_res(J23,(E1-E2)/2,0,V,ion_sys) #generate Hamiltonian
@@ -69,7 +69,7 @@ ion_sys.pcut = [[3,6]]
 ion_sys.active_phonon = [[1,2]] #consider tilt, and rock
 ion_sys.check_phonon()
 oplist = [exop.spin_measure(ion_sys,[0,1]),
-          exop.spin_measure(ion_sys,[1,0])] #spin population
+          exop.phonon_measure(ion_sys,1)] #spin population
 clist2 = exop.c_op(ion_sys) #collapse operator
 rho0 = exop.rho_thermal(ion_sys) #initial state
 print("__________________________________________________________")
@@ -85,6 +85,22 @@ plt.plot(tplot0,pplot1,'-',label='special frame')
 plt.plot(tplot0,pplot2,'x',label=r'ordinary frame',markersize=2)   
 plt.xlabel(r'$\omega_0t/(2\pi)$')
 plt.ylabel(r'$p_{tot}$')
+title = r'$\delta_{rock} = -100kHz, \Delta E = $'+str(E1) + r'$kHz , J=$'+str(J23)+r'$kHz$'
+plt.title(title)
+plt.yticks(fontsize = 13)
+plt.xticks(fontsize = 13)
+plt.legend(fontsize=12)
+plt.grid()   
+plt.show()
+
+#%% plot spin popluation
+pplot3 =  result1.expect[1]
+pplot4 =  result2.expect[1]
+plt.figure(0)
+plt.plot(tplot0,pplot3,'-',label='special frame')
+plt.plot(tplot0,pplot4,'-',label=r'ordinary frame',markersize=2)   
+plt.xlabel(r'$t\delta_0$',fontsize = 14)
+plt.ylabel(r'$<a^+a>$',fontsize = 14)
 title = r'$\delta_{rock} = -100kHz, \Delta E = $'+str(E1) + r'$kHz , J=$'+str(J23)+r'$kHz$'
 plt.title(title)
 plt.yticks(fontsize = 13)
