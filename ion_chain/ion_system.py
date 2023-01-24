@@ -637,7 +637,7 @@ class ions:
 
         Returns
         -------
-        float, anharmonic coupling strength, [2pi kHz]
+        float, anharmonic coupling strength [unit 1], multiply fz to get actual coupling strength in unit of frequency 
 
         '''
         tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2
