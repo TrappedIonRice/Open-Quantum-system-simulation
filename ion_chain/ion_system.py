@@ -108,21 +108,7 @@ def Aele(N0,m,n,epos):
     else:
         ele_val = -2/(np.abs(epos[m]-epos[n]))**3    
     return ele_val
-def Amatrix(N,fz):
-    #compute the tensor A which determines the axial oscillation
-    #fz, axial frequency of the ion trap
-    eposition = E_position(N, fz,False,0) 
-    Amat = np.zeros((N,N))
-    for m in range(N):
-        for n in range(N):
-            Amat[m,n] = Aele(N,m,n,eposition)
-    return Amat
-def Tmatrix(N,fz,fx):
-    #compute the tensor B that determines transverse oscillation
-    #fx, transverse frequency of the ion trap
-    Amat = Amatrix(N,fz)
-    Tmat = (0.5+(fx/fz)**2) * np.identity(N) - 0.5*Amat
-    return Tmat
+
 '''
 functions to use for this module
 '''
@@ -406,6 +392,21 @@ class ions:
 
         '''
         return E_position(self.N,self.fz,False,0) 
+    def Amatrix(self):
+        #compute the tensor A which determines the axial oscillation
+        #fz, axial frequency of the ion trap
+        eposition = E_position(self.N, self.fz,False,0) 
+        Amat = np.zeros((self.N,self.N))
+        for m in range(self.N):
+            for n in range(self.N):
+                Amat[m,n] = Aele(self.N,m,n,eposition)
+        return Amat
+    def Tmatrix(self):
+        #compute the tensor B that determines transverse oscillation
+        #fx, transverse frequency of the ion trap
+        Amat = self.Amatrix()
+        Tmat = (0.5+(self.fx/self.fz)**2) * np.identity(self.N) - 0.5*Amat
+        return Tmat
     def C(self,m,n,p):
         '''
         Compute the anharmonic tensor in the classical Lagrangian 
@@ -479,7 +480,7 @@ class ions:
         The eigenvalues are arranged in an increasing order, such that the first 
         one correpond to COM mode frequency
         '''
-        e_val = np.linalg.eig(Amatrix(self.N,self.fz))[0]
+        e_val = np.linalg.eig(self.Amatrix())[0]
         order = np.argsort(e_val)
         e_val = e_val[order]
         return np.sqrt(e_val)
@@ -493,7 +494,7 @@ class ions:
         one correpond to COM mode
 
         '''
-        e_val,e_array = np.linalg.eig(Amatrix(self.N,self.fz))
+        e_val,e_array = np.linalg.eig(self.Amatrix())
         order = np.argsort(e_val)
         return (np.transpose(e_array))[order]
     def Transfreq(self):
@@ -506,7 +507,7 @@ class ions:
         one correpond to COM mode frequency
 
         '''
-        e_val = np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))[0]
+        e_val = np.linalg.eig(self.Tmatrix())[0]
         order = np.argsort(e_val)
         e_val = e_val[order][::-1]
         #check if the matrix is positive-definite
@@ -526,7 +527,7 @@ class ions:
         one correpond to COM mode
 
         '''
-        e_val, e_array= np.linalg.eig(Tmatrix(self.N,self.fz,self.fx))
+        e_val, e_array= np.linalg.eig(self.Tmatrix())
         order = np.argsort(e_val)[::-1]
         return np.transpose(e_array)[order]    
     def wmlist(self):
@@ -637,7 +638,8 @@ class ions:
 
         Returns
         -------
-        float, anharmonic coupling strength [unit 1], multiply fz to get actual coupling strength in unit of frequency 
+        float, anharmonic coupling strength, [unit 1]
+        multiply fz to get coupling strength in Hz
 
         '''
         tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2
