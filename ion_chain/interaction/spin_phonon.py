@@ -110,7 +110,23 @@ def Him_res(ion0, i,m,sindex,mindex):
     p_opa = exop.p_ladder(ion0,mindex,0) + exop.p_ladder(ion0,mindex,1) 
     H = tensor(spin.sz(ion0.df_spin(),sindex),p_opa)
     return 0.5*ion0.g(i,m)*H 
-
+def H_harmonic(ion0):
+    '''
+    Compute the harmonic part of the spin-phonon interaction Hamiltonian in
+    resonant frame
+    Input: 
+        ion0: ion class object
+    Output:
+        Qutip operator
+    '''
+    hterm = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #compensation for change of interaction frame
+    mindex = 0 #this index is used for phonon operators
+    for m in exop.ph_list(ion0):
+        hterm = (hterm + ion0.dmlist()[m]
+                 *tensor(spin.sI(ion0.df_spin()),
+                         exop.p_ladder(ion0,mindex,1)*exop.p_ladder(ion0,mindex,0)))    
+        mindex = mindex+1
+    return hterm
 '''
 functions to use
 ''' 
@@ -173,17 +189,13 @@ def H_res(ion0):
     Input: 
         ion0, ion class object
     '''
-    term1 = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #laser-ion interaction term 
-    term2 = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #compensation for change of interaction frame
+    spterm = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #laser-ion interaction term 
     mindex = 0 #this index is used for phonon operators
     for m in exop.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
         for i in ion0.laser_couple:
-            term1 = term1 + Him_res(ion0,i,m,sindex,mindex)
+            spterm = spterm + Him_res(ion0,i,m,sindex,mindex)
             sindex = sindex + 1
-        term2 = (term2 + ion0.dmlist()[m]
-                 *tensor(spin.sI(ion0.df_spin()),
-                         exop.p_ladder(ion0,mindex,1)*exop.p_ladder(ion0,mindex,0)))    
         mindex = mindex+1
-    return term1-term2
+    return spterm - H_harmonic(ion0)
         

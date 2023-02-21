@@ -21,25 +21,33 @@ def summary():
 def single_site(Omegax, Omegaz, ion0):
     '''
     Compute Hamiltonian for single site spin interaction 
-    between the two ionic states
+    between the two ionic states for each enabled ion site, 
+    with no coupling between the sites
 
     Parameters
     ----------
-    Omegax : float 
-        coupling coefficient between the doner and acceptor state [kHz]
-    Omegaz : float
-        energy difference between the doner and acceptor state  [kHz]
+    Omegax : float/list of float 
+        coupling coefficient between the doner and acceptor state for each site [kHz]
+    Omegaz : float/list of float
+        energy difference between the doner and acceptor state for each site  [kHz]
     ion0 : ion class object
-
+    
     Returns
     -------
     Qutip operator
 
     '''
-    term1 = (2 * np.pi) * Omegax * tensor(spin.sx(1,0),exop.p_I(ion0)) 
-    term2 = (2 * np.pi)*-0.5 * Omegaz * tensor(spin.sz(1,0),exop.p_I(ion0))
-    #coupling between the sites
-    return term1+term2
+    Ns = ion0.df_spin()
+    if Ns == 1:
+        Hspin = (2 * np.pi) * (Omegax * tensor(spin.sx(1,0),exop.p_I(ion0))  
+         -0.5 * Omegaz * tensor(spin.sz(1,0),exop.p_I(ion0))) 
+    else:
+        Hspin = (2 * np.pi) * (Omegax[0] * tensor(spin.sx(Ns,0),exop.p_I(ion0))  
+         -0.5 * Omegaz[0] * tensor(spin.sz(Ns,0),exop.p_I(ion0)))
+        for i in range(1,Ns):
+            Hspin = Hspin + (2 * np.pi) * (Omegax[i] * tensor(spin.sx(Ns,i),exop.p_I(ion0))  
+             -0.5 * Omegaz[i] * tensor(spin.sz(Ns,i),exop.p_I(ion0)))
+    return Hspin
 def double_site(J12, E1, E2, Vx, ion0):
     '''
     Compute Hamiltonian for spin interaction of a two site system 

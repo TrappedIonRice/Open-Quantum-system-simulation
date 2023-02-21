@@ -6,6 +6,7 @@ functions: sx, sy, sz, zero_op, sI, phid, phiup
 """
 import numpy as np
 from qutip import *
+from qutip.qip.operations import ry
 def summary():
     print("____________________________________________________________________")
     print("function: sx,sy,sz")
@@ -68,7 +69,7 @@ def sy(N,i):
 def sz(N,i):
     '''
     generate the sigmaz operator acting on the ith (python index) spin 1/2
-    in the system of N ions
+    space in the system of N ions
     Input: 
         N: int
             number of ions in the system, N > 1
@@ -85,6 +86,31 @@ def sz(N,i):
         else:
             opsz = tensor(opsz, op_list[m])
     return opsz
+def sry(N,i,phi):
+    '''
+    generate the y rotation operator acting on the ith (python index) spin 1/2
+    space in the system of N ions
+
+    Parameters
+    ----------
+    N: int
+        number of ions in the system, N > 1
+    i: int 
+        python index of the ion that the operator acts on, from 0 to N-1
+    phi : float
+        angle for rotation [rad]
+
+    Output:
+        Qutip Operator    
+    '''
+    op_list = [qeye(2)]*N
+    op_list[i] = ry(phi)
+    for m in range(N):
+        if m == 0:
+            opsry = op_list[m]
+        else:
+            opsry = tensor(opsry, op_list[m])
+    return opsry
 def up(N,i):
     '''
     generate the sigma+ operator acting on the ith (python index) spin 1/2
@@ -146,9 +172,9 @@ def sI(N):
     if N == 1:
         Iden = qeye(2)
     else:    
-        Iden = qeye(N)
+        Iden = qeye(2)
         for i in range(N-1):
-            Iden = tensor(Iden,qeye(N))
+            Iden = tensor(Iden,qeye(2))
     return Iden    
 def phid(N):
     """

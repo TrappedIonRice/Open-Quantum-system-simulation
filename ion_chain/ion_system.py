@@ -191,9 +191,9 @@ class ions:
     fx : float
         transverse frequency of the ion trap, [MHz]
     fr: float
-         red side band frequency [kHz]     
+         effective red side band frequency Omega * dK * X_0(fx) [kHz],      
     fb: float
-         blue side band frequency [kHz] 
+         effective blue side band frequency [kHz] 
     phase: float
         spin phase phis [rad]    
     active_phonon: list of list of int
@@ -345,6 +345,7 @@ class ions:
             plt.xlabel(r'frequecny kHz')
             plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
             plt.legend()
+            plt.show()
         else:
             print('current module only enables plotting frequency diagram for 3 ion system')
     def plot_all_freq(self):

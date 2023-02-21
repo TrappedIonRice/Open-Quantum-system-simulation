@@ -59,7 +59,7 @@ tscale = J23      #use J as time scale
 H0  = extrans.H_res(J23,(E1-E2)/2,0,V,ion_sys) #generate Hamiltonian
 #%%
 clist1 = exop.c_op(ion_sys) #collapse operator
-rho0 = exop.rho_thermal(ion_sys) #initial state
+rho0 = exop.rho_thermal(ion_sys,False,[0,1]) #initial state
 tplot0 = np.arange(0,2,0.01)
 times0 =tplot0/tscale
 print('computing time evolution')

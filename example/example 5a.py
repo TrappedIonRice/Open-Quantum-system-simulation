@@ -45,19 +45,23 @@ ion0.N=2
 print('compute D222')
 print('theoretical result: ', -2**(1/6))
 print('numeric result:',ion0.D(1,1,1)) 
-#%% plot all combinations of D 
+#%% plot all combinations of non-zero D 
 ion0.N=3
 Dplot = {}
 N = ion0.N 
 for i in range(N):
     for j in range(N):
         for k in range(N):
-            Dplot[str(i+1)+str(j+1)+str(k+1)]=np.abs(ion0.D(i,j,k))
+            Dvalue = np.abs(ion0.D(i,j,k))
+            if Dvalue>1e-5:
+                Dplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(Dvalue)
 names = list(Dplot.keys())
 values = list(Dplot.values())
 plt.bar(range(len(Dplot)), values, tick_label=names)  
-plt.ylabel(r'$|D_{mnp}|$',fontsize = 10)      
-plt.xticks(fontsize = 6)  
+plt.ylabel(r'$|D_{mnp}|$',fontsize = 13)      
+plt.xticks(fontsize = 13)  
+plt.yticks(fontsize = 13)  
+plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
 plt.grid()
 #%% Check the result with PRL 119 
 #compute coupling frequency for mnp = 332
@@ -81,7 +85,8 @@ fxplot = np.arange(2,4,0.01)
 for fx in fxplot:
     ion0.fx = fx
     ion0.fz = (20/63)**0.5 * fx
-    anc_plot = np.append(anc_plot, ion0.ah_couple(2,2,1)*ion0.fz*10**6)
+    anc_plot = np.append(anc_plot, ion0.ah_couple(2,2,1)*ion0.fz*10**6) 
+    #multiply fz in Hz to get real coupling in unit of frequency
 #%%
 plt.plot(fxplot,anc_plot)
 plt.xlabel('Radial frequency, [MHz]',fontsize = 13) 

@@ -21,7 +21,7 @@ from  Qsim.ion_chain.ion_system import *
 Set up the system 
 '''    
 
-ion_sys = ions() #construct a two ion system using class ions 
+ion_sys = ions() #construct a 3 ion system using class ions 
 ion_sys.N = 3
 ion_sys.fx = 2
 ion_sys.fz = (20/63)**0.5 * ion_sys.fx #set to resonant condition

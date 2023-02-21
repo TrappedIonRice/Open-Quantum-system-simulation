@@ -18,17 +18,17 @@ import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
 from  Qsim.ion_chain.ion_system import *
 import copy
 #%% set ion1 for drive 1, axial coupling to tilt mode
-delta0 = -50
+delta0 = -20
 ion1 = ions() #construct a two ion system using class ions 
 ion1.N = 3
 ion1.fx = 2
 ion1.fz = (20/63)**0.5 * ion1.fx #set to resonant condition
 ion1.df_laser = 0
 ion1.delta_ref = 1
-ion1.delta =np.sqrt(2)*delta0
-ion1.fr = 5*np.abs(delta0);ion1.fb =  5*np.abs(delta0)
+ion1.delta = 2*delta0 #np.sqrt(2)*delta0
+ion1.fr = 10*np.abs(delta0);ion1.fb =  10*np.abs(delta0)
 ion1.laser_couple = [0]
-ion1.pcut = [[80],[80]]
+ion1.pcut = [[100],[100]]
 ion1.active_phonon = [[1],[2]] #only consider tilt for axial and rock for radial
 ion1.list_para()
 ion1.plot_freq()
@@ -41,13 +41,13 @@ ion2.delta_ref = 2
 ion2.list_para()
 ion2.plot_freq()
 #%%
-Omegax = np.abs(ion2.delta)
-deltaE = ion2.delta
+Omegax = 0.2*np.abs(ion2.delta)
+deltaE = 100*ion2.delta
 '''
 time scale
 '''
 t_scale = np.abs(ion2.delta)
-tplot = np.linspace(0,1,1000)
+tplot = np.linspace(0,5,10000)
 times = tplot*2*np.pi/t_scale
 '''
 measure axial tilt mode and radial rock mode population
@@ -113,7 +113,7 @@ ph_num2_1 = result2.expect[1] #Axial Tilt population
 ph_num2_2 = result2.expect[2] #Radial Rock population
 sigma_2 = result2.expect[3] #dilution factor  
 #%%plot result 
-xend = 1
+xend = 5
 fig1 = plt.figure(figsize=(12,4))
 p1 = fig1.add_subplot(121)
 p1.plot(tplot,spin_2,'-')
@@ -154,14 +154,15 @@ plt.legend()
 plt.show()
 #%%
 plt.clf()
-plt.plot(tplot,sigma_1,label = 'without anharmonicity')
+#plt.plot(tplot,sigma_1,label = 'without anharmonicity')
 plt.plot(tplot,sigma_2,'.',label = 'with anharmonicity')
 plt.xlabel(r'$\delta t/(2\pi)$',fontsize = 14)
 plt.ylabel(r'$P_{\uparrow 0}$',fontsize = 14)
 plt.title(r'survival probability')
 plt.grid() 
-plt.ylim(0,1)  
+#plt.ylim(0,0.25)  
 plt.xlim(0,xend)
+plt.yscale('log')
 plt.yticks(fontsize = 13)
 plt.xticks(fontsize = 13)
 plt.legend()

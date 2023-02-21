@@ -150,7 +150,7 @@ def p_ladder(ion0,mindex,atype,df=None):
         Np = pnum(ion0)
     else:
         df_couple = df #specify the coupling coefficeint
-        Np = pnum(ion0,df=df_couple)
+        Np = pnum(ion0,df_couple)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         if atype == 0:
@@ -169,54 +169,64 @@ def p_ladder(ion0,mindex,atype,df=None):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0):
+def rho_thermal(ion0,ket=False,s_num=0):
     '''
-    Construct initial density matrix according to a thermal distribution
+    Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
     ----------
     ion0: ions class object
        the object that represent the system to be simulated
-       
+    ket: bool, default as false
+        if true, output state as ket for a pure superposition of fock states
+        if false, output the usual density matrix used for thermal state
+    s_num: list of int
+        specify initial spin state, 0 for up, 1 of down, default as 0    
     Returns
     -------
     Qutip operator
 
     '''
-    Ns = ion0.df_spin()
     wmlist0 = [ion0.Axialfreq()*ion0.fz,ion0.Transfreq()*ion0.fz]
+    Ns = ion0.df_spin()
     if Ns == 1:
-        isket = fock(2,0)
+        isket = fock(2,s_num[0])
     else:    
-        isket = tensor(fock(2,0),fock(2,1)) # ion 1 in excited state
+        isket = fock(2,s_num[0])
+        for i in range(1,Ns):
+            isket = tensor(isket,fock(2,s_num[i])) 
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for mindex in range(ion0.df_phonon()[1][0]):
             m = ph_list(ion0)[mindex]
             wm = ion0.wmlist()[m]
             if mindex == 0:
-                pho = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot)
+                pho = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot,ket)
             else:
-                pho = tensor(pho,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot))
+                pho = tensor(pho,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))
     else:
         for mindex in range(ion0.df_phonon()[1][0]):
             m = ph_list(ion0)[mindex]
             wm = wmlist0[0][m]
             if mindex == 0:
-                pho1 = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot)
+                pho1 = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot,ket)
             else:
-                pho1 = tensor(pho1,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot))
+                pho1 = tensor(pho1,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))
         for mindex in range(ion0.df_phonon()[1][1]):
             m = ph_list(ion0)[mindex]
             wm = wmlist0[1][m]
-            if m == 0:
-                pho2 = phon.inip_thermal(ion0.pcut[1][0],fr_conv(wm,'khz'),ion0.Etot)
+            if mindex == 0:
+                pho2 = phon.inip_thermal(ion0.pcut[1][0],fr_conv(wm,'khz'),ion0.Etot,ket)
             else:
-                pho2 = tensor(pho2,phon.inip_thermal(ion0.pcut[1][mindex],fr_conv(wm,'khz'),ion0.Etot))        
+                pho2 = tensor(pho2,phon.inip_thermal(ion0.pcut[1][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))        
     #dmat = fock(ion0.pcut,0)*fock(ion0.pcut,0).dag()
     #pho0 = tensor(dmat,dmat,dmat)
         pho = tensor(pho1,pho2)
-    rho0 = tensor(ini_sdm,pho)
-    return rho0    
+    if ket:
+        ket0 = tensor(isket,pho)
+        return ket0
+    else:
+        rho0 = tensor(ini_sdm,pho)
+        return rho0    
 
 def ini_state(ion0,s_num,p_num,state_type):
     '''
@@ -227,7 +237,7 @@ def ini_state(ion0,s_num,p_num,state_type):
     ion0: ions class object
        the object that represent the system to be simulated
     s_num: list of int
-        specify initial spin state, 0 for up, 1 of down, default as 0
+        specify initial spin state, 0 for up, 1 of down
     p_num: list of list of int 
         specified phonon number for the state
     state_type: type of state to be generated 
@@ -242,7 +252,9 @@ def ini_state(ion0,s_num,p_num,state_type):
     if Ns == 1:
         isket = fock(2,s_num[0])
     else:    
-        isket = tensor(fock(2,s_num[0]),fock(2,s_num[1])) # ion 1 in excited state
+        isket = fock(2,s_num[0])
+        for i in range(1,Ns):
+            isket = tensor(isket,fock(2,s_num[i])) 
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
@@ -321,7 +333,23 @@ def spin_measure(ion0,index):
         s_ket = tensor(fock(2,index[0]),fock(2,index[1]))
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
     return s_op
+def site_spin_measure(ion0,index):
+    '''
+    Generate operators to measure site spin population for excitation transfer systems
+    p = 0.5*(<\sigma_z>)+0.5
+    Parameters
+    ----------
+    ion0 : ion class object
+    index : int
+        specify the index of spin space to be measured
+    Returns
+    -------
+    s_op : Qutip operator
 
+    '''
+    s_op = tensor( 0.5 * (spin.sI(ion0.df_spin()) + spin.sz(ion0.df_spin(),index)),
+                  p_I(ion0))
+    return s_op
 def phonon_measure(ion0,mindex,df=None):
     '''
     Generate operators to measure phonon evolution for excitation transfer systems
@@ -345,3 +373,41 @@ def phonon_measure(ion0,mindex,df=None):
         p_op = p_ladder(ion0,mindex,1,df)*p_ladder(ion0,mindex,0,df)
     p_op = tensor(spin.sI(ion0.df_spin()),p_op)
     return p_op    
+
+def pstate_measure(ion0,slevel,mindex,df=None):
+    '''
+    mearsure the population of n=pcut state of a specific phonon space 
+    in order to check the validity using a finite phonon space
+    ion0 : ion class object
+    slevel: int
+        phonon state level to be measured    
+    mindex: int  
+        index of phonon space to be measured    
+    df : int, default as none
+         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+         Specified if doing computations with a different coupling direction from the direction
+         initialized in ion class object    
+    Returns
+    -------
+    Qutip operator.
+    '''
+    if df == None:
+        df_couple = ion0.df_laser #use default
+        Np = pnum(ion0)
+    else:
+        df_couple = df #specify the coupling direction
+        Np = pnum(ion0, df_couple)
+    pcut = ion0.pcut
+    if ion0.df_phonon()[0] == 1: #only consider one phonon space
+        opa = phon.state_measure(pcut[0],Np,slevel,mindex)
+    else:     #two  phonon spaces
+        opa = phon.state_measure(pcut[df_couple],Np,slevel,mindex)
+        #construct in order axial, transverse
+        if  df_couple ==0:
+            opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
+        else:
+            opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
+    return tensor(spin.sI(ion0.df_spin()),opa)   
+    
+
+    

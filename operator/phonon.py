@@ -33,10 +33,10 @@ def up(m,clevel,N):
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel : np array of int
+    clevel : list of int
         cut off level of each phonon space 
     N : int
-        number of ions in the system
+       total number of phonon spaces
 
     Returns
     -------
@@ -64,10 +64,10 @@ def down(m,clevel,N):
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel :  np array of int
+    clevel :  list of int
         cut off level of each phonon space 
     N : int
-        number of ions in the system
+        total number of phonon spaces
     
     Returns
     -------
@@ -94,10 +94,10 @@ def zero_op(clevel,N):
     Input: (clevel,N)
     Parameters
     ----------
-    clevel :  np array of int
+    clevel :  list of int
         cut off level of each phonon space 
     N : int
-        number of ions in the system
+        total number of phonon spaces
     
     Returns
     -------
@@ -114,10 +114,10 @@ def phip(clevel,N,nlist):
     Input: (clevel,N,nlist)
     Parameters
     ----------
-    clevel :  np array of int
+    clevel :  list of int
         cut off level of each phonon space 
     N : int
-        number of ions in the system
+        total number of phonon spaces
     nlist : list of int
         the specfic fock states that each ion is in
 
@@ -131,16 +131,43 @@ def phip(clevel,N,nlist):
     for i in range(1,N):
         istate = tensor(istate, basis(clevel[i],nlist[i]))
     return istate
+def state_measure(clevel,N,slevel,m=0):
+    '''
+    generate the operator to measure a single phonon state population for a specified
+    phonon space
+    clevel :  list of int
+        cut off level of each phonon space 
+    N : int
+        total number of phonon spaces
+    slevel: int
+        phonon state level to be measured    
+    m: index of phonon space for measurement, default as 0
+    '''
+    m_ket = fock(clevel[m],slevel)
+    dm_h = m_ket*m_ket.dag()
+    if N == 1: 
+        hm_op =  dm_h
+    else:
+        for j in range(N):
+            if j == m:
+                nextop = dm_h
+            else:
+                nextop = qeye(clevel[j])
+            if j == 0:
+               hm_op  = nextop
+            else:
+               hm_op  = tensor(hm_op ,nextop)
+    return hm_op 
 def pI(clevel,N):
     '''
     generate the identity operator acting on the system of N ions
     Input: (clevel,N)
     Parameters
     ----------
-    clevel :  np array of int
+    clevel : list of int
         cut off level of each phonon space 
     N : int
-        number of ions in the system
+       total number of phonon spaces
     
     Returns
     -------
@@ -151,10 +178,35 @@ def pI(clevel,N):
     for i in range(N-1):
         Iden = tensor(Iden,qeye(clevel[i+1]))
     return Iden    
-def inip_thermal(clevel,wm,Etot):
+
+def p_thermal(clevel,wm,Etot):
     '''
-    generate the initial density operator for the phonon space of a single ion
-    composed with pure states with population following a thermal distribution 
+    generate the probability distribution following a canonical distrbution 
+    with kT = Etot, harmonic energy frequency wm
+    input(clevel,N,wm,Etot)
+    Parameters
+    ----------
+    clevel : int
+        cut off level of phonon space
+    wm : float
+        energy frequency of the phonon states MHz
+    Etot : float
+        total energy of the ion
+
+    Returns
+    -------
+    np array, each element is the probability of a correponding fock state
+
+    '''
+    pdis = np.array([])
+    for i in range(clevel):
+        pdis = np.append(pdis,np.exp(-(i+0.5)*wm/Etot))
+    pdis = pdis/np.sum(pdis)
+    return pdis     
+def inip_thermal(clevel,wm,Etot,ket=False):
+    '''
+    generate the initial density matirx/pure quantum state ket for a single phonon space 
+    with population following a thermal distribution 
     input(clevel,N,wm,Etot)
     Parameters
     ----------
@@ -164,13 +216,46 @@ def inip_thermal(clevel,wm,Etot):
         energy frequency of the phonon states
     Etot : float
         total energy of the ion
-
+    ket: bool, default as false
+        if true, output state as ket for a pure superposition of fock states
+        if false, output the usual density matrix used for thermal state
     Returns
     -------
     Qutip Operator
 
     '''
-    dmta = np.zeros((clevel,clevel))
-    for i in range(clevel):
-        dmta[i,i] = np.exp(-(i+0.5)*wm/Etot)
-    return Qobj(dmta/np.trace(dmta))
+    pdis0 = p_thermal(clevel,wm,Etot)
+    if ket:
+        for n in range(clevel):
+            if n == 0:
+                pket = np.sqrt(pdis0[0])*fock(clevel,0)
+            else:
+                pket = pket + np.sqrt(pdis0[n])*fock(clevel,n)
+        return pket    
+   
+    else:
+        dmta = np.zeros((clevel,clevel))
+        for n in range(clevel):
+            dmta[n,n] = pdis0[n] 
+        return Qobj(dmta)
+def inik_thermal(clevel,wm,Etot):
+    '''
+    generate a pure quantum state ket for a single phonon space 
+    with population following a thermal distribution 
+    input(clevel,N,wm,Etot)
+    Parameters
+    ----------
+    clevel : int
+        cut off level of phonon space
+    wm : float
+        energy frequency of the phonon states
+    Etot : float
+        total energy of the ion
+    
+    Returns
+    -------
+    Qutip Operator
+    
+    '''
+    pdis0 = p_thermal(clevel,wm,Etot)
+   
