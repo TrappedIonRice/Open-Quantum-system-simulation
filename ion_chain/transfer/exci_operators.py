@@ -249,12 +249,7 @@ def ini_state(ion0,s_num,p_num,state_type):
 
     '''
     Ns = ion0.df_spin()
-    if Ns == 1:
-        isket = fock(2,s_num[0])
-    else:    
-        isket = fock(2,s_num[0])
-        for i in range(1,Ns):
-            isket = tensor(isket,fock(2,s_num[i])) 
+    isket = spin.spin_state(Ns,s_num)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
@@ -312,7 +307,7 @@ def c_op(ion0,normalized=True):
         mindex = mindex + 1                                            
     return clist
 
-def spin_measure(ion0,index):
+def spin_measure(ion0,s_config):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
 
@@ -327,10 +322,7 @@ def spin_measure(ion0,index):
     s_op : Qutip operator
 
     '''
-    if ion0.df_spin() == 1:
-        s_ket = fock(2,index)
-    else:
-        s_ket = tensor(fock(2,index[0]),fock(2,index[1]))
+    s_ket = spin.spin_state(ion0.df_spin(),s_config)
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
     return s_op
 def site_spin_measure(ion0,index):

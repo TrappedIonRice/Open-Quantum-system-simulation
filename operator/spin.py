@@ -211,3 +211,25 @@ def phiup(N):
     for i in range(N-1):
         istate = tensor(istate, basis(2, 1))
     return istate
+def spin_state(N,config):
+    """
+    construct a state with all N ions, the spin
+    of each ion can be specified 
+    input(N)
+    Parameters
+    ----------
+    N : int
+        number of ions in the system, N > 1
+    config: list of int
+        specify the spin configuration, 0 for up and 1 for down 
+    Returns
+    -------
+    Qutip ket
+    """
+    if N == 1:
+        isket = fock(2,config[0])
+    else:    
+        isket = fock(2,config[0])
+        for i in range(1,N):
+            isket = tensor(isket,fock(2,config[i])) 
+    return isket        
