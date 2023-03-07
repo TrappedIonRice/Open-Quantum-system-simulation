@@ -178,8 +178,8 @@ def pI(clevel,N):
     for i in range(N-1):
         Iden = tensor(Iden,qeye(clevel[i+1]))
     return Iden    
-
-def p_thermal(clevel,wm,Etot):
+  
+def p_thermal(clevel,nbar):
     '''
     generate the probability distribution following a canonical distrbution 
     with kT = Etot, harmonic energy frequency wm
@@ -188,10 +188,8 @@ def p_thermal(clevel,wm,Etot):
     ----------
     clevel : int
         cut off level of phonon space
-    wm : float
-        energy frequency of the phonon states MHz
-    Etot : float
-        total energy of the ion
+    nbar : float
+        average phonon number of the thermal state
 
     Returns
     -------
@@ -200,10 +198,10 @@ def p_thermal(clevel,wm,Etot):
     '''
     pdis = np.array([])
     for i in range(clevel):
-        pdis = np.append(pdis,np.exp(-(i+0.5)*wm/Etot))
+        pdis = np.append(pdis,(1/nbar + 1)**(-i))
     pdis = pdis/np.sum(pdis)
-    return pdis     
-def inip_thermal(clevel,wm,Etot,ket=False):
+    return pdis    
+def inip_thermal(clevel,nbar,ket=False):
     '''
     generate the initial density matirx/pure quantum state ket for a single phonon space 
     with population following a thermal distribution 
@@ -212,10 +210,8 @@ def inip_thermal(clevel,wm,Etot,ket=False):
     ----------
     clevel : int
         cut off level of phonon space
-    wm : float
-        energy frequency of the phonon states
-    Etot : float
-        total energy of the ion
+    nbar : float
+        average phonon number of the thermal state
     ket: bool, default as false
         if true, output state as ket for a pure superposition of fock states
         if false, output the usual density matrix used for thermal state
@@ -224,7 +220,7 @@ def inip_thermal(clevel,wm,Etot,ket=False):
     Qutip Operator
 
     '''
-    pdis0 = p_thermal(clevel,wm,Etot)
+    pdis0 = p_thermal(clevel,nbar)
     if ket:
         for n in range(clevel):
             if n == 0:
@@ -238,24 +234,4 @@ def inip_thermal(clevel,wm,Etot,ket=False):
         for n in range(clevel):
             dmta[n,n] = pdis0[n] 
         return Qobj(dmta)
-def inik_thermal(clevel,wm,Etot):
-    '''
-    generate a pure quantum state ket for a single phonon space 
-    with population following a thermal distribution 
-    input(clevel,N,wm,Etot)
-    Parameters
-    ----------
-    clevel : int
-        cut off level of phonon space
-    wm : float
-        energy frequency of the phonon states
-    Etot : float
-        total energy of the ion
-    
-    Returns
-    -------
-    Qutip Operator
-    
-    '''
-    pdis0 = p_thermal(clevel,wm,Etot)
    

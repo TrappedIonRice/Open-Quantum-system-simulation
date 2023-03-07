@@ -232,7 +232,6 @@ class ions:
     fr = 10
     phase = 0
     gamma = [0.1 * 20, 0.1*20]
-    Etot = fr_conv(0.217*2,'khz')
     active_phonon = [[0,1,2]]  #index phonon space that will be considered, if more than 1 space,
     pcut = [[2,2,2]] #cutoff of phonon energy for distinctive modes, first index is always for com mode
     coolant = [2] #index of coolant
@@ -272,7 +271,6 @@ class ions:
         print('spin phase phis',np.round(self.phase*180/np.pi,2))
         print('(input in rad but displayed in degs)')
         print('cooling rate ', np.round(self.gamma,2)," [kHz]") 
-        print('avearge phonon number ', np.round(self.n_bar(),4))
     def check_phonon(self):
         '''
         Check the consistency in set up of phonon space
@@ -561,16 +559,6 @@ class ions:
         '''
         dm = self.mu()-2*np.pi*(self.wmlist()*1000)
         return dm
-    def n_bar(self):
-        '''
-        compute the average phonon number for each mode for given intial energy
-        ----------
-        Returns
-        -------
-        np array of float, index 0 is always for com mode, [unit 1]
-        
-        '''
-        return 1/(np.exp(1000*(2*np.pi)*(self.wmlist())/self.Etot)-1)
     def Omega(self):
         '''
         compute the effective rabi frequency of the laser

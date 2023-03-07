@@ -169,7 +169,7 @@ def p_ladder(ion0,mindex,atype,df=None):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0,ket=False,s_num=0):
+def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
     '''
     Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
@@ -180,44 +180,37 @@ def rho_thermal(ion0,ket=False,s_num=0):
         if true, output state as ket for a pure superposition of fock states
         if false, output the usual density matrix used for thermal state
     s_num: list of int
-        specify initial spin state, 0 for up, 1 of down, default as 0    
+        specify initial spin state, 0 for up, 1 of down, default as 0 
+    nbar_list: list of list of float
+        average phonon number of each phonon space
     Returns
     -------
     Qutip operator
 
     '''
-    wmlist0 = [ion0.Axialfreq()*ion0.fz,ion0.Transfreq()*ion0.fz]
     Ns = ion0.df_spin()
-    if Ns == 1:
-        isket = fock(2,s_num[0])
-    else:    
-        isket = fock(2,s_num[0])
-        for i in range(1,Ns):
-            isket = tensor(isket,fock(2,s_num[i])) 
+    isket = spin.spin_state(Ns,s_num)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for mindex in range(ion0.df_phonon()[1][0]):
-            m = ph_list(ion0)[mindex]
-            wm = ion0.wmlist()[m]
+            nbar = nbar_list[0][mindex]
             if mindex == 0:
-                pho = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot,ket)
+                pho = phon.inip_thermal(ion0.pcut[0][0],nbar,ket)
             else:
-                pho = tensor(pho,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))
+                pho = tensor(pho,phon.inip_thermal(ion0.pcut[0][mindex],nbar,ket))
     else:
         for mindex in range(ion0.df_phonon()[1][0]):
-            m = ph_list(ion0)[mindex]
-            wm = wmlist0[0][m]
+            nbar = nbar_list[0][mindex]
             if mindex == 0:
-                pho1 = phon.inip_thermal(ion0.pcut[0][0],fr_conv(wm,'khz'),ion0.Etot,ket)
+                pho1 = phon.inip_thermal(ion0.pcut[0][0],nbar,ket)
             else:
-                pho1 = tensor(pho1,phon.inip_thermal(ion0.pcut[0][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))
+                pho1 = tensor(pho1,phon.inip_thermal(ion0.pcut[0][mindex],nbar,ket))
         for mindex in range(ion0.df_phonon()[1][1]):
-            m = ph_list(ion0)[mindex]
-            wm = wmlist0[1][m]
+            nbar = nbar_list[1][mindex]
             if mindex == 0:
-                pho2 = phon.inip_thermal(ion0.pcut[1][0],fr_conv(wm,'khz'),ion0.Etot,ket)
+                pho2 = phon.inip_thermal(ion0.pcut[1][0],nbar,ket)
             else:
-                pho2 = tensor(pho2,phon.inip_thermal(ion0.pcut[1][mindex],fr_conv(wm,'khz'),ion0.Etot,ket))        
+                pho2 = tensor(pho2,phon.inip_thermal(ion0.pcut[1][mindex],nbar,ket))        
     #dmat = fock(ion0.pcut,0)*fock(ion0.pcut,0).dag()
     #pho0 = tensor(dmat,dmat,dmat)
         pho = tensor(pho1,pho2)
@@ -276,12 +269,14 @@ def ini_state(ion0,s_num,p_num,state_type):
     else:
         return tensor(isket,pho)
 
-def c_op(ion0,normalized=True):
+def c_op(ion0,nbar_list,normalized=True):
     '''
     Construct the collapse operator for the transfer systems
     Parameters
     ----------
     ion0 : ion class object
+    nbar_list: list of float
+        average phonon number of each phonon space
     normalized: bool
         if normalized, all cooling coefficient will be multiplied by
         corresponding Eigenmode matrix element
@@ -297,13 +292,14 @@ def c_op(ion0,normalized=True):
     else:
         emat = ion0.Transmode()
     for m in ph_list(ion0):
+        nbar = nbar_list[m]
         cm = tensor(spin.sI(ion0.df_spin()), p_ladder(ion0,mindex,0))
         if normalized:
             coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'hz'))
         else:
             coeff = np.sqrt(fr_conv(ion0.gamma[m],'hz'))
-        clist.append(coeff*np.sqrt(1+ion0.n_bar()[m])*cm)
-        clist.append(coeff* np.sqrt(ion0.n_bar()[m])*cm.dag())
+        clist.append(coeff*np.sqrt(1+nbar)*cm)
+        clist.append(coeff* np.sqrt(nbar)*cm.dag())
         mindex = mindex + 1                                            
     return clist
 
