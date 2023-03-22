@@ -13,6 +13,7 @@ import Qsim.ion_chain.interaction.spin_phonon as Isp
 import Qsim.ion_chain.interaction.pure_spin as Is
 from  Qsim.ion_chain.ion_system import *
 from scipy.optimize import fsolve
+from scipy.optimize import minimize
 def summary():
     print("____________________________________________________________________")
     print("function: H_ord")
@@ -87,9 +88,38 @@ def res_ah_arg(mu1,mu2):
 
     '''
     return {'d1':-1j*mu1,'d2':1j*(2*mu2-mu1)}
+def max_axial_eq(fz,*para):
+    '''
+    construct the equation used for solving maximum axial confining frequnecy
+    allowed for a stable 1D chain 
+
+    Parameters
+    ----------
+    fz : TYPE
+        DESCRIPTION.
+    *para : tuple
+        parameters to construct the equation
+        [fx,N]
+        fx: float
+            radial confining frequency
+        N: int
+            number of ions in the system
+    Returns
+    -------
+    LHS of the equation 
+
+    '''
+    fx0,N = para
+    ion_temp = ions()
+    ion_temp.N = N
+    ion_temp.fx = fx0; ion_temp.fz = fz
+    mu = (ion_temp.Axialfreq()[N-1])**2#maximum axial eigenfrequency
+    lhs = ion_temp.alpha() - 2/(mu-1)
+    del ion_temp
+    return lhs
 def res_freq_eq(fz,*para):
     '''
-    construct the equation used for solving resonant radial trapping frequency 
+    construct the equation used for solving resonant axial confining freq
     for the setup of 1 drive which satisfies \omega_r-\omega
 
     Parameters
@@ -106,13 +136,86 @@ def res_freq_eq(fz,*para):
     '''
     fx0, w0 = para
     return np.sqrt(3)*fz - 2*np.sqrt(fx0**2 - 12*fz**2/5) + w0/1000
+def res_freq_eq2(fz,*para):
+    '''
+    construct the equation used for solving axial confining freq that statsfies resonant condition
+    \omega_m + \omega_n = \nu_p + \omega 
+
+    Parameters
+    ----------
+    fz : float
+        radial trapping frequency, variable to be solved [Mhz]
+    *para : tuple
+        parameters to construct the equation
+        [fx,w, N, m ,n , p]
+        fx is the radial confining freq in MHz
+        w is the off resonance factor in kHz
+        N is the number of ions
+        m is the index for first radial mode
+        n is the index for second radial mode
+        p is the index for axial mode
+    Returns
+    -------
+    LHS of the equation 
+
+    '''
+    fx0, w0, N, m, n, p = para
+    #create a ion class object
+    ion_temp = ions()
+    ion_temp.N = N
+    ion_temp.fx = fx0; ion_temp.fz = fz
+    #compute axial frequency at index p
+    afreq = fz*ion_temp.Axialfreq()[p]
+    #compute the raidal frequency using another method to avoid 
+    #compute radial frequency at index m, n
+    rfreq_m = fz*ion_temp.Transfreq()[m]
+    rfreq_n = fz*ion_temp.Transfreq()[n]
+    del ion_temp
+    return np.abs(afreq - (rfreq_m+rfreq_n) + w0/1000)
+def fz_cons(fz,*para):
+    '''
+    construct constraint conditions for a 1D stable equilibrium 
+
+    Parameters
+    ----------
+    fz : float
+        radial trapping frequency, variable to be solved [Mhz]
+    *para : tuple
+        parameters to construct the equation    
+    Returns
+    -------
+    None.
+
+    '''
+    (fmax,) = para
+    farray = np.zeros(2)
+    farray[0] = fmax-fz
+    farray[1] = fz
+    return  farray
 '''
 function to use
 ''' 
+def max_axial(fx,N):
+    '''
+    maximum axial confining frequnecy allowed for a stable 1D chain 
+    Parameters
+    ----------
+    fx : float
+        axial trapping frequency [MHz]
+    N: int
+        number of ions
 
+    Returns
+    -------
+    float, radial trapping frequency fz [MHz]
+
+    '''
+    fz_i = fx/2
+    para0 = (fx,N)
+    return fsolve(max_axial_eq, fz_i, args=para0)[0]
 def res_freq(fx,w):
     '''
-    solve for resonant radial trapping frequency for the setup of 1 drive which satisfies
+    solve for resonant axial confining freq for the setup of 1 drive which satisfies
     \omega_r-\omega
 
     Parameters
@@ -131,6 +234,39 @@ def res_freq(fx,w):
     fz_i = (20/63)**0.5 * fx
     para0 = (fx,w)
     return fsolve(res_freq_eq, fz_i, args=para0)[0]
+def res_freq2(fx,w,N,mode_index,fz_i=1):
+    '''
+    solve for resonant axial confining freq that statsfies resonant condition
+    \omega_m + \omega_n = \nu_p + \omega 
+
+    Parameters
+    ----------
+    fx : float
+        axial trapping frequency [MHz]
+    w: float
+        detuning from radial rock mode, [kHz]    
+    N: int
+        number of ions
+    m: 
+        index for first radial mode
+    n:
+        index for second radial mode
+    p:
+        index for axial mode
+    f_zi: float
+        guess of solution, default is 1 MHz    
+    Returns
+    -------
+    float, radial trapping frequency fz [MHz]
+
+    ''' 
+    [m,n,p] = mode_index
+    para0 = (fx,w,N,m,n,p)
+    #print(para1)
+    ub_fz =  max_axial(fx, N)-1e-2
+    cons = ({'type': 'ineq', 'fun': lambda fz:ub_fz-fz},
+        {'type': 'ineq', 'fun': lambda fz: fz})
+    return minimize(res_freq_eq2, fz_i, method = 'trust-constr', args=para0, constraints = cons)['x'][0]
 def H_ord1(Omegax, Omegaz, ion0, ah_term=False,ah_op=0,full_ah=False):
     '''
     Compute the complete time-dependent Hamiltonian for the 3 ion open qunatum system

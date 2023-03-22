@@ -238,7 +238,6 @@ class ions:
     df_laser = 1 #vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
     laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
     delta_ref = 0 #reference frequency index, 0 for com frequency
-    
     def list_para(self):
         '''
         list basic physical parameters of the system
@@ -341,7 +340,7 @@ class ions:
             plt.ylim(0,1)
             plt.title(title)
             plt.xlabel(r'frequecny kHz')
-            plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
+            plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
             plt.legend()
             plt.show()
         else:
@@ -367,11 +366,47 @@ class ions:
                 plt.plot(fplot ,ylist,'b-',label = lab)     
             plt.ylim(0,1)
             plt.xlabel(r'frequecny kHz')
-            plt.grid(b=None, which='major', axis='x', color = 'blue', linestyle = '--')
+            plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
             plt.legend()
         else:
             print('current module only enables plotting frequency diagram for 3 ion system')
-        
+    def plot_N_freq(self):
+        '''
+        plot all eigenfrequencies of N ion system
+        '''
+        wmlist  = self.Axialfreq()*self.fz*1000
+        ylist = [0,1]
+        plt.figure(0)
+        for m in range(self.N):
+            fplot =  [wmlist[m], wmlist[m]]
+            if m ==0:
+                lab = 'Axial COM' 
+                plt.plot(fplot ,ylist,'r-',label = lab) 
+            else:
+                plt.plot(fplot ,ylist,'r-') 
+        wmlist  = self.Transfreq()*self.fz*1000
+        for m in range(self.N):
+            fplot =  [wmlist[m], wmlist[m]]
+            if m ==0:
+                lab = 'Radial' 
+                plt.plot(fplot ,ylist,'b-',label = lab) 
+            else:
+                plt.plot(fplot ,ylist,'b-') 
+        plt.title('Axial COM: '+str(np.round(self.fz,2))+' MHz, '+ 
+                  'Radial COM: '+str(self.fx)+' MHz')        
+        plt.ylim(0,1)
+        plt.xlabel(r'frequecny kHz')
+        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.legend()
+    def alpha(self):
+        '''
+        compute anisotropy coefficient of the trap
+        Returns
+        -------
+        float, unit of 1
+
+        '''
+        return (self.fz/self.fx)**2 
     def l0(self):
         '''
         compute the chracteristic length scale of the system
@@ -469,7 +504,123 @@ class ions:
                 for n0 in range(N0):
                     nterm = self.C(l,m0,n0) * Amat[p0,l] * Amat[q,m0] * Amat[r,n0]
                     Dpqr = Dpqr + nterm
-        return Dpqr             
+        return Dpqr 
+    def plot_D(self,non_zero=True):
+        '''
+        Plot absolute value of anharmonic coefficients D_mnp
+
+        Parameters
+        ----------
+        non_zero: bool 
+            default is True, if True, only plot non-zero coefficeints     
+
+        Returns
+        -------
+        None.
+
+        '''
+        Dplot = {}
+        for i in range(self.N ):
+            for j in range(self.N):
+                for k in range(self.N ):
+                    Dvalue = np.abs(self.D(i,j,k))
+                    if non_zero:
+                        if Dvalue>1e-5:
+                            Dplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(Dvalue)
+                    else:
+                        Dplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(Dvalue)
+        names = list(Dplot.keys())
+        values = list(Dplot.values())
+        plt.bar(range(len(Dplot)), values, tick_label=names)  
+        plt.ylabel(r'$|D_{mnp}|$',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
+        plt.grid()       
+        plt.show()
+    def ah_freq(self,mode_index,ftype):
+        '''
+        compute the oscillating frequency of the anharmonic term m n p
+
+        Parameters
+        ----------
+        m : int
+            index of radial mode 1
+        n : int
+            index of radial mode
+        p : int
+            index of axial mode 
+        ftype: int
+            determines the type of frequency to be computed
+            0 for -
+            1 for +
+        Returns
+        -------
+        frequency in kHz
+
+        '''
+        [m,n,p] = mode_index
+        efaxial = self.Axialfreq()*self.fz*1000
+        efradial = self.Transfreq()*self.fz*1000
+        if ftype==0:
+            f_ah = efradial[m]-efradial[n]-efaxial[p]
+        else:
+            f_ah = efradial[m]+efradial[n]-efaxial[p]
+        return f_ah 
+    def plot_ah_freq(self,non_zero=True):
+        '''
+        Plot absolute value of anharmonic coupling freq
+
+        Parameters
+        ----------
+        non_zero: bool 
+            default is True, if True, only plot non-zero coefficeints     
+
+        Returns
+        -------
+        None.
+
+        '''
+        afplot1 = {}; afplot2 = {}
+        #compute axial, radial freq
+        efaxial = self.Axialfreq()*self.fz*1000
+        efradial = self.Transfreq()*self.fz*1000
+        for i in range(self.N ):
+            for j in range(self.N):
+                for k in range(self.N ):
+                    Dvalue = np.abs(self.D(i,j,k))
+                    af1 = np.abs(efradial[i]-efradial[j]-efaxial[k])
+                    af2 = np.abs(efradial[i]+efradial[j]-efaxial[k])
+                    if non_zero:
+                        if Dvalue>1e-5:
+                            afplot1[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=af1
+                            afplot2[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=af2
+                    else:
+                        afplot1[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=af1
+                        afplot2[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=af2
+        names = list(afplot1.keys())
+        #plot Delta-
+        plt.figure()
+        values1 = list(afplot1.values())
+        plt.bar(range(len(afplot1)), values1, tick_label=names)  
+        plt.title(r'$|\omega_n-\omega_m-\nu_p|$',fontsize = 12)
+        plt.ylabel(r'$|\Delta^-|$, [kHz]',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
+        plt.grid()       
+        plt.show()
+        #plot Delta+
+        plt.figure()
+        values2 = list(afplot2.values())
+        plt.bar(range(len(afplot1)), values2, tick_label=names)  
+        plt.title(r'$|\omega_n+\omega_m-\nu_p|$',fontsize = 12)
+        plt.ylabel(r'$|\Delta^+|$, [kHz]',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
+        plt.grid()       
+        plt.show()
     def Axialfreq(self):
         '''
         compute the eigenvalue of axial eigenmode matrix, multiply by fz to get real frequency
@@ -512,7 +663,7 @@ class ions:
         #check if the matrix is positive-definite
         if np.min(e_val) < 0:
             print("Negtive transverse frequency, the system is unstable")
-            return -1
+            return np.sqrt(e_val+0j)
         else:
             return np.sqrt(e_val)
     def Transmode(self):
@@ -616,21 +767,63 @@ class ions:
         '''
         sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'mhz')))
         return  sigma0 / (4*self.l0())
-    def ah_couple(self, m,n,p):
+    def ah_couple(self, mode_index,real_unit=False):
         '''
         Compute the anharmonic coupling strength for index m , n, p
 
         Parameters
         ----------
-        m,n,p: python index
+        mode_index: list of python index [m n p]
         m,n for transverse modes, p for axial mode
-
+        real_unit: bool
+            default as False
+            if True, compute coefficients in unit of kHz
+            if false, compute coefficients in unit of fz
         Returns
         -------
         float, anharmonic coupling strength, [unit 1]
         multiply fz to get coupling strength in Hz
+        or real frequency in kHz
 
         '''
+        [m,n,p] = mode_index
         tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2
         freq_factor = (tfreq[m]*tfreq[n]*afreq[p])**0.25
-        return -3*self.epsilon()*self.D(m,n,p)/freq_factor
+        if real_unit:
+            ah_coef = self.fz*1000*(-3*self.epsilon()*self.D(m,n,p)/freq_factor)
+        else:
+            ah_coef = -3*self.epsilon()*self.D(m,n,p)/freq_factor
+        return ah_coef
+    def plot_ah_c(self,non_zero=True):
+        '''
+        Plot absolute value of anharmonic coupling coefficients
+    
+        Parameters
+        ----------
+        non_zero: bool 
+            default is True, if True, only plot non-zero coefficeints     
+    
+        Returns
+        -------
+        None.
+    
+        '''
+        ahplot = {}
+        for i in range(self.N ):
+            for j in range(self.N):
+                for k in range(self.N ):
+                    ah_value = np.abs(self.ah_couple([i,j,k],True))
+                    if non_zero:
+                        if ah_value>1e-5:
+                            ahplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)] = ah_value 
+                    else:
+                        ahplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)] = ah_value 
+        names = list(ahplot.keys())
+        values = list(ahplot.values())
+        plt.bar(range(len(ahplot)), values, tick_label=names)  
+        plt.ylabel(r'$|C_{ah}|$, [kHz]',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
+        plt.grid()       
+        plt.show()
