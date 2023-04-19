@@ -718,7 +718,11 @@ class ions:
         -------
         float,2pi kHz
         '''
-        return np.sqrt(Omega(self.fr,self.fx)*Omega(self.fb,self.fx))/1000
+        if self.df_laser == 0:
+            f_scale = self.fz
+        else:
+            f_scale = self.fx
+        return np.sqrt(Omega(self.fr,f_scale)*Omega(self.fb,f_scale))/1000
     def g(self,i,m):
         '''
         Compute the laser-ion coupling strength between ion i and mode m

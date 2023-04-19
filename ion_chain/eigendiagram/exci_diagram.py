@@ -95,19 +95,16 @@ def Hspin(J12, E1, E2, V, x, ion0):
     dm = ion0.dmlist()
     #spin phonon coupling
     term1 =  spin.zero_op(Ns)
-    emat = ion0.Transmode()
-    coeff = eta(ion0.wmlist())/X0(ion0.wmlist())
     for i in range(Ns):
         subop = spin.zero_op(Ns)
         for m in range(Np):
-            eta_im = coeff[m]*emat[m,i]
             subop = (subop +
-                     0.5 *np.sqrt(2) * eta_im* ion0.Omega() * x[m] * spin.sz(Ns,i))
+                     0.5 *np.sqrt(2) * ion0.g(i,m) * x[m] * spin.sz(Ns,i))
         term1 = term1 + subop 
     #print(term1)    
     term2 = spin.zero_op(Ns)
     for m in range(Np):
-        term2 = term2 + 0.5*dm[m]*((x[m]/X0(ion0.wmlist())[m])**2-1)*spin.sI(Ns)
+        term2 = term2 + 0.5*dm[m]*((x[m])**2-1)
     #print(term2)
     #phonnic mode
     sop3 = spin.up(Ns,0)*spin.down(Ns,1)
@@ -145,12 +142,22 @@ def elevel(ion0,E0,nlev,m):
     ellist = np.array([])
     for i in range(nlev):
         if i == 0:
-            elev = E0 + deltae
+            elev = E0
         else:
             elev = elev + deltae
         ellist = np.append(ellist,elev)
     return ellist    
-def energy_diagram_2d(ion_sys,J12,E1,E2,V,xarray):
+def eig_energy(ion0,J12,E1,E2,V,x,m,s_type):
+    eta_m = 1/np.sqrt(2) * (ion0.g(0,m)-ion0.g(1,m))
+    term1 = np.sqrt( np.square( 2*np.pi*(E1-E2) + eta_m*x) + (2*np.pi*J12)**2)
+    sum_d = np.sum(ion0.dmlist())/2
+    if s_type == 0:
+        eig = term1 - ion0.dmlist()[m]/2*( x**2) + sum_d
+    else:
+        eig = -term1 - ion0.dmlist()[m]/2*(x**2) + sum_d
+    return eig
+  
+def energy_diagram_2d(ion0,J12,E1,E2,V,xarray,method = 0, m=None):
     '''
     compute eigenenergy for excitation transfer system given displacement of
     rocking mode.
@@ -175,19 +182,21 @@ def energy_diagram_2d(ion_sys,J12,E1,E2,V,xarray):
     array of eigenenergy [kHz] for downup and updown
 
     '''
-    
-    scale = X0(ion_sys.wmlist())[0]
-    xlist = xarray*scale
     eiged = np.array([])
     eigeu = np.array([])
-    factor = 2*np.pi 
-    for x in xlist:
-        tempx = [0,0,x]
-        Heff = Hspin(J12,E1,E2,V,tempx,ion_sys)
-        state = Heff.eigenstates()
-        neige = sort(state)
-        eiged = np.append(eiged,neige[1]/factor)
-        eigeu = np.append(eigeu,neige[2]/factor)
+    factor = 2*np.pi
+    if method == 0:
+        for x in xarray:
+            tempx = [0,0,x]
+            Heff = Hspin(J12,E1,E2,V,tempx,ion0)
+            state = Heff.eigenstates()
+            neige = sort(state)
+            eiged = np.append(eiged,neige[1]/factor)
+            eigeu = np.append(eigeu,neige[2]/factor)
+    else:
+        for x in xarray:
+            eiged = np.append(eiged,eig_energy(ion0,J12,E1,E2,V,x,m,1)/factor)
+            eigeu = np.append(eigeu,eig_energy(ion0,J12,E1,E2,V,x,m,0)/factor)
     return eiged, eigeu              
 def energy_diagram_3d(ion_sys,J12,E1,E2,V,xrarray,xtarray):
     '''
