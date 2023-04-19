@@ -4,7 +4,7 @@ Simulate the time evolution of excitation transfer at different deltaE
 with multi cores parallel coumputation,
 this code enables using different cutoff for different deltaE.
 Note: this script must be saved before running if any changes have been made
-(a strange feature of multiprocessing package)
+(feature of multiprocessing package)
 @author: zhumj
 """
 import numpy as np
@@ -43,7 +43,7 @@ print('coupling strength between ion 1 and 2', J23, ' kHz *h')
 print('site energy of ion 2 ', E3, ' kHz *h')
 tscale = J23
 #configure time scale for computation
-end = 0.5    #end of simulation time
+end = 1    #end of simulation time
 tplot = np.arange(0,end,0.01)/tscale
 times = tplot/tscale
 #%% configure multi-core schema
@@ -60,7 +60,7 @@ print('task dictionary', tdict)
 #%%  define task function
 ion_sys.active_phonon = [[1,2]] #consider com, tilt, and 
 pcut_cri = 200 # critirion to change phonon cut off 
-pcut_list = [[[3,6]],[[3,8]]] #phonon cutoff to be used for different parameters
+pcut_list = [ [[2,10]] , [[2,10]] ] #phonon cutoff to be used for different parameters
 def spin_evolution(task,Earray):
     '''
     solve time evolution for a single energy splitting
@@ -85,9 +85,9 @@ def spin_evolution(task,Earray):
         oplist = [exop.spin_measure(ion_sys,[0,1]),
                   exop.spin_measure(ion_sys,[1,0])]
         elist = oplist
-        rho0 = exop.rho_thermal(ion_sys)
+        rho0 = exop.rho_thermal(ion_sys,[[0.01]*3],False,[0,1]) #initial state
         H0 = extrans.H_res(J23,E2/2,E3,V,ion_sys)
-        clist1 = exop.c_op(ion_sys)
+        clist1 = exop.c_op(ion_sys,[0.01]*3) #collapse operator
         result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
         sresult.append(result.expect[0])
     return {task:sresult}   

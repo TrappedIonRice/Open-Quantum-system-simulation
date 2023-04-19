@@ -10,3 +10,9 @@ ion_chain/operator/__pycache__/__init__.cpython-36.pyc
 ion_chain/operator/__pycache__/phonon.cpython-36.pyc
 ion_chain/operator/__pycache__/spin.cpython-36.pyc
 ion_chain/example/3ion excitation transfer muticore script.py
+ion_chain/transfer/anharmonic_transfer - 副本.py
+ion_chain/__pycache__/ion_system.cpython-39.pyc
+ion_chain/transfer/__pycache__/anharmonic_transfer.cpython-39.pyc
+ion_chain/transfer/__pycache__/exci_operators.cpython-39.pyc
+ion_chain/transfer/__pycache__/multi_core.cpython-39.pyc
+operator/__pycache__/phonon.cpython-39.pyc
