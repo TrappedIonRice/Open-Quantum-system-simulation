@@ -118,7 +118,7 @@ def Hspin(J12, E1, E2, V, x, ion0):
 '''
 functions to use
 '''
-def elevel(ion0,E0,nlev,m):
+def elevel(ion0,E0,nlev,m,shift=0):
     '''
     Compute energy levels of a given mode 
 
@@ -132,6 +132,9 @@ def elevel(ion0,E0,nlev,m):
         number of levels to be computed    
     m: int
         index of mode used for computing energy levels
+    shift: float
+        an additional energy shift add to all splittings, can be 
+        used for ploting mixed energy levels
     Returns
     -------
     ellist: python list
@@ -144,7 +147,7 @@ def elevel(ion0,E0,nlev,m):
         if i == 0:
             elev = E0
         else:
-            elev = elev + deltae
+            elev = elev + deltae + shift
         ellist = np.append(ellist,elev)
     return ellist    
 def eig_energy(ion0,J12,E1,E2,V,x,m,s_type):

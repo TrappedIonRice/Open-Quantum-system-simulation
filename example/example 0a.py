@@ -17,11 +17,12 @@ spin.summary()
 help(spin.sx)
 #%% this part illustrates how to use 'class' 
 #import all functions of ion_system.py from ion_chain.ising 
+#import Qsim.operator.spin as spin
 from  Qsim.ion_chain.ion_system import *
 #%% see the documents for ions class
 help(ions)
 #read document for a specific function in this class
-help(ions.n_bar)
+help(ions.alpha)
 #%% construct a ions class object
 ions1 = ions()
 ions1.list_para() #list defaut value of parameters
@@ -29,4 +30,4 @@ ions1.list_para() #list defaut value of parameters
 ions1.pcut = 20
 ions1.list_para()
 #%% use function of ions class
-print(ions1.n_bar()) 
+print(ions1.alpha()) 

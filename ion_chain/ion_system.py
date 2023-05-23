@@ -347,7 +347,7 @@ class ions:
             print('current module only enables plotting frequency diagram for 3 ion system')
     def plot_all_freq(self):
         '''
-        plot all eigenfrequencies of the sustem
+        plot all eigenfrequencies of the system
         '''
         lab_dic = {0:'com',1:'tilt',2:'rock'}
         if self.N == 3:
