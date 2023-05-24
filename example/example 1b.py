@@ -46,7 +46,8 @@ simulation for complete Hamiltonian
 #construct Hamiltonian 
 Heff,arg0 = iscc.H_ord(Bz,ion_sys) #construct time-dependent H
 #construct initial state (initialized as up up)
-psi1 = exop.ini_state(ion_sys,[0,0],0,1)
+spin_config = np.array([0,0])
+psi1 = exop.ini_state(ion_sys,spin_config,[[0,0]],1)
 elist1 = [tensor(spin.sz(N,0),exop.p_I(ion_sys)),tensor(spin.sz(N,1),exop.p_I(ion_sys))]
 #solve time dependent SE
 times =  np.arange(0,4,10**(-4))
@@ -79,7 +80,7 @@ plt.xticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.grid()
 plt.show()
-0#%% extract frequency of oscillation for the complete evolution
+#%% extract frequency of oscillation for the complete evolution
 dlist = ion_sys.dmlist()/(2*np.pi)
 f, Pxx_den = signal.periodogram(p1-p2, 10000)
 plt.semilogy(f, Pxx_den,)

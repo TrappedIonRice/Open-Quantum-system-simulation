@@ -56,8 +56,8 @@ ion_sys.active_phonon = [[0,1,2]] #consider com, tilt, and rock
 ion_sys.check_phonon()
 oplist = [exop.spin_measure(ion_sys,[0,1]),#spin population
           exop.phonon_measure(ion_sys,2)] # rock mode population
-clist1 = exop.c_op(ion_sys) #collapse operator
-rho0 = exop.rho_thermal(ion_sys) #initial state
+clist1 = exop.c_op(ion_sys,[0.01,0.01,0.01]) #collapse operator
+rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01,0.01]],False,[0,1])  #initial state
 H1 = extrans.H_res(J23,(E1-E2)/2,0,V,ion_sys) #generate Hamiltonian
 #result = mesolve(H0,rho0,times,clist1,[],progress_bar=True,options=Options(nsteps=10000))
 result1 = mesolve(H1,rho0,times0,clist1,oplist,progress_bar=True,options=Options(nsteps=100000))
@@ -70,8 +70,8 @@ ion_sys.active_phonon = [[1,2]] #consider tilt, and rock
 ion_sys.check_phonon()
 oplist = [exop.spin_measure(ion_sys,[0,1]),
           exop.phonon_measure(ion_sys,1)] #spin population
-clist2 = exop.c_op(ion_sys) #collapse operator
-rho0 = exop.rho_thermal(ion_sys) #initial state
+clist2 = exop.c_op(ion_sys,[0.01,0.01,0.01]) #collapse operator
+rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01,0.01]],False,[0,1])  #initial state
 print("__________________________________________________________")
 print('simulating with time-dependent H in ordinary interaction frame')
 H2, arg0 = extrans.H_ord(J23,(E1-E2)/2,0,V,ion_sys) #generate Hamiltonian

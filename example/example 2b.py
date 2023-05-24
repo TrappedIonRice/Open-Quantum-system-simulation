@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
-import Qsim.ion_chain.ising.ising_ce as isce
+#import Qsim.ion_chain.ising.ising_ce as isce
 from  Qsim.ion_chain.ion_system import *
 import Qsim.ion_chain.transfer.exci_operators as exop
 #%%
@@ -45,9 +45,9 @@ ion_sys.active_phonon = [[0]] #consider only com mode
 ion_sys.pcut = [[10]]
 ion_sys.list_para() #print parameters
 H0  = etrans.H_res(Omegax,deltaE,ion_sys)
-elist1 =[exop.spin_measure(ion_sys,0)]
-clist1 = exop.c_op(ion_sys,False)
-rho0 = exop.rho_thermal(ion_sys)
+elist1 =[exop.spin_measure(ion_sys,[0])]
+clist1 = exop.c_op(ion_sys,[0.01,0.01],False)
+rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01]],s_num = [0])
 print("__________________________________________________________")
 print("solving time evolution (1 mode) for deltaE =", deltaE)
 result1 = mesolve(H0,rho0,times,clist1,elist1,progress_bar=True,options=Options(nsteps=10000))
@@ -57,12 +57,12 @@ rhoee1 = result1.expect[0]
 ion_sys.gamma = [0.05*np.abs(ion_sys.delta)/(2*np.pi),0]
 ion_sys.active_phonon = [[0,1]] 
 ion_sys.pcut = [[10,2]]
-elist2 = [exop.spin_measure(ion_sys,0)]
+elist2 = [exop.spin_measure(ion_sys,[0])]
 ion_sys.list_para() 
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys)
-clist2 = exop.c_op(ion_sys,False)
-rho0 = exop.rho_thermal(ion_sys)
+clist2 = exop.c_op(ion_sys,[0.01,0.01],False)
+rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01]],s_num = [0])
 print("__________________________________________________________")
 print("solving time evolution (2 mode) for deltaE =", deltaE)
 result2 = mesolve(H0,rho0,times,clist2,elist2,progress_bar=True,options=Options(nsteps=10000))
@@ -72,11 +72,11 @@ rhoee2 = result2.expect[0]
 ion_sys.active_phonon = [[0,1]] 
 ion_sys.pcut = [[10,2]]
 ion_sys.gamma = [0.05*np.abs(ion_sys.delta)/(2*np.pi),0]
-elist3 = [exop.spin_measure(ion_sys,0)]
+elist3 = [exop.spin_measure(ion_sys,[0])]
 ion_sys.list_para()
-rho0 = exop.rho_thermal(ion_sys)
+rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01]],s_num = [0])
 Hce, arg0 = etrans.H_ord(Omegax,deltaE,ion_sys)
-clist3 = exop.c_op(ion_sys,False)
+clist3 = exop.c_op(ion_sys,[0.01,0.01],False)
 print("__________________________________________________________")
 print("solving time evolution using time-dependent H in ordinary frame, for deltaE =", deltaE)
 result3 = mesolve(Hce,rho0,times,clist3,elist3,args=arg0,progress_bar=True,options=Options(nsteps=10000))

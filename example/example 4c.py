@@ -85,9 +85,9 @@ def spin_evolution_g(task,Garray):
         oplist = [exop.spin_measure(ion_sys,[0,1]),
                   exop.spin_measure(ion_sys,[1,0])]
         elist = oplist
-        rho0 = exop.rho_thermal(ion_sys)
+        rho0 = exop.rho_thermal(ion_sys,[[0.01]*3],False,[0,1]) #initial state
         H0 = extrans.H_res(J23,E2/2,E3,V,ion_sys)
-        clist1 = exop.c_op(ion_sys)
+        clist1 = exop.c_op(ion_sys,[0.01]*3) #collapse operator
         result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
         sresult.append(result.expect[0])
     return {task:sresult}   
