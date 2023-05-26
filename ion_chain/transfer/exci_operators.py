@@ -221,7 +221,7 @@ def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
         rho0 = tensor(ini_sdm,pho)
         return rho0    
 
-def ini_state(ion0,s_num,p_num,state_type):
+def ini_state(ion0,s,p_num,state_type):
     '''
     Construct initial ket/density matrix that has integer phonon number
 
@@ -229,7 +229,7 @@ def ini_state(ion0,s_num,p_num,state_type):
     ----------
     ion0: ions class object
        the object that represent the system to be simulated
-    s_num: list of int
+    s: initial spin state defined as spin.spin_state(Ns,s_num)
         specify initial spin state, 0 for up, 1 of down
     p_num: list of list of int 
         specified phonon number for the state
@@ -242,7 +242,9 @@ def ini_state(ion0,s_num,p_num,state_type):
 
     '''
     Ns = ion0.df_spin()
-    isket = spin.spin_state(Ns,s_num)
+    # we should put an error exception if Ns does not coincide with the dimension of the spin state
+    #isket = spin.spin_state(Ns,s_num)
+    isket = s
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
@@ -267,7 +269,7 @@ def ini_state(ion0,s_num,p_num,state_type):
     if state_type == 0:
         return rho0
     else:
-        return tensor(isket,pho)
+        return tensor(s,pho)
 
 def c_op(ion0,nbar_list,normalized=True):
     '''
