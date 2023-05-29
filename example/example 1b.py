@@ -46,7 +46,8 @@ simulation for complete Hamiltonian
 #construct Hamiltonian 
 Heff,arg0 = iscc.H_ord(Bz,ion_sys) #construct time-dependent H
 #construct initial state (initialized as up up)
-spin_config = np.array([0,0])
+#spin_config = np.array([0,0])
+spin_config = spin.spin_state(N,[1,1])
 psi1 = exop.ini_state(ion_sys,spin_config,[[0,0]],1)
 elist1 = [tensor(spin.sz(N,0),exop.p_I(ion_sys)),tensor(spin.sz(N,1),exop.p_I(ion_sys))]
 #solve time dependent SE
@@ -58,7 +59,8 @@ result1 = sesolve(Heff,psi1,times,e_ops=elist1,args = arg0,progress_bar=True,opt
 '''
 simulation with a pure spin approximation
 '''
-psi0 = spin.phid(N)  
+psi0 = spin.phid(N)
+psi0 = spin.spin_state(2,[1,1]) 
 J = iscp.Jt(ion_sys)
 elist2 = [spin.sz(N,0),spin.sz(N,1)]
 H = iscp.Hps(J,ion_sys,Bz)
