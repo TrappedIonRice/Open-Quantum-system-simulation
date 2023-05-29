@@ -45,7 +45,7 @@ def ph_list(ion0):
 
     Parameters
     ----------
-    ion0 : ion class object
+    ion0 : ions class object
     Returns
     -------
     list of int
@@ -56,13 +56,13 @@ def ph_list(ion0):
        mlist = ion0.active_phonon[ion0.df_laser]
     return mlist    
 
-def pnum(ion0,df=None):
+def pnum(ion0 = None,df=None):
     '''
     find the number of phonon spaces coupled to the laser
     
     Parameters
     ----------
-    ion0 : ion class object
+    ion0 : ions class object
     df : int, default as none
         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
         Specified if doing computations with a different coupling direction from the direction
@@ -83,7 +83,7 @@ def pnum(ion0,df=None):
         dim = ion0.df_phonon()[1][df_couple]
     return dim    
 
-def p_zero(ion0):
+def p_zero(ion0 = None):
     '''
     construct the zero operator on phonon space
     Parameters
@@ -125,7 +125,7 @@ def p_I(ion0):
                     phon.pI(pcut[1],ion0.df_phonon()[1][1]))
     return pI
 
-def p_ladder(ion0,mindex,atype,df=None):
+def p_ladder(ion0=None,mindex=0,atype=0,df=None):
     '''
     construct the ladder operator on phonon space
     Parameters
@@ -154,14 +154,14 @@ def p_ladder(ion0,mindex,atype,df=None):
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         if atype == 0:
-            opa = phon.down(mindex,pcut[0],Np)
+            opa = phon.down(m = mindex,cutoff = pcut[0], N = Np)
         else:
-            opa = phon.up(mindex,pcut[0],Np)
+            opa = phon.up(m = mindex,cutoff = pcut[0], N = Np)
     else:     #two  phonon spaces
         if atype == 0:
-            opa = phon.down(mindex,pcut[df_couple],Np)
+            opa = phon.down(m = mindex, cutoff = pcut[df_couple], N = Np)
         else:
-            opa = phon.up(mindex,pcut[df_couple],Np)
+            opa = phon.up(m = mindex, cutoff = pcut[df_couple], N = Np)
         #construct in order axial, transverse
         if  df_couple ==0:
             opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
@@ -169,7 +169,7 @@ def p_ladder(ion0,mindex,atype,df=None):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
+def rho_thermal(ion0=None, nbar_list=[],s_state=[0], ket = False):
     '''
     Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
@@ -179,7 +179,7 @@ def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
     ket: bool, default as false
         if true, output state as ket for a pure superposition of fock states
         if false, output the usual density matrix used for thermal state
-    s_num: list of int
+    s_state: list of int
         specify initial spin state, 0 for up, 1 of down, default as 0 
     nbar_list: list of list of float
         average phonon number of each phonon space
@@ -189,7 +189,7 @@ def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
 
     '''
     Ns = ion0.df_spin()
-    isket = spin.spin_state(Ns,s_num)
+    isket = spin.spin_state(Ns,s_state)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for mindex in range(ion0.df_phonon()[1][0]):
@@ -221,7 +221,7 @@ def rho_thermal(ion0,nbar_list,ket=False,s_num=0,):
         rho0 = tensor(ini_sdm,pho)
         return rho0    
 
-def ini_state(ion0,s_num,p_num,state_type):
+def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     '''
     Construct initial ket/density matrix that has integer phonon number
 
@@ -229,9 +229,9 @@ def ini_state(ion0,s_num,p_num,state_type):
     ----------
     ion0: ions class object
        the object that represent the system to be simulated
-    s_num: list of int
+    s_state: list of int
         specify initial spin state, 0 for up, 1 of down
-    p_num: list of list of int 
+    p_state: list of list of int 
         specified phonon number for the state
     state_type: type of state to be generated 
         0 for density matrix
@@ -242,25 +242,25 @@ def ini_state(ion0,s_num,p_num,state_type):
 
     '''
     Ns = ion0.df_spin()
-    isket = spin.spin_state(Ns,s_num)
+    isket = spin.spin_state(Ns,s_state)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho = fock(ion0.pcut[0][0],p_num[0][m])
+                pho = fock(ion0.pcut[0][0],p_state[0][m])
             else:
-                pho = tensor(pho,phon.fock(ion0.pcut[0][m],p_num[0][m]))
+                pho = tensor(pho,phon.fock(ion0.pcut[0][m],p_state[0][m]))
     else:
         for m in range(ion0.df_phonon()[1][0]):
             if m == 0:
-                pho1 = fock(ion0.pcut[0][0],p_num[0][m])
+                pho1 = fock(ion0.pcut[0][0],p_state[0][m])
             else:
-                pho1 = tensor(pho1,fock(ion0.pcut[0][m],p_num[0][m]))
+                pho1 = tensor(pho1,fock(ion0.pcut[0][m],p_state[0][m]))
         for m in range(ion0.df_phonon()[1][1]):
             if m == 0:
-                pho2 = fock(ion0.pcut[1][0],p_num[1][m])
+                pho2 = fock(ion0.pcut[1][0],p_state[1][m])
             else:
-                pho2 = tensor(pho2,fock(ion0.pcut[1][m],p_num[1][m]))  
+                pho2 = tensor(pho2,fock(ion0.pcut[1][m],p_state[1][m]))  
         pho = tensor(pho1,pho2)       
     dpmat = pho*pho.dag()
     rho0 = tensor(ini_sdm,dpmat)
@@ -269,7 +269,7 @@ def ini_state(ion0,s_num,p_num,state_type):
     else:
         return tensor(isket,pho)
 
-def c_op(ion0,nbar_list,normalized=True):
+def c_op(ion0=None, nbar_list=[1],normalized=True):
     '''
     Construct the collapse operator for the transfer systems
     Parameters
@@ -288,9 +288,9 @@ def c_op(ion0,nbar_list,normalized=True):
     clist = []
     mindex = 0
     if ion0.df_laser == 0:
-        emat = ion0.Axialmode()
+        emat = ion0.axial_mode
     else:
-        emat = ion0.Transmode()
+        emat = ion0.radial_mode
     for m in ph_list(ion0):
         nbar = nbar_list[m]
         cm = tensor(spin.sI(ion0.df_spin()), p_ladder(ion0,mindex,0))
@@ -303,7 +303,7 @@ def c_op(ion0,nbar_list,normalized=True):
         mindex = mindex + 1                                            
     return clist
 
-def spin_measure(ion0,s_config):
+def spin_measure(ion0=None,s_config=[0]):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
 
@@ -321,7 +321,7 @@ def spin_measure(ion0,s_config):
     s_ket = spin.spin_state(ion0.df_spin(),s_config)
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
     return s_op
-def site_spin_measure(ion0,index):
+def site_spin_measure(ion0=None,index=0):
     '''
     Generate operators to measure site spin population for excitation transfer systems
     p = 0.5*(<\sigma_z>)+0.5
@@ -338,7 +338,7 @@ def site_spin_measure(ion0,index):
     s_op = tensor( 0.5 * (spin.sI(ion0.df_spin()) + spin.sz(ion0.df_spin(),index)),
                   p_I(ion0))
     return s_op
-def phonon_measure(ion0,mindex,df=None):
+def phonon_measure(ion0=None,mindex=0,df=None):
     '''
     Generate operators to measure phonon evolution for excitation transfer systems
     Parameters
@@ -362,12 +362,12 @@ def phonon_measure(ion0,mindex,df=None):
     p_op = tensor(spin.sI(ion0.df_spin()),p_op)
     return p_op    
 
-def pstate_measure(ion0,slevel,mindex,df=None):
+def pstate_measure(ion0=None,meas_level=0,mindex=0,df=None):
     '''
     mearsure the population of n=pcut state of a specific phonon space 
     in order to check the validity using a finite phonon space
     ion0 : ion class object
-    slevel: int
+    meas_level: int
         phonon state level to be measured    
     mindex: int  
         index of phonon space to be measured    
@@ -387,9 +387,9 @@ def pstate_measure(ion0,slevel,mindex,df=None):
         Np = pnum(ion0, df_couple)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
-        opa = phon.state_measure(pcut[0],Np,slevel,mindex)
+        opa = phon.state_measure(pcut[0],Np,meas_level,mindex)
     else:     #two  phonon spaces
-        opa = phon.state_measure(pcut[df_couple],Np,slevel,mindex)
+        opa = phon.state_measure(pcut[df_couple],Np,meas_level,mindex)
         #construct in order axial, transverse
         if  df_couple ==0:
             opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))

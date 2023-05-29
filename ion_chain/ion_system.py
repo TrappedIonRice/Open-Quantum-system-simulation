@@ -75,7 +75,7 @@ def E_eq(x):
                 new_eq =  new_eq + elist[i] * ef_term(x[m],x[i])
         eqlist.append(new_eq)
     return eqlist                    
-def E_position(N,fz,scale,com_scale):
+def E_position(N,fz,scale=False,com_scale=1):
     '''
     Compute the equilibrium position of the 1D ion chain centered at 0 
     Input: 
@@ -108,7 +108,14 @@ def Aele(N0,m,n,epos):
     else:
         ele_val = -2/(np.abs(epos[m]-epos[n]))**3    
     return ele_val
-
+def compute_three_tensor(N,c_func):
+    #compute all elements of a rank 3 tensor and store them in array
+    tensor = np.zeros((N,N,N))
+    for i in range(N):
+        for j in range(N):
+            for k in range(N):
+                tensor[i][j][k] = c_func(i,j,k)
+    return tensor
 '''
 functions to use for this module
 '''
@@ -143,9 +150,9 @@ def eta(f):
 
     '''
     return Dk * X0(f) 
-def Omega(fs,fx):
+def Omega_conv(fs,fx):
     '''
-    Compute side band rabi-rate
+    Convert effective rabi frequency to real rabi frequency 
     Input(fs,fx)
     Parameters
     ----------
@@ -179,65 +186,102 @@ def summary():
     print("compute side band rabi-rate")
 class ions:
     '''
-    this class is used to store the parameters of a N ion system couples to a single
-    laser drive in Axial or Radial direction, assuming the two radial directions are equivalent
-    Parameters  
+    this class is used to store the parameters of a N ion system couples to a 
+    single laser drive in Axial or Radial direction, assuming the two radial 
+    directions are equivalent object attributes to be set directly
+    ion_config:
     N : int
         number of ions in the system
-    pcut : int
-        cut off level of the harmonic ocsillator eigenenergy
     fz : float
         axial frequency of the ion trap, [MHz]
     fx : float
         transverse frequency of the ion trap, [MHz]
-    fr: float
-         effective red side band frequency Omega * dK * X_0(fx) [kHz],      
-    fb: float
-         effective blue side band frequency [kHz] 
+        
+    laser_config:
+    Omega_eff: float
+         effective laser_dipole Rabi frequency Omega * dK * X_0(fx) [kHz],
+    df_laser: int   
+        vibrational degree of freedom coupled to the laser, 0 for axial, 1 for 
+        radial
+    laser_couple: list of int
+        ion index that couples to the laser, for instance [0,1] means couple to 
+        ion 0, 1
+    delta: float
+        Laser detuning from a specific eigenfrequency, used to specify laser 
+        frequency.      
+    delta_ref: int 
+        reference eigenfrequency index correspond to delta, 0 for com mode
     phase: float
-        spin phase phis [rad]    
+        spin phase phis [rad]
+        
+    phonon config
     active_phonon: list of list of int
-        index phonon space that will be considered
-        initialized in form [[axial]]/[[radial]] if only 1 vibration direction is considered
-        initialized in form [[axial],[radial]] if both vibrational degrees of freedoms are considered.
-        0 always means com mode
-        #for instance, [[1,2],[0,2]] means consider the tilt, rock mode for axial motion
-        #com, rock mode for 1 radial modtion
+        Index of phonon space to be be considered.
+        Initialized in form [[axial]]/[[radial]] if only 
+        1 vibrational degree of freedom is considered. 
+        Initialized in form [[axial],[radial]] if both 
+        vibrational degrees of freedoms are considered. 
+        (0 always means com mode)
+        For instance, [[1,2],[0,2]] means consider the tilt, 
+        rock mode for axial motion com, rock mode for 1 radial motion.
     pcut: list of list of int
-        cutoff of phonon space size for each phonon space being considered, 
-        initialized in form [[axial]]/[[radial]] if only 1 vibration direction is considered
-        initialized in form [[axial],[radial]] if both vibrational degrees of freedoms are considered.
-        Note for the sublist, first index is always for com mode
-        Needs to be consistent with active_phonon
+        Cutoff of phonon space size for each phonon space to be considered, 
+        needs to be consistent with active_phonon. 
+        Initialized in form [[axial]]/[[radial]] if only
+        1 vibration degree of freedom is considered. 
+        Initialized in form [[axial],[radial]] if both 
+        vibrational degrees of freedoms are considered.
+    
+    cooling config
+    gamma: list of float
+        cooling rate on each phonon space
     coolant: list of int
         index of coolant    
-    df_laser: int   
-        vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
-    laser_couple: list of int
-        ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
-    delta_ref: int 
-        reference frequency index for defining laser detuning, 0 for com mode
-    
-    Etot: float
-        total energy of one ion    
+        
+    important class method:
+            
     '''
-    '''
-    default value of parameters
-    '''
-    N = 2  #number of ions
-    delta = 20 #detuning 
-    fx = 2 
-    fz = 1
-    fb = 10
-    fr = 10
-    phase = 0
-    gamma = [0.1 * 20, 0.1*20]
-    active_phonon = [[0,1,2]]  #index phonon space that will be considered, if more than 1 space,
-    pcut = [[2,2,2]] #cutoff of phonon energy for distinctive modes, first index is always for com mode
-    coolant = [2] #index of coolant
-    df_laser = 1 #vibrational degree of freedom coupled to the laser, 0 for axial, 1 for radial
-    laser_couple = [0,1] #ion index that couples to the laser, for instance [0,1] means couple to ion 0, 1
-    delta_ref = 0 #reference frequency index, 0 for com frequency
+    def __init__(self,
+                 trap_config = {'N':2,'fx':2,'fz':1},
+                 phonon_config = {'active_phonon':[[0,1]],'pcut' : [[5,5]]},
+                 laser_config = {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
+                                 'delta':20, 'delta_ref':0,'phase':0},
+                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}
+                 ):
+        
+        '''
+        initialize a ions class object with given parameters
+        Parameters
+        ----------
+        trap_config : dict, optional
+            parameters for trap configuration. 
+            The default is {'N':2,'fx':2,'fz':1}:
+            N = 2 ions, fx = 2MHz, fz = 1MHz
+        phonon_config : dict, optional
+            parameters for phonon space configuration. 
+            The default is {'active_phonon':[[0,1]],'pcut' : [[5,5]]}.
+            consider all 2 modes in axial/radial direction and set cutoff level at 5
+        laser_config : dict, optional
+            parameters for laser configuration.
+            The default is {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
+                            'delta':20, 'delta_ref':0,'phase':0}.
+            Omega_eff = 10 kHz (Effective Rabi frequency)
+            df_laser = 1 (Laser drive in radial direction)
+            laser_couple = [0,1] (Laser coupled to all two ions)
+            delta = 20 kHz (detuning from eigenmode)
+            delta_ref = 0 (The above detuning is specified with respect to COM mode)
+            phase  = 0 rad (spin phase)
+        cooling_config : TYPE, optional
+            parameters for cooling configuration. 
+            The default is {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}.
+
+        Returns
+        -------
+        None.
+
+        '''
+        self.update_all(trap_config, phonon_config, laser_config, cooling_config)        
+        print('Ions class object initialized.')
     def list_para(self):
         '''
         list basic physical parameters of the system
@@ -248,28 +292,164 @@ class ions:
         print('________________________________________________________________')
         print('********************Setup of the Trap************************')
         print('number of ions', self.N)
-        print('axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
-        print('transverse COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
-        print('index of ions that couple to the laser field: ',self.laser_couple)
-        print('Axial vibrational eigenfrequency', np.round(self.Axialfreq()*self.fz,2),'MHz')
-        print('Transverse(Radial) vibrational eigenfrequency', np.round(self.Transfreq()*self.fz,2),'MHz')
+        print('Axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
+        print('Radial COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
+        print('Axial vibrational eigenfrequency', np.round(self.axial_freq,2),'MHz')
+        print('Radial (Transverse) vibrational eigenfrequency', np.round(self.radial_freq,2),'MHz')
         print('                                                                 ')
         print('********************Parameters of Laser Drive************************')
         print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[self.df_laser])
+        print('index of ions that couple to the laser field: ',self.laser_couple)
         print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
               ,np.round(self.delta,2)," [kHz]")
-        print('detuning from eigenfrequency',np.round(self.dmlist()/(2*np.pi),2),'kHz')
-        print('detuning frequency index: ', self.delta_ref)
-        print('red side band rabi frequency ', np.round(self.fr,2),' [kHz]')
-        print('blue side band rabi frequency ', np.round(self.fb,2),' [kHz]')
+        print('detuning from eigenfrequency',np.round(self.detuning/(2*np.pi),2),'kHz')
+        print('reference eigenfrequency index: ', self.delta_ref)
+        print('Effective rabi frequency ', np.round(self.Omega_eff,2),' [kHz]')
         print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0)/(2*np.pi),2),' [kHz]')
+        print('spin phase phis',np.round(self.phase*180/np.pi,2))
+        print('(input in rad but displayed in degs)')
         print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
         print('index of phonon space included in simulation: ',self.active_phonon )
         print('corresonding phonon space cutoff ', self.pcut)
-        print('spin phase phis',np.round(self.phase*180/np.pi,2))
-        print('(input in rad but displayed in degs)')
-        print('cooling rate ', np.round(self.gamma,2)," [kHz]") 
+        print('********************Config of Cooling************************')
+        print('Effective cooling rate ', np.round(self.gamma,2)," [kHz]") 
+        print('Coolant index ', self.coolant)
+    def update_all(self, trap_config = None, phonon_config=None,  
+                   laser_config = None, cooling_config=None, 
+                   print_text = True) :
+        self.update_trap(trap_config, print_text)
+        self.update_phonon(phonon_config, print_text)
+        self.update_laser(laser_config, print_text)
+        self.update_cooling(cooling_config, print_text)
+    def update_trap(self,trap_config = None, print_text = True):
+        '''
+        Set trap parameters and compute all related attributes. 
+        (see pdf document for details)
+        Parameters
+        ----------
+        trap_config : dict, optional
+           Parameters for trap configuration. The default is None.
+        print_text : bool, optional
+            If true, print a message after updating parameters. 
+            The default is True.
+
+        Returns
+        -------
+        None.
+
+        '''
+        if trap_config != None:
+            self.N = trap_config['N']  #set trap parameters
+            self.fx = trap_config['fx']
+            self.fz = trap_config['fz']
+        #compute and update Eigenmodes and Eigenfrequencies
+        #compute normalized equilibrium position of the ions
+        self.equi_posi = self.Equi_posi() 
+        #compute axial/radial elastic tensor
+        self.a_matrix = self.A_matrix(); self.r_matrix = self.R_matrix()
+        #compute axial/radial eigenvalues
+        self.axial_eval = self.Axial_eval(); self.radial_eval = self.Radial_eval()
+        self.axial_mode = self.Axial_mode(); self.radial_mode = self.Radial_mode()
+        #compute axial/radial eigenfrequencies in  (MHz)
+        self.axial_freq = self.fz * np.sqrt(self.axial_eval)
+        #check if the radial tensor is positive definite
+        if np.min(self.radial_eval) < 0:
+            print("Negtive radialverse frequency, the system is unstable")
+            self.radial_freq = self.fz * np.sqrt(self.radial_eval+0j)
+        else:
+            self.radial_freq = self.fz * np.sqrt(self.radial_eval)
+        
+        #compute anharmonic coupling tensor C, D
+        self.ah_epsilon_val = self.ah_epsilon()
+        self.ah_C_tensor = compute_three_tensor(self.N,self.ah_C)
+        self.ah_D_tensor = compute_three_tensor(self.N,self.ah_D)
+        if print_text:
+            print('Trap coefficients updated')
+            print('Anharmonic coefficients updated')
+    def update_phonon(self, phonon_config = None, print_text = True):
+        '''
+        Set phonon parameters and compute all related attributes. 
+        (see pdf document for details)
+        Parameters
+        ----------
+        phonon_config : dict, optional
+           Parameters for phonon space configuration. The default is None.
+        print_text : bool, optional
+          If true, print a message after updating parameters. The default is True.
+
+       Returns
+       -------
+       None.
+
+        '''
+        if phonon_config != None:
+            self.active_phonon = phonon_config['active_phonon']  
+            self.pcut = phonon_config['pcut']
+        if print_text:
+            self.check_phonon()
+            print('Phonon space parameters updated')
+    def update_laser(self, laser_config = None, print_text = True):
+        '''
+        Set laser parameters and compute all related attributes. 
+        (see pdf document for details)
+        Parameters
+        ----------
+        laser_config : dict, optional
+           Parameters for laser configuration. The default is None.
+        print_text : bool, optional
+          If true, print a message after updating parameters. The default is True.
+
+       Returns
+       -------
+       None.
+
+        '''
+        if laser_config != None:
+            self.Omega_eff = laser_config['Omega_eff']  
+            self.df_laser = laser_config['df_laser']
+            self.laser_couple = laser_config['laser_couple']
+            self.delta = laser_config['delta']
+            self.delta_ref = laser_config['delta_ref']
+            self.phase = laser_config['phase']
+        #extract eigenfrequncy in laser drive direction, [MHz]   
+        if self.df_laser == 0: 
+            self.efreq = self.axial_freq 
+        else:   
+            self.efreq = self.radial_freq
+        #compute effective laser frequency mu = omega_{L}- omega{hf} [2pi kHz] 
+        self.mu = 2*np.pi*(1000*self.efreq[self.delta_ref] + self.delta)
+        #compute all detunings from eigenfrequencies in laser drive direction, [2pi kHz] 
+        self.detuning = self.mu - fr_conv(self.efreq, 'khz')
+        #compute real rabi frequency  of the laser drive replaces 
+        if self.df_laser == 0:
+            f_scale = self.fz
+        else:
+            f_scale = self.fx
+        self.Omega = Omega_conv(self.Omega_eff,f_scale)/1000
+        if print_text:
+            print('Laser parameters updated')
+    def update_cooling(self, cooling_config = None, print_text = True):
+        '''
+        Set laser parameters and compute all related attributes. 
+        (see pdf document for details)
+        Parameters
+        ----------
+        cooling_config : dict, optional
+           Parameters for laser configuration. The default is None.
+        print_text : bool, optional
+          If true, print a message after updating parameters. The default is True.
+
+       Returns
+       -------
+       None.
+
+        '''
+        if cooling_config != None:
+            self.gamma =  cooling_config['gamma']  
+            self.coolant=  cooling_config['coolant']
+        if print_text:
+            print('Cooling parameters updated')
     def check_phonon(self):
         '''
         Check the consistency in set up of phonon space
@@ -287,7 +467,7 @@ class ions:
         if checker == 0:    
             print('Inconsistency between active phonon space and assigned phonon cutoff')
         else:
-            print('consistent')
+            print('Phonon space setups are consistent')
         print('_____________________________________________________________')    
     def df_spin(self):
         '''
@@ -320,7 +500,7 @@ class ions:
         visualize eigenfreqencies and laser frequency
         '''
         if self.N == 3:
-            wmlist  = self.wmlist()*1000
+            wmlist  = self.efreq*1000
             lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
             lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
             lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
@@ -351,14 +531,14 @@ class ions:
         '''
         lab_dic = {0:'com',1:'tilt',2:'rock'}
         if self.N == 3:
-            wmlist  = self.Axialfreq()*self.fz*1000
+            wmlist  = self.axial_freq*1000
             ylist = [0,1]
             plt.figure(0)
             for m in range(3):
                 lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
                 fplot =  [wmlist[m], wmlist[m]]
                 plt.plot(fplot ,ylist,'r-',label = lab) 
-            wmlist  = self.Transfreq()*self.fz*1000
+            wmlist  = self.radial_freq()*1000
             plt.figure(0)
             for m in range(3):
                 lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
@@ -426,24 +606,81 @@ class ions:
 
         '''
         return E_position(self.N,self.fz,False,0) 
-    def Amatrix(self):
+    def A_matrix(self):
         #compute the tensor A which determines the axial oscillation
         #fz, axial frequency of the ion trap
-        eposition = E_position(self.N, self.fz,False,0) 
         Amat = np.zeros((self.N,self.N))
         for m in range(self.N):
             for n in range(self.N):
-                Amat[m,n] = Aele(self.N,m,n,eposition)
+                Amat[m,n] = Aele(self.N,m,n,self.equi_posi)
         return Amat
-    def Tmatrix(self):
+    def R_matrix(self):
         #compute the tensor B that determines transverse oscillation
         #fx, transverse frequency of the ion trap
-        Amat = self.Amatrix()
+        Amat = self.a_matrix
         Tmat = (0.5+(self.fx/self.fz)**2) * np.identity(self.N) - 0.5*Amat
         return Tmat
-    def C(self,m,n,p):
+    def Axial_eval(self):
         '''
-        Compute the anharmonic tensor in the classical Lagrangian 
+        compute the eigenvalue of axial elastic tensor
+        Returns
+        -------
+        np array object, each index is an eigenvalue for axial mode [unit of 1]
+        The eigenvalues are arranged in an increasing order, such that the first 
+        one corresponds to COM mode frequency
+        '''
+        e_val = np.linalg.eig(self.a_matrix)[0]
+        order = np.argsort(e_val)
+        e_val = e_val[order]
+        return e_val
+    def Axial_mode(self):
+        '''
+        compute the eigenmodes of axial oscillation 
+        Returns
+        -------
+        np array object that represents N by N matrix, each row is an axial eigenmode
+        The eigenmode are arranged in an increasing order of eigenvalues, such that the first 
+        one correpond to COM mode
+
+        '''
+        e_val,e_array = np.linalg.eig(self.a_matrix)
+        order = np.argsort(e_val)
+        return (np.transpose(e_array))[order]
+    def Radial_eval(self):
+        '''
+        compute the eigenvalue of transverse/radial elastic tensor
+        Returns
+        -------
+        np array object, each index is an eigenvalue for Transverse(Radial) mode [unit of 1]
+        The eigenvalues are arranged in an decreasing order, such that the first 
+        one correpond to COM mode frequency
+
+        '''
+        e_val = np.linalg.eig(self.r_matrix)[0]
+        order = np.argsort(e_val)
+        e_val = e_val[order][::-1]
+        return e_val
+    def Radial_mode(self):
+        '''
+        compute the eigenmode of radial oscillation
+
+        Returns
+        -------
+        np array object that represents N by N matrix, each row is an Transverse (Radial) eigenmode
+        The eigenmode are arranged in an decreasing order of eigenvalues, such that the first 
+        one correpond to COM mode
+
+        '''
+        e_val, e_array= np.linalg.eig(self.r_matrix)
+        order = np.argsort(e_val)[::-1]
+        return np.transpose(e_array)[order]    
+    '''
+    _________________________________________________________________________
+    This part computes anharmonic coupling coefficients
+    '''
+    def ah_C(self,m,n,p):
+        '''
+        Compute the anharmonic tensor C elements for classical Lagrangian 
 
         Parameters
         ----------
@@ -460,7 +697,7 @@ class ions:
             for q in range(self.N):
                 if q!=m:
                     Cmnp = (Cmnp + 
-                            np.sign(q-m)/(self.Equi_posi()[q]-self.Equi_posi()[m])**4)
+                            np.sign(q-m)/(self.equi_posi[q]-self.equi_posi[m])**4)
         elif (m!=n) and (n!=p) and (m!=p):
             Cmnp = 0
         else:
@@ -472,11 +709,11 @@ class ions:
             else:
                 p0 = m ; m0 = p 
             #only needs m,p to compute this     
-            Cmnp = -1*np.sign(p0-m0) / (self.Equi_posi()[p0]-self.Equi_posi()[m0])**4
+            Cmnp = -1*np.sign(p0-m0) / (self.equi_posi[p0]-self.equi_posi[m0])**4
         return Cmnp
-    def D(self,p0,q,r):
+    def ah_D(self,p0,q,r):
         '''
-        Compute the anharmonic tensor for mode-mode coupling   
+        Compute the anharmonic tensor D element for mode-mode coupling   
         
         Parameters
         ----------
@@ -491,7 +728,7 @@ class ions:
         #implement the summation over 3 index
         Dpqr = 0
         N0 = self.N
-        Amat = self.Axialmode()
+        Amat = self.axial_mode
         #this matrix adjust the sign of the eigenmodes such that all eigenvectors
         #has positive sign at index N (or N-1 in terms of python index)
         sigs = np.sign(Amat[:,N0-1])
@@ -502,10 +739,48 @@ class ions:
         for l in range(N0):
             for m0 in range(N0):
                 for n0 in range(N0):
-                    nterm = self.C(l,m0,n0) * Amat[p0,l] * Amat[q,m0] * Amat[r,n0]
+                    nterm = self.ah_C_tensor[l][m0][n0] * Amat[p0,l] * Amat[q,m0] * Amat[r,n0]
                     Dpqr = Dpqr + nterm
         return Dpqr 
-    def plot_D(self,non_zero=True):
+    def ah_epsilon(self):
+        '''
+        Compute the anharmonic coefficient epsilon = sqrt(hbar/(2 m fz)/(4l))
+        -------
+        Returns
+        -------
+        float unit of 1
+
+        '''
+        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'mhz')))
+        return  sigma0 / (4*self.l0())
+    def ah_couple(self, mode_index, real_unit=False):
+        '''
+        Compute the anharmonic coupling strength for index m , n, p
+
+        Parameters
+        ----------
+        mode_index: list of python index [m n p]
+        m,n for transverse modes, p for axial mode
+        real_unit: bool
+            default as False
+            if True, compute coefficients in unit of kHz
+            if false, compute coefficients in unit of fz
+        Returns
+        -------
+        float, anharmonic coupling strength, [unit 1]
+        multiply fz to get coupling strength in Hz
+        or real frequency in kHz
+
+        '''
+        [m,n,p] = mode_index
+        tfreq = self.radial_eval; afreq = self.axial_eval
+        freq_factor = (tfreq[m]*tfreq[n]*afreq[p])**0.25
+        if real_unit:
+            ah_coef = self.fz*1000*(-3*self.ah_epsilon_val*self.ah_D_tensor[m][n][p]/freq_factor)
+        else:
+            ah_coef = -3*self.ah_epsilon_val*self.ah_D_tensor[m][n][p]/freq_factor
+        return ah_coef
+    def plot_ah_c(self,non_zero=True,real_freq = True):
         '''
         Plot absolute value of anharmonic coefficients D_mnp
 
@@ -513,26 +788,34 @@ class ions:
         ----------
         non_zero: bool 
             default is True, if True, only plot non-zero coefficeints     
-
+        real_freq: bool 
+            default is True, if True, plot real anharmonic coupling coefficients in kHz 
+                             if False, plot elements of tensor D
         Returns
         -------
         None.
 
         '''
-        Dplot = {}
+        ah_plot = {}
         for i in range(self.N ):
             for j in range(self.N):
                 for k in range(self.N ):
-                    Dvalue = np.abs(self.D(i,j,k))
-                    if non_zero:
-                        if Dvalue>1e-5:
-                            Dplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(Dvalue)
+                    if real_freq:
+                        ah_val = np.abs(self.ah_couple([i,j,k],True))
                     else:
-                        Dplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(Dvalue)
-        names = list(Dplot.keys())
-        values = list(Dplot.values())
-        plt.bar(range(len(Dplot)), values, tick_label=names)  
-        plt.ylabel(r'$|D_{mnp}|$',fontsize = 13)      
+                        ah_val = np.abs(self.ah_D_tensor[i][j][k])
+                    if non_zero:
+                        if ah_val>1e-5:
+                            ah_plot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(ah_val)
+                    else:
+                        ah_plot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=np.abs(ah_val)
+        names = list(ah_plot.keys())
+        values = list(ah_plot.values())
+        plt.bar(range(len(ah_plot)), values, tick_label=names) 
+        if real_freq:
+            plt.ylabel(r'$|C_{ah}|$, [kHz]',fontsize = 13)      
+        else:
+            plt.ylabel(r'$|D_{mnp}|$',fontsize = 13)      
         plt.xticks(fontsize = 13)  
         plt.yticks(fontsize = 13)  
         plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
@@ -560,8 +843,8 @@ class ions:
 
         '''
         [m,n,p] = mode_index
-        efaxial = self.Axialfreq()*self.fz*1000
-        efradial = self.Transfreq()*self.fz*1000
+        efaxial = self.axial_freq*1000
+        efradial = self.radial_freq*1000
         if ftype==0:
             f_ah = efradial[m]-efradial[n]-efaxial[p]
         else:
@@ -582,15 +865,12 @@ class ions:
 
         '''
         afplot1 = {}; afplot2 = {}
-        #compute axial, radial freq
-        efaxial = self.Axialfreq()*self.fz*1000
-        efradial = self.Transfreq()*self.fz*1000
         for i in range(self.N ):
             for j in range(self.N):
                 for k in range(self.N ):
-                    Dvalue = np.abs(self.D(i,j,k))
-                    af1 = np.abs(efradial[i]-efradial[j]-efaxial[k])
-                    af2 = np.abs(efradial[i]+efradial[j]-efaxial[k])
+                    Dvalue = np.abs(self.ah_D_tensor[i][j][k])
+                    af1 = np.abs(self.ah_freq(self,[i,j,k],0))
+                    af2 = np.abs(self.ah_freq(self,[i,j,k],1))
                     if non_zero:
                         if Dvalue>1e-5:
                             afplot1[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)]=af1
@@ -620,109 +900,10 @@ class ions:
         plt.yticks(fontsize = 13)  
         plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
         plt.grid()       
-        plt.show()
-    def Axialfreq(self):
-        '''
-        compute the eigenvalue of axial eigenmode matrix, multiply by fz to get real frequency
-        Returns
-        -------
-        np array object, each index is an eigenvalue for axial mode [unit of 1]
-        The eigenvalues are arranged in an increasing order, such that the first 
-        one correpond to COM mode frequency
-        '''
-        e_val = np.linalg.eig(self.Amatrix())[0]
-        order = np.argsort(e_val)
-        e_val = e_val[order]
-        return np.sqrt(e_val)
-    def Axialmode(self):
-        '''
-        compute the eigenmodes of axial oscillation 
-        Returns
-        -------
-        np array object that represents N by N matrix, each row is an axial eigenmode
-        The eigenmode are arranged in an increasing order of eigenvalues, such that the first 
-        one correpond to COM mode
-
-        '''
-        e_val,e_array = np.linalg.eig(self.Amatrix())
-        order = np.argsort(e_val)
-        return (np.transpose(e_array))[order]
-    def Transfreq(self):
-        '''
-        compute the eigenvalue of transverse eigenmode matrix, multiply by fz to get real frequency [MHz]
-        Returns
-        -------
-        np array object, each index is an eigenvalue for Transverse(Radial) mode [unit of 1]
-        The eigenvalues are arranged in an decreasing order, such that the first 
-        one correpond to COM mode frequency
-
-        '''
-        e_val = np.linalg.eig(self.Tmatrix())[0]
-        order = np.argsort(e_val)
-        e_val = e_val[order][::-1]
-        #check if the matrix is positive-definite
-        if np.min(e_val) < 0:
-            print("Negtive transverse frequency, the system is unstable")
-            return np.sqrt(e_val+0j)
-        else:
-            return np.sqrt(e_val)
-    def Transmode(self):
-        '''
-        compute the eigenmode of transverse oscillation
-
-        Returns
-        -------
-        np array object that represents N by N matrix, each row is an Transverse (Radial) eigenmode
-        The eigenmode are arranged in an decreasing order of eigenvalues, such that the first 
-        one correpond to COM mode
-
-        '''
-        e_val, e_array= np.linalg.eig(self.Tmatrix())
-        order = np.argsort(e_val)[::-1]
-        return np.transpose(e_array)[order]    
-    def wmlist(self):
-        '''
-        compute axial , transverse eigenfrequencies of the system
-        Returns
-        -------
-        np array of float, index 0 is always for com mode, [MHz]
-        '''
-        if self.df_laser == 0:
-            wlsit = self.Axialfreq()*self.fz
-        else:   
-            wlsit = self.Transfreq()*self.fz
-        return wlsit
-    def mu(self):
-        '''
-        compute band laser frequency mu defined as  omega_{Lb}- omega{hf}
-        -------
-        float 2pi kHz (angular)
-        '''
-        wlist0 = self.wmlist()*1000
-        mu = 2*np.pi*(wlist0[self.delta_ref] + self.delta)
-        return mu
-    def dmlist(self):
-        '''
-        compute the detuning from eigenmodes with specified direction, increasing order
-        Returns
-        -------
-        np array of float, index 0 is always for com mode. 2pi kHz (angular)
-        '''
-        dm = self.mu()-2*np.pi*(self.wmlist()*1000)
-        return dm
-    def Omega(self):
-        '''
-        compute the effective rabi frequency of the laser
-        ----------
-        Returns
-        -------
-        float,2pi kHz
-        '''
-        if self.df_laser == 0:
-            f_scale = self.fz
-        else:
-            f_scale = self.fx
-        return np.sqrt(Omega(self.fr,f_scale)*Omega(self.fb,f_scale))/1000
+    '''
+    _________________________________________________________________________
+    This part computes laser related coefficients
+    '''
     def g(self,i,m):
         '''
         Compute the laser-ion coupling strength between ion i and mode m
@@ -740,17 +921,17 @@ class ions:
         '''
         
         if self.df_laser == 0:
-            emat = self.Axialmode()
+            emat = self.axial_mode
         else:   
-            emat = self.Transmode()
+            emat = self.radial_mode
         
-        coeff = eta(self.wmlist()[m])*self.Omega()*emat[m,i]
+        coeff = eta(self.efreq[m])*self.Omega*emat[m,i]
         return coeff
     def expeak(self):
         '''
         compute the expected peak frequencies
         '''
-        print(np.round(np.abs(self.dmlist())/(4*np.pi),2))
+        print(np.round(np.abs(self.detuning)/(4*np.pi),2))
     def Lambda(self):
         '''
         Compute the reorgonization energy lambda, which also correponds to energy
@@ -760,74 +941,4 @@ class ions:
         float [J/10**6]
         '''
         return self.g()**2/np.abs(self.w0())
-    def epsilon(self):
-        '''
-        Compute the anharmonic coefficient epsilon = sqrt(hbar/(2 m fz)/(4l))
-        -------
-        Returns
-        -------
-        float unit of 1
-
-        '''
-        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'mhz')))
-        return  sigma0 / (4*self.l0())
-    def ah_couple(self, mode_index,real_unit=False):
-        '''
-        Compute the anharmonic coupling strength for index m , n, p
-
-        Parameters
-        ----------
-        mode_index: list of python index [m n p]
-        m,n for transverse modes, p for axial mode
-        real_unit: bool
-            default as False
-            if True, compute coefficients in unit of kHz
-            if false, compute coefficients in unit of fz
-        Returns
-        -------
-        float, anharmonic coupling strength, [unit 1]
-        multiply fz to get coupling strength in Hz
-        or real frequency in kHz
-
-        '''
-        [m,n,p] = mode_index
-        tfreq = (self.Transfreq())**2; afreq = (self.Axialfreq())**2
-        freq_factor = (tfreq[m]*tfreq[n]*afreq[p])**0.25
-        if real_unit:
-            ah_coef = self.fz*1000*(-3*self.epsilon()*self.D(m,n,p)/freq_factor)
-        else:
-            ah_coef = -3*self.epsilon()*self.D(m,n,p)/freq_factor
-        return ah_coef
-    def plot_ah_c(self,non_zero=True):
-        '''
-        Plot absolute value of anharmonic coupling coefficients
-    
-        Parameters
-        ----------
-        non_zero: bool 
-            default is True, if True, only plot non-zero coefficeints     
-    
-        Returns
-        -------
-        None.
-    
-        '''
-        ahplot = {}
-        for i in range(self.N ):
-            for j in range(self.N):
-                for k in range(self.N ):
-                    ah_value = np.abs(self.ah_couple([i,j,k],True))
-                    if non_zero:
-                        if ah_value>1e-5:
-                            ahplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)] = ah_value 
-                    else:
-                        ahplot[str(i+1)+'\n'+str(j+1)+'\n'+str(k+1)] = ah_value 
-        names = list(ahplot.keys())
-        values = list(ahplot.values())
-        plt.bar(range(len(ahplot)), values, tick_label=names)  
-        plt.ylabel(r'$|C_{ah}|$, [kHz]',fontsize = 13)      
-        plt.xticks(fontsize = 13)  
-        plt.yticks(fontsize = 13)  
-        plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
-        plt.grid()       
-        plt.show()
+   

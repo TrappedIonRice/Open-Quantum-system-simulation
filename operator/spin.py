@@ -26,7 +26,7 @@ def summary():
     print("____________________________________________________________________")
     print("function: phiup")
     print("construct a state with all N ions in spin up")
-def sx(N,i):
+def sx(N=1,i=0):
     '''
     generate the sigmax operator acting on the ith (python index) spin 1/2
     in the system of N ions
@@ -46,7 +46,7 @@ def sx(N,i):
         else:
             opsx = tensor(opsx, op_list[m])
     return opsx
-def sy(N,i):
+def sy(N=1,i=0):
     '''
     generate the sigmay operator acting on the ith (python index) spin 1/2
     in the system of N ions
@@ -66,7 +66,7 @@ def sy(N,i):
         else:
             opsy = tensor(opsy, op_list[m])
     return opsy
-def sz(N,i):
+def sz(N=1,i=0):
     '''
     generate the sigmaz operator acting on the ith (python index) spin 1/2
     space in the system of N ions
@@ -86,7 +86,7 @@ def sz(N,i):
         else:
             opsz = tensor(opsz, op_list[m])
     return opsz
-def sry(N,i,phi):
+def sry(N=1,i=0,phi=0):
     '''
     generate the y rotation operator acting on the ith (python index) spin 1/2
     space in the system of N ions
@@ -111,7 +111,7 @@ def sry(N,i,phi):
         else:
             opsry = tensor(opsry, op_list[m])
     return opsry
-def up(N,i):
+def up(N=1,i=0):
     '''
     generate the sigma+ operator acting on the ith (python index) spin 1/2
     in the system of N ions
@@ -124,7 +124,7 @@ def up(N,i):
         Qutip Operator    
     '''
     return 0.5*(sx(N,i)+1j*sy(N,i))
-def down(N,i):
+def down(N=1,i=0):
     '''
     generate the sigma- operator acting on the ith (python index) spin 1/2
     in the system of N ions
@@ -137,7 +137,7 @@ def down(N,i):
         Qutip Operator    
     '''
     return 0.5*(sx(N,i)-1j*sy(N,i))
-def zero_op(N):
+def zero_op(N=1):
     """
     generate zero operator on N ion spin space
     input(N)
@@ -155,7 +155,7 @@ def zero_op(N):
     for i in range(N-1):
         mat = tensor(mat,qzero(2))
     return mat    
-def sI(N):
+def sI(N=1):
     """
     generate identity operator on N ion spin space
     input(N)
@@ -190,9 +190,9 @@ def phid(N):
     Qutip ket
 
     """
-    istate = basis(2,0)
+    istate = basis(2,1)
     for i in range(N-1):
-        istate = tensor(istate, basis(2, 0))
+        istate = tensor(istate, basis(2, 1))
     return istate
 def phiup(N):
     """
@@ -207,11 +207,11 @@ def phiup(N):
     -------
     Qutip ket
     """
-    istate = basis(2,1)
+    istate = basis(2,0)
     for i in range(N-1):
-        istate = tensor(istate, basis(2, 1))
+        istate = tensor(istate, basis(2, 0))
     return istate
-def spin_state(N,config):
+def spin_state(N=1,config=[0]):
     """
     construct a state with all N ions, the spin
     of each ion can be specified 

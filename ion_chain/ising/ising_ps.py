@@ -46,10 +46,9 @@ def Jt(ion0):
     np array object that represents N by N matrix J, unit of [kHz]
 
     '''
-    N = ion0.df_spin(); sdelta = ion0.delta*2*np.pi*10**3 #compute in SI unit (2pi Hz)
-    wz = w(ion0.fz);  
-    Omega0 = (ion0.Omega()*1000)**2
-    nfreq = ion0.Transfreq();emat = ion0.Transmode()
+    N = ion0.df_spin(); 
+    Omega0 = (ion0.Omega*1000)**2
+    emat = ion0.radial_mode
     J = np.zeros((N,N))
     for i in range(N):
         for j in range(N):
@@ -57,7 +56,7 @@ def Jt(ion0):
                 eij = 0
                 for m in range (N):
                     numer = R*Omega0 * emat[m,i] * emat[m,j]
-                    demon = (sdelta+wz*nfreq[ion0.delta_ref])**2 - (wz*nfreq[m])**2
+                    demon = 1e6*((ion0.mu)**2 - (fr_conv(ion0.efreq[m],'khz'))**2)
                     eij = eij + (numer/demon)
                 J[i,j] = eij/(2*np.pi*10**3)    
     return J
@@ -84,7 +83,7 @@ def plotj(J):
     ax1.set_title('Coupling matrix J')
     ax1.set_xlabel('i index')
     ax1.set_ylabel('j index')
-def HBz(ion0,B0):
+def HBz(ion0=None, B0=0):
     '''
     compute the Hamiltonian due to coupling with z magnetic field
     input(N,B0)
@@ -104,7 +103,7 @@ def HBz(ion0,B0):
     for i in range(Ns):
         H = H + B0 * spin.sz(Ns,i) 
     return 2*np.pi*H    
-def Hps(J,ion0,B0):
+def Hps(J=np.array([]),ion0=None,B0=0):
     '''
     Compute Hamiltonian under a pure spin approximation, with ising coupling (sx) and magentic field coupled with sz
     input(J,ion0,B0)

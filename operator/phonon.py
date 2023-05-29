@@ -25,15 +25,15 @@ def summary():
     print("____________________________________________________________________")
     print("function: inip_thermal") 
     print("generate the initial density operator for the phonon space of 1 ion composed with pure states with population following a thermal distribution ")
-def up(m,clevel,N):
+def up(m=0,cutoff=[2],N=1):
     '''
     generate the creation ladder operator acting on the mth (python index) ion of system of N ions
-    Input: (m,clevel,N)
+    Input: (m,cutoff,N)
     Parameters
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel : list of int
+    cutoff : list of int
         cut off level of each phonon space 
     N : int
        total number of phonon spaces
@@ -44,27 +44,27 @@ def up(m,clevel,N):
 
     '''
     if N == 1: 
-        lup = create(clevel[0])
+        lup = create(cutoff[0])
     else:
         for j in range(N):
             if j == m:
-                nextop = create(clevel[j])
+                nextop = create(cutoff[j])
             else:
-                nextop = qeye(clevel[j])
+                nextop = qeye(cutoff[j])
             if j == 0:
                 lup = nextop
             else:
                 lup = tensor(lup,nextop)
     return lup
-def down(m,clevel,N):
+def down(m=0,cutoff=[2],N=1):
     '''
     generate the annihilation ladder operator acting on the mth (python index) ion of system of N ions
-    Input: (m,clevel,N)
+    Input: (m,cutoff,N)
     Parameters
     ----------
     m : int
         python index of the ion that the operator acts on
-    clevel :  list of int
+    cutoff :  list of int
         cut off level of each phonon space 
     N : int
         total number of phonon spaces
@@ -75,26 +75,26 @@ def down(m,clevel,N):
 
     '''
     if N == 1: 
-        ldown = destroy(clevel[0])
+        ldown = destroy(cutoff[0])
     else:
         for j in range(N):
             if j == m:
-                nextop = destroy(clevel[j])
+                nextop = destroy(cutoff[j])
             else:
-                nextop = qeye(clevel[j])
+                nextop = qeye(cutoff[j])
             if j == 0:
                ldown = nextop
             else:
                ldown = tensor(ldown,nextop)
     return ldown
     
-def zero_op(clevel,N):
+def zero_op(cutoff,N):
     '''
     generate the zero operator acting on the system of N ions
-    Input: (clevel,N)
+    Input: (cutoff,N)
     Parameters
     ----------
-    clevel :  list of int
+    cutoff :  list of int
         cut off level of each phonon space 
     N : int
         total number of phonon spaces
@@ -104,17 +104,17 @@ def zero_op(clevel,N):
     Qutip Operator
 
     '''
-    mat = qzero(clevel[0])
+    mat = qzero(cutoff[0])
     for i in range(N-1):
-        mat = tensor(mat,qzero(clevel[i+1]))
+        mat = tensor(mat,qzero(cutoff[i+1]))
     return mat    
-def phip(clevel,N,nlist):
+def phip(cutoff=[2],N=1,nlist=[0]):
     '''
-    compute phonon state of the system with state energy specified by nlist
-    Input: (clevel,N,nlist)
+    compute phonon state of the system with phonon number specified by nlist
+    Input: (cutoff,N,nlist)
     Parameters
     ----------
-    clevel :  list of int
+    cutoff :  list of int
         cut off level of each phonon space 
     N : int
         total number of phonon spaces
@@ -127,15 +127,15 @@ def phip(clevel,N,nlist):
 
     '''
     #compute initial phonon state with state energy specified by nlist
-    istate = basis(clevel[0],nlist[0])
+    istate = basis(cutoff[0],nlist[0])
     for i in range(1,N):
-        istate = tensor(istate, basis(clevel[i],nlist[i]))
+        istate = tensor(istate, basis(cutoff[i],nlist[i]))
     return istate
-def state_measure(clevel,N,slevel,m=0):
+def state_measure(cutoff=[2],N=1,meas_level=1,m=0):
     '''
     generate the operator to measure a single phonon state population for a specified
     phonon space
-    clevel :  list of int
+    cutoff :  list of int
         cut off level of each phonon space 
     N : int
         total number of phonon spaces
@@ -143,7 +143,7 @@ def state_measure(clevel,N,slevel,m=0):
         phonon state level to be measured    
     m: index of phonon space for measurement, default as 0
     '''
-    m_ket = fock(clevel[m],slevel)
+    m_ket = fock(cutoff[m],meas_level)
     dm_h = m_ket*m_ket.dag()
     if N == 1: 
         hm_op =  dm_h
@@ -152,19 +152,19 @@ def state_measure(clevel,N,slevel,m=0):
             if j == m:
                 nextop = dm_h
             else:
-                nextop = qeye(clevel[j])
+                nextop = qeye(cutoff[j])
             if j == 0:
                hm_op  = nextop
             else:
                hm_op  = tensor(hm_op ,nextop)
     return hm_op 
-def pI(clevel,N):
+def pI(cutoff,N):
     '''
     generate the identity operator acting on the system of N ions
-    Input: (clevel,N)
+    Input: (cutoff,N)
     Parameters
     ----------
-    clevel : list of int
+    cutoff : list of int
         cut off level of each phonon space 
     N : int
        total number of phonon spaces
@@ -174,19 +174,19 @@ def pI(clevel,N):
     Qutip Operator
 
     '''
-    Iden = qeye(clevel[0])
+    Iden = qeye(cutoff[0])
     for i in range(N-1):
-        Iden = tensor(Iden,qeye(clevel[i+1]))
+        Iden = tensor(Iden,qeye(cutoff[i+1]))
     return Iden    
   
-def p_thermal(clevel,nbar):
+def p_thermal(cutoff,nbar):
     '''
     generate the probability distribution following a canonical distrbution 
     with kT = Etot, harmonic energy frequency wm
-    input(clevel,N,wm,Etot)
+    input(cutoff,N,wm,Etot)
     Parameters
     ----------
-    clevel : int
+    cutoff : int
         cut off level of phonon space
     nbar : float
         average phonon number of the thermal state
@@ -197,18 +197,18 @@ def p_thermal(clevel,nbar):
 
     '''
     pdis = np.array([])
-    for i in range(clevel):
+    for i in range(cutoff):
         pdis = np.append(pdis,(1/nbar + 1)**(-i))
     pdis = pdis/np.sum(pdis)
     return pdis    
-def inip_thermal(clevel,nbar,ket=False):
+def inip_thermal(cutoff=2,nbar=1,ket=False):
     '''
     generate the initial density matirx/pure quantum state ket for a single phonon space 
     with population following a thermal distribution 
-    input(clevel,N,wm,Etot)
+    input(cutoff,N,wm,Etot)
     Parameters
     ----------
-    clevel : int
+    cutoff : int
         cut off level of phonon space
     nbar : float
         average phonon number of the thermal state
@@ -220,18 +220,18 @@ def inip_thermal(clevel,nbar,ket=False):
     Qutip Operator
 
     '''
-    pdis0 = p_thermal(clevel,nbar)
+    pdis0 = p_thermal(cutoff,nbar)
     if ket:
-        for n in range(clevel):
+        for n in range(cutoff):
             if n == 0:
-                pket = np.sqrt(pdis0[0])*fock(clevel,0)
+                pket = np.sqrt(pdis0[0])*fock(cutoff,0)
             else:
-                pket = pket + np.sqrt(pdis0[n])*fock(clevel,n)
+                pket = pket + np.sqrt(pdis0[n])*fock(cutoff,n)
         return pket    
    
     else:
-        dmta = np.zeros((clevel,clevel))
-        for n in range(clevel):
+        dmta = np.zeros((cutoff,cutoff))
+        for n in range(cutoff):
             dmta[n,n] = pdis0[n] 
         return Qobj(dmta)
    

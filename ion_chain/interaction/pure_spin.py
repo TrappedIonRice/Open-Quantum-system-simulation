@@ -10,7 +10,7 @@ import numpy as np
 from qutip import *
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 from  Qsim.ion_chain.ion_system import *
 def summary():
     print("____________________________________________________________________")
@@ -18,7 +18,7 @@ def summary():
     print("Compute Hamiltonian for single site spin interaction between two ionic states")
     print("function: single_site")
     print("Compute Hamiltonian for spin interaction of a two site system ")
-def single_site(Omegax, Omegaz, ion0):
+def single_site(Omegax=0, Omegaz=0, ion0=None):
     '''
     Compute Hamiltonian for single site spin interaction 
     between the two ionic states for each enabled ion site, 
@@ -39,16 +39,16 @@ def single_site(Omegax, Omegaz, ion0):
     '''
     Ns = ion0.df_spin()
     if Ns == 1:
-        Hspin = (2 * np.pi) * (Omegax * tensor(spin.sx(1,0),exop.p_I(ion0))  
-         -0.5 * Omegaz * tensor(spin.sz(1,0),exop.p_I(ion0))) 
+        Hspin = (2 * np.pi) * (Omegax * tensor(spin.sx(1,0),sp_op.p_I(ion0))  
+         -0.5 * Omegaz * tensor(spin.sz(1,0),sp_op.p_I(ion0))) 
     else:
-        Hspin = (2 * np.pi) * (Omegax[0] * tensor(spin.sx(Ns,0),exop.p_I(ion0))  
-         -0.5 * Omegaz[0] * tensor(spin.sz(Ns,0),exop.p_I(ion0)))
+        Hspin = (2 * np.pi) * (Omegax[0] * tensor(spin.sx(Ns,0),sp_op.p_I(ion0))  
+         -0.5 * Omegaz[0] * tensor(spin.sz(Ns,0),sp_op.p_I(ion0)))
         for i in range(1,Ns):
-            Hspin = Hspin + (2 * np.pi) * (Omegax[i] * tensor(spin.sx(Ns,i),exop.p_I(ion0))  
-             -0.5 * Omegaz[i] * tensor(spin.sz(Ns,i),exop.p_I(ion0)))
+            Hspin = Hspin + (2 * np.pi) * (Omegax[i] * tensor(spin.sx(Ns,i),sp_op.p_I(ion0))  
+             -0.5 * Omegaz[i] * tensor(spin.sz(Ns,i),sp_op.p_I(ion0)))
     return Hspin
-def double_site(J12, E1, E2, Vx, ion0):
+def double_site(J12=0, E1=0, E2=0, Vx=0, ion0=None):
     '''
     Compute Hamiltonian for spin interaction of a two site system 
     Parameters
@@ -69,12 +69,12 @@ def double_site(J12, E1, E2, Vx, ion0):
     '''
     Ns = 2
     #coupling between two sites
-    sop = tensor(spin.up(Ns,0)*spin.down(Ns,1),exop.p_I(ion0))
+    sop = tensor(spin.up(Ns,0)*spin.down(Ns,1),sp_op.p_I(ion0))
     term1 = fr_conv(J12,'hz') * (sop+sop.dag())
     #site energy difference
-    term2 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),exop.p_I(ion0))+
-             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),exop.p_I(ion0)))
+    term2 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),sp_op.p_I(ion0))+
+             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),sp_op.p_I(ion0)))
     #coupling between donor/ accpetor states for each site
     term3 = (fr_conv(Vx,'hz') * 
-             tensor(spin.sx(Ns,0)+spin.sx(Ns,1),exop.p_I(ion0)))
+             tensor(spin.sx(Ns,0)+spin.sx(Ns,1),sp_op.p_I(ion0)))
     return term1+term2+term3

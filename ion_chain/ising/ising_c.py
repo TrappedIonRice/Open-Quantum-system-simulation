@@ -8,7 +8,7 @@ import numpy as np
 from qutip import *
 import Qsim.ion_chain.ising.ising_ps as iscp
 import Qsim.operator.spin as spin
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.interaction.spin_phonon as Isp
 from  Qsim.ion_chain.ion_system import *
 
@@ -42,7 +42,7 @@ def H_ord(Bz,ion0):
       dictionary that records the value of coefficients for time dependent functions
     '''
     Ns = ion0.df_spin()
-    H0 = tensor(iscp.HBz(ion0,Bz),exop.p_I(ion0))
+    H0 = tensor(iscp.HBz(ion0,Bz),sp_op.p_I(ion0))
     Heff = [H0]+ Isp.H_td(ion0,0,1) + Isp.H_td(ion0,1,1)
     H_arg = Isp.H_td_arg(ion0)
     return Heff, H_arg

@@ -7,7 +7,7 @@ import numpy as np
 from qutip import *
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 from  Qsim.ion_chain.ion_system import *
 def summary():
     print("____________________________________________________________________")
@@ -26,7 +26,7 @@ subfunctions
 def sigma_phi(N,i,phase):
     return np.cos(phase)*spin.sx(N,i) + np.sin(phase)*spin.sy(N,i)
 
-def tstring(N,atype,las_label=''):
+def tstring(N=1,atype=0,las_label=''):
     '''
     Generate the list of time depedent expression for the Hamiltonian 
 
@@ -58,7 +58,7 @@ def tstring(N,atype,las_label=''):
             fstring.append('cos(t * '+ustr+') * exp(-1 * (t * ' + newm +"))")
     return mstring, fstring        
 
-def Him_ord(ion0,atype,i,m,sindex,mindex,i_type=0):
+def Him_ord(ion0=None,atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
     '''
     Compute the i,m th component for time independent part of ion-laser interaction 
     Hamiltonian in ordinary frame, which discribes the coupling between ion i and mode m
@@ -81,7 +81,7 @@ def Him_ord(ion0,atype,i,m,sindex,mindex,i_type=0):
         Hamiltonina H im, Qobj
     '''
     #set coefficient constants according to the coupling degree of freedom
-    p_opa = exop.p_ladder(ion0,mindex,atype)
+    p_opa = sp_op.p_ladder(ion0,mindex,atype)
     if i_type == 1:
         s_oper = sigma_phi(ion0.df_spin(),sindex,ion0.phase)
     else:    
@@ -89,7 +89,7 @@ def Him_ord(ion0,atype,i,m,sindex,mindex,i_type=0):
     H = tensor(s_oper,p_opa)
     return ion0.g(i,m)*H 
 
-def Him_res(ion0, i,m,sindex,mindex):
+def Him_res(ion0=None, i=0,m=0,sindex=0,mindex=0):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
     which discribes the coupling between ion i and mode m
@@ -107,7 +107,7 @@ def Him_res(ion0, i,m,sindex,mindex):
         Hamiltonina H im, Qobj
     '''
     #set coefficient constants according to the coupling degree of freedom
-    p_opa = exop.p_ladder(ion0,mindex,0) + exop.p_ladder(ion0,mindex,1) 
+    p_opa = sp_op.p_ladder(ion0,mindex,0) + sp_op.p_ladder(ion0,mindex,1) 
     H = tensor(spin.sz(ion0.df_spin(),sindex),p_opa)
     return 0.5*ion0.g(i,m)*H 
 def H_harmonic(ion0):
@@ -119,12 +119,12 @@ def H_harmonic(ion0):
     Output:
         Qutip operator
     '''
-    hterm = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #compensation for change of interaction frame
+    hterm = tensor(spin.zero_op(ion0.df_spin()),sp_op.p_zero(ion0)) #compensation for change of interaction frame
     mindex = 0 #this index is used for phonon operators
-    for m in exop.ph_list(ion0):
-        hterm = (hterm + ion0.dmlist()[m]
+    for m in sp_op.ph_list(ion0):
+        hterm = (hterm + ion0.detuning[m]
                  *tensor(spin.sI(ion0.df_spin()),
-                         exop.p_ladder(ion0,mindex,1)*exop.p_ladder(ion0,mindex,0)))    
+                         sp_op.p_ladder(ion0,mindex,1)*sp_op.p_ladder(ion0,mindex,0)))    
         mindex = mindex+1
     return hterm
 '''
@@ -147,14 +147,14 @@ def H_td_arg(ion0,las_label=''):
     '''
     #generate the arg list for solving time dependent SE
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
-    adic = {"u"+las_label:ion0.mu()}
+    adic = {"u"+las_label:ion0.mu}
     slist, fs = tstring(ion0.N,0,las_label)
-    wlist0 = 1j*ion0.wmlist() * 2000* np.pi #this is used to compute deltam in kHz
+    wlist0 = 1j*ion0.efreq * 2000* np.pi #this is used to compute deltam in kHz
     for argi in range(ion0.N):
         adic[slist[argi]] = wlist0[argi]
     return adic 
 
-def H_td(ion0,atype,i_type = 0,las_label=''): 
+def H_td(ion0=None,atype=0,i_type = 0,las_label=''): 
     '''
     Compute the list of H correponding to time-dependent Hamiltonian for ion-lasesr
     interaction with a single drive as a input for qutip solver
@@ -172,9 +172,9 @@ def H_td(ion0,atype,i_type = 0,las_label=''):
     #compute the mth element by summing over i for Him for destroy operators
     Hlist = []
     mindex = 0 #this index is used for phonon operators
-    for m in exop.ph_list(ion0):
+    for m in sp_op.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
-        subH = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0))
+        subH = tensor(spin.zero_op(ion0.df_spin()),sp_op.p_zero(ion0))
         for i in ion0.laser_couple:
             subH = subH + Him_ord(ion0,atype,i,m,sindex,mindex,i_type)
             sindex = sindex + 1
@@ -189,9 +189,9 @@ def H_res(ion0):
     Input: 
         ion0, ion class object
     '''
-    spterm = tensor(spin.zero_op(ion0.df_spin()),exop.p_zero(ion0)) #laser-ion interaction term 
+    spterm = tensor(spin.zero_op(ion0.df_spin()),sp_op.p_zero(ion0)) #laser-ion interaction term 
     mindex = 0 #this index is used for phonon operators
-    for m in exop.ph_list(ion0):
+    for m in sp_op.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
         for i in ion0.laser_couple:
             spterm = spterm + Him_res(ion0,i,m,sindex,mindex)

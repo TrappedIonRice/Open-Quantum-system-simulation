@@ -13,7 +13,8 @@ from  Qsim.ion_chain.ion_system import *
 '''
 set parameters of the system
 '''    
-ion_sys = ions()
+ion_sys = ions(trap_config={'N': 2, 'fx': 5, 'fz': 0.2}, 
+                   )
 #ion_sys.N = 4
 #ion_sys.laser_couple = [0,1,2,3]
 #ion_sys.N = 2
