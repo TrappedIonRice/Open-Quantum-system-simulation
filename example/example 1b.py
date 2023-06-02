@@ -34,8 +34,8 @@ ion_sys.pcut = [[3,3]]
 ion_sys.delta_ref = 0 #detuning from com
 delta = 100 #detuning from com mode
 ion_sys.delta = delta
-df_laser = 1 #Coupled to Radial
-laser_couple = [0,1] #laser coupled to both ions
+ion_sys.df_laser = 1 #Coupled to Radial
+ion_sys.laser_couple = [0,1] #laser coupled to both ions
 ion_sys.list_para() #print parameters of the system
 ion_sys.check_phonon()
 Bz = 0 #Effective magnetic field
