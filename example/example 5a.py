@@ -13,7 +13,7 @@ from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
 from  Qsim.ion_chain.ion_system import *
 #from to_precision import to_precision
@@ -63,21 +63,21 @@ times = tplot/t_scale
 operators for measuring 
 '''
 spin_config = np.array([0,1,0]) #initilaize spin state as up down up 
-ket0 = exop.ini_state(ion1,spin_config,[[5],[5]],1) #phonon population n = 5
+ket0 = sp_op.ini_state(ion1,spin_config,[[5],[5]],1) #phonon population n = 5
 Lop = chaos.L_imbalance(spin_config,ion1) #spin imbalance 
-p_op1 = exop.phonon_measure(ion2,0,0) #axial tilt mode population 
-p_op2 = exop.phonon_measure(ion2,0) #radial rock mode population 
-s_op1 = exop.site_spin_measure(ion2,0) #spin population of ion1,2,3 
-s_op2 = exop.site_spin_measure(ion2,1)
-s_op3 = exop.site_spin_measure(ion2,2)
+p_op1 = sp_op.phonon_measure(ion2,0,0) #axial tilt mode population 
+p_op2 = sp_op.phonon_measure(ion2,0) #radial rock mode population 
+s_op1 = sp_op.site_spin_measure(ion2,0) #spin population of ion1,2,3 
+s_op2 = sp_op.site_spin_measure(ion2,1)
+s_op3 = sp_op.site_spin_measure(ion2,2)
 '''
 construct anharmonic coupling term
 '''
 print('coupling strenght [kHz]',ion2.ah_couple(mconfig)*ion2.fz*1000)
 ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'khz') #kHz
-operator_a = exop.p_ladder(ion2,0,1,0) #creation operator on tilt axial mode
-operator_b =  exop.p_ladder(ion2,0,0,1) #destory operator on rock radial mode
-ah_oper =ah_coef*tensor(spin.sI(ion2.df_spin()),operator_a*operator_b*operator_b)
+operator_a = sp_op.p_ladder(ion2,0,1,0) #creation operator on tilt axial mode
+operator_b =  sp_op.p_ladder(ion2,0,0,1) #destory operator on rock radial mode
+ah_oper =ah_coef*tensor(spin.sI(ion2.df_spin),operator_a*operator_b*operator_b)
 ndata = Table()
 #%% dynamics in ordinary frame 
 Hce, arg0 = ah_t.H_ord1(Omegax,deltaE,ion2,True,ah_oper)
@@ -86,8 +86,8 @@ print("solving time evolution in ordinary frame")
 result1 = sesolve(Hce,ket0,times,args=arg0,progress_bar=True,options=Options(nsteps=100000))
 
 #report error
-mp_state1_1 = expect(exop.pstate_measure(ion2,cut_lev1-1,0,0),result1.states) 
-mp_state2_1 = expect(exop.pstate_measure(ion2,cut_lev2-1,0),result1.states) 
+mp_state1_1 = expect(sp_op.pstate_measure(ion2,cut_lev1-1,0,0),result1.states) 
+mp_state2_1 = expect(sp_op.pstate_measure(ion2,cut_lev2-1,0),result1.states) 
 print('Maximum phonon population of highest axial tilt space')
 print(np.max(mp_state1_1))
 print('Maximum phonon population of highest radial rock space')
@@ -125,8 +125,8 @@ print("__________________________________________________________")
 print("solving time evolution in resonant frame")
 result2 = sesolve(Hres,ket0,times,progress_bar=True,options=Options(nsteps=100000))
 #%%
-mp_state1_2 = expect(exop.pstate_measure(ion2,cut_lev1-1,0,0),result2.states) 
-mp_state2_2 = expect(exop.pstate_measure(ion2,cut_lev2-1,0),result2.states) 
+mp_state1_2 = expect(sp_op.pstate_measure(ion2,cut_lev1-1,0,0),result2.states) 
+mp_state2_2 = expect(sp_op.pstate_measure(ion2,cut_lev2-1,0),result2.states) 
 print('Maximum phonon population of highest axial tilt space')
 print(np.max(mp_state1_2))
 print('Maximum phonon population of highest radial rock space')

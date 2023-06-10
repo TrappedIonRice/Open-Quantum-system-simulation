@@ -9,7 +9,7 @@ from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 from  Qsim.ion_chain.ion_system import *
 #%%
@@ -38,10 +38,10 @@ define operators for measurement
 '''
 elist = []
 for j in range(3): #phonon population
-    eop = exop.phonon_measure(ion_sys,j)
+    eop = sp_op.phonon_measure(ion_sys,j)
     elist.append(eop) 
-oplist = [exop.spin_measure(ion_sys,[0,1]),
-          exop.spin_measure(ion_sys,[1,0])] #spin population
+oplist = [sp_op.spin_measure(ion_sys,[0,1]),
+          sp_op.spin_measure(ion_sys,[1,0])] #spin population
 elist = oplist+elist    
 #%%    
 '''
@@ -58,8 +58,8 @@ print('site energy difference ', E1-E2, ' kHz *h')
 tscale = J23      #use J as time scale
 H0  = extrans.H_res(J23,(E1-E2)/2,0,V,ion_sys) #generate Hamiltonian
 #%%
-clist1 = exop.c_op(ion_sys,[0.01,0.01,0.01]) #collapse operator
-rho0 = exop.rho_thermal(ion_sys,[[0.01,0.01,0.01]],False,[0,1]) #initial state
+clist1 = sp_op.c_op(ion_sys,[0.01,0.01,0.01]) #collapse operator
+rho0 = sp_op.rho_thermal(ion_sys,[[0.01,0.01,0.01]],False,[0,1]) #initial state
 tplot0 = np.arange(0,2,0.01)
 times0 =tplot0/tscale
 print('computing time evolution')

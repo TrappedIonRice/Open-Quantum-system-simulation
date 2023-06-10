@@ -87,7 +87,7 @@ for i in range(Nlev):
 plt.plot(xi,yi,'b*',label = ilabel)   
 plt.xlabel(r'Displacement x, $X_0$',fontsize = 13)
 plt.ylabel('Energy [kHz]',fontsize = 13)
-tilt_lab = str(np.round(ion_sys.dmlist()[1]/(2*np.pi),2))
+tilt_lab = str(np.round(ion_sys.detuning[1]/(2*np.pi),2))
 plt.title(r'$\Delta E=$'+str(np.round(2*E1,2))+'kHz '+ r'$\delta_{rock}=$'+str(ion_sys.delta)+' kHz '
           + r'$\delta_{tilt}=$'+tilt_lab+' kHz')
 plt.ylim(-1000,1000)

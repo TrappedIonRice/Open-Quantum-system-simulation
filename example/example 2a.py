@@ -12,7 +12,7 @@ import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
 from  Qsim.ion_chain.ion_system import *
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 #%%
 '''
 parameters of the system, use the same parameter in quantum regime 
@@ -35,11 +35,11 @@ deltaE = 5*ion_sys.delta #note site energy difference is negative by definition
 '''
 simulation with 1 mode, reproduce curve C in Fig 3(B)
 '''
-elist = [exop.spin_measure(ion_sys,[0,1])]
+elist = [sp_op.spin_measure(ion_sys,[0,1])]
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys)
-clist1 = exop.c_op(ion_sys,[0.01],False)
-rho0 = exop.rho_thermal(ion_sys,[[0.01]],False,[0,1])
+clist1 = sp_op.c_op(ion_sys,[0.01],False)
+rho0 = sp_op.rho_thermal(ion_sys,[[0.01]],False,[0,1])
 tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(ion_sys.delta))
 print("solving time evolution (1 mode) for deltaE =", deltaE)

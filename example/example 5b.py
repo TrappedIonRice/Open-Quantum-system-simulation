@@ -13,7 +13,7 @@ from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.transfer.anharmonic_transfer as ah_t
 import Qsim.ion_chain.transfer.chaos as chaos
 from  Qsim.ion_chain.ion_system import *
@@ -39,7 +39,7 @@ ion1.pcut = [[cut_lev1],[cut_lev2]]
 ion1.active_phonon = [[1],[2]] #only consider tilt for axial and rock for radial
 tplot = np.linspace(0,20,5000)
 spin_config = np.array([0,1,0]) #initilaize spin state as up down up 
-ket0 = exop.ini_state(ion1,spin_config,[[5],[5]],1) #phonon population n = 5
+ket0 = sp_op.ini_state(ion1,spin_config,[[5],[5]],1) #phonon population n = 5
 Lop = chaos.L_imbalance(spin_config,ion1) #
 elist = [Lop]
 mconfig = [2,2,1]
@@ -65,12 +65,12 @@ deltaE = [deltaE0]*3
 construct anharmonic coupling term
 '''
 ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'khz') #kHz
-operator_a = exop.p_ladder(ion2,0,0,0) #destory operator on tilt axial mode
-operator_b =  exop.p_ladder(ion2,0,1,1) #create operator on rock radial mode
+operator_a = sp_op.p_ladder(ion2,0,0,0) #destory operator on tilt axial mode
+operator_b =  sp_op.p_ladder(ion2,0,1,1) #create operator on rock radial mode
 #term 1, a * b^+ * b
-ah_oper1 =ah_coef*2*tensor(spin.sI(ion2.df_spin()),operator_a*operator_b*operator_b.dag())
+ah_oper1 =ah_coef*2*tensor(spin.sI(ion2.df_spin),operator_a*operator_b*operator_b.dag())
 #term 2, a * b^+ * b^+
-ah_oper2 =ah_coef*tensor(spin.sI(ion2.df_spin()),operator_a*operator_b*operator_b)
+ah_oper2 =ah_coef*tensor(spin.sI(ion2.df_spin),operator_a*operator_b*operator_b)
 #%% dynamics in resonant frame 
 print("solving time evolution in resonant frame")
 Hres = ah_t.H_res1(Omegax,deltaE,ion2,ion1,True,ah_oper2)

@@ -92,7 +92,7 @@ def Hspin(J12, E1, E2, V, x, ion0):
     '''
     Np = ion0.N #of ions to be considered for phonon space
     Ns = ion0.N-1 #of ions to be considered for spin space
-    dm = ion0.dmlist()
+    dm = ion0.detuning
     #spin phonon coupling
     term1 =  spin.zero_op(Ns)
     for i in range(Ns):
@@ -141,7 +141,7 @@ def elevel(ion0,E0,nlev,m,shift=0):
         list of energy levels
 
     '''
-    deltae = np.abs(ion0.dmlist()[m]/(2*np.pi))
+    deltae = np.abs(ion0.detuning[m]/(2*np.pi))
     ellist = np.array([])
     for i in range(nlev):
         if i == 0:
@@ -153,11 +153,11 @@ def elevel(ion0,E0,nlev,m,shift=0):
 def eig_energy(ion0,J12,E1,E2,V,x,m,s_type):
     eta_m = 1/np.sqrt(2) * (ion0.g(0,m)-ion0.g(1,m))
     term1 = np.sqrt( np.square( 2*np.pi*(E1-E2) + eta_m*x) + (2*np.pi*J12)**2)
-    sum_d = np.sum(ion0.dmlist())/2
+    sum_d = np.sum(ion0.detuning)/2
     if s_type == 0:
-        eig = term1 - ion0.dmlist()[m]/2*( x**2) + sum_d
+        eig = term1 - ion0.detuning[m]/2*( x**2) + sum_d
     else:
-        eig = -term1 - ion0.dmlist()[m]/2*(x**2) + sum_d
+        eig = -term1 - ion0.detuning[m]/2*(x**2) + sum_d
     return eig
   
 def energy_diagram_2d(ion0,J12,E1,E2,V,xarray,method = 0, m=None):
@@ -225,7 +225,7 @@ def energy_diagram_3d(ion_sys,J12,E1,E2,V,xrarray,xtarray):
     array of eigenenergy [kHz] for downup and updown
 
     '''
-    scale = X0(ion_sys.wmlist())
+    scale = X0(ion_sys.efreq)
     xrlist = xrarray*scale[0]; rsize = np.size(xrlist) 
     xtlist = xrarray*scale[1]; tsize = np.size(xtlist)
     eiged = np.zeros([rsize,tsize])

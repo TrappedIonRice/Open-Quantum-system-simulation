@@ -9,7 +9,7 @@ reference:
 from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import numpy as np
 import datetime
 def create_dic(data):
@@ -73,7 +73,7 @@ def L_imbalance(ini_spin,ion0):
     Qutip operator
 
     '''
-    Ns = ion0.df_spin()
+    Ns = ion0.df_spin
     up_index = np.reshape(np.argwhere(ini_spin==0),-1)
     down_index =  np.reshape(np.argwhere(ini_spin==1),-1)
     s_op1 = spin.zero_op(Ns)
@@ -87,5 +87,5 @@ def L_imbalance(ini_spin,ion0):
             s_op2 = s_op2 + spin.sz(Ns,j)
         s_op2 = s_op2/np.size(down_index)
     s_op = s_op1 - s_op2
-    L_op = tensor(s_op, exop.p_I(ion0)) 
+    L_op = tensor(s_op, sp_op.p_I(ion0)) 
     return L_op 

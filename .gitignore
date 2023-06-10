@@ -17,3 +17,4 @@ ion_chain/transfer/__pycache__/exci_operators.cpython-39.pyc
 ion_chain/transfer/__pycache__/multi_core.cpython-39.pyc
 operator/__pycache__/phonon.cpython-39.pyc
 *.pyc
+replace_code.py

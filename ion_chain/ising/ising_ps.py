@@ -34,20 +34,22 @@ def w(f):
 functions to use
 '''
 #Compute Ising coupling matrix J
-def Jt(ion0):
+def Jt(ion0,laser0):
     '''
     Compute ising coupling matrix J for pure spin approximation
     Parameters
     ----------
     ion0: ions class object
         contains all parameters of the ion-chain system
+    laser0: laser class object
+        represents a symmetric pair of sideband drives
     Returns
     -------
     np array object that represents N by N matrix J, unit of [kHz]
 
     '''
-    N = ion0.df_spin(); 
-    Omega0 = (ion0.Omega*1000)**2
+    N = ion0.df_spin; 
+    Omega0 = (laser0.Omega(ion0)*1000)**2
     emat = ion0.radial_mode
     J = np.zeros((N,N))
     for i in range(N):
@@ -55,8 +57,8 @@ def Jt(ion0):
             if i != j:
                 eij = 0
                 for m in range (N):
-                    numer = R*Omega0 * emat[m,i] * emat[m,j]
-                    demon = 1e6*((ion0.mu)**2 - (fr_conv(ion0.efreq[m],'khz'))**2)
+                    numer = laser0.R * Omega0 * emat[m,i] * emat[m,j]
+                    demon = 1e6*((fr_conv(laser0.mu,'hz'))**2 - (fr_conv(efreq(ion0,laser0)[m],'khz'))**2)
                     eij = eij + (numer/demon)
                 J[i,j] = eij/(2*np.pi*10**3)    
     return J
@@ -98,7 +100,7 @@ def HBz(ion0=None, B0=0):
     Qutip operator
 
     '''   
-    Ns = ion0.df_spin()
+    Ns = ion0.df_spin
     H = spin.zero_op(Ns)
     for i in range(Ns):
         H = H + B0 * spin.sz(Ns,i) 

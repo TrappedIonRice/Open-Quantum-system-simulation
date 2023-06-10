@@ -18,8 +18,6 @@ h = 6.62607015 * 10**(-34) / (2*np.pi)
 MYb171 = 0.171 / (6.02214076*10**23) #mass of Yb ion, kg
 qe = 1.60218 * 10**(-19) #charge of electron, C
 eps0 = 8.85418781 * 10**(-12) #vacuum dielectric constant,SI
-Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) #effective wave vector 355nm laser drive
-R = (h*Dk**2) / (2*MYb171) #recoil frequency constant, SI 
 def fr_conv(f,unit):
     '''
     convert frequency to radial frequency 
@@ -134,39 +132,28 @@ def lc(fz):
 
     '''
     return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'mhz')**2))**(1/3)
-def eta(f):
+
+
+def efreq(ion0,laser0):
     '''
-    Compute single ion Lamb-Dicke parameter for vibrational eigenmode correspond to
-    eigenfrequency f
-    input(f)
+    extract eigenfrequency [MHz] in a given laser direction
+    
     Parameters
     ----------
-    f : float
-       eigenfrequency [MHz]
+    ion0 : ions class object
+    laser0 : Laser class object
 
     Returns
     -------
-    float, unit SI
+    np array
 
     '''
-    return Dk * X0(f) 
-def Omega_conv(fs,fx):
-    '''
-    Convert effective rabi frequency to real rabi frequency 
-    Input(fs,fx)
-    Parameters
-    ----------
-    fs : float
-        sideband rabi frequency, [kHz]
-    fx : float
-        transverse frequency of the ion trap, [MHz]
+    if laser0.wavevector == 0: 
+        freq = ion0.axial_freq 
+    else:   
+        freq = ion0.radial_freq
+    return freq
 
-    Returns
-    -------
-    float, unit [2pi Hz]
-
-    '''
-    return fr_conv(fs,'khz') / eta(fx)  
 def summary():
     '''
     give a summary of all functions and classes defined in this module
@@ -200,9 +187,6 @@ class ions:
     laser_config:
     Omega_eff: float
          effective laser_dipole Rabi frequency Omega * dK * X_0(fx) [kHz],
-    df_laser: int   
-        vibrational degree of freedom coupled to the laser, 0 for axial, 1 for 
-        radial
     laser_couple: list of int
         ion index that couples to the laser, for instance [0,1] means couple to 
         ion 0, 1
@@ -214,7 +198,9 @@ class ions:
     phase: float
         spin phase phis [rad]
         
-    phonon config
+    numeric config
+    active_spin: list of int
+        index of ionic spin space to be considered 
     active_phonon: list of list of int
         Index of phonon space to be be considered.
         Initialized in form [[axial]]/[[radial]] if only 
@@ -243,9 +229,7 @@ class ions:
     '''
     def __init__(self,
                  trap_config = {'N':2,'fx':2,'fz':1},
-                 phonon_config = {'active_phonon':[[0,1]],'pcut' : [[5,5]]},
-                 laser_config = {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
-                                 'delta':20, 'delta_ref':0,'phase':0},
+                 numeric_config = {'active_spin':[0,1], 'active_phonon':[[0,1]],'pcut' : [[5,5]]},
                  cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}
                  ):
         
@@ -257,21 +241,11 @@ class ions:
             parameters for trap configuration. 
             The default is {'N':2,'fx':2,'fz':1}:
             N = 2 ions, fx = 2MHz, fz = 1MHz
-        phonon_config : dict, optional
+        numeric_config : dict, optional
             parameters for phonon space configuration. 
             The default is {'active_phonon':[[0,1]],'pcut' : [[5,5]]}.
             consider all 2 modes in axial/radial direction and set cutoff level at 5
-        laser_config : dict, optional
-            parameters for laser configuration.
-            The default is {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
-                            'delta':20, 'delta_ref':0,'phase':0}.
-            Omega_eff = 10 kHz (Effective Rabi frequency)
-            df_laser = 1 (Laser drive in radial direction)
-            laser_couple = [0,1] (Laser coupled to all two ions)
-            delta = 20 kHz (detuning from eigenmode)
-            delta_ref = 0 (The above detuning is specified with respect to COM mode)
-            phase  = 0 rad (spin phase)
-        cooling_config : TYPE, optional
+        cooling_config : dict optional
             parameters for cooling configuration. 
             The default is {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}.
 
@@ -280,15 +254,13 @@ class ions:
         None.
 
         '''
-        self.update_all(trap_config, phonon_config, laser_config, cooling_config)        
+        self.update_all(trap_config, numeric_config, cooling_config)        
         print('Ions class object initialized.')
     def list_para(self):
         '''
-        list basic physical parameters of the system
+        list basic physical parameters of the trapped ion chain 
 
         '''
-        Coup_dic = {0:'Axial', 1:'Transverse (Radial)'}
-        freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
         print('________________________________________________________________')
         print('********************Setup of the Trap************************')
         print('number of ions', self.N)
@@ -297,30 +269,16 @@ class ions:
         print('Axial vibrational eigenfrequency', np.round(self.axial_freq,2),'MHz')
         print('Radial (Transverse) vibrational eigenfrequency', np.round(self.radial_freq,2),'MHz')
         print('                                                                 ')
-        print('********************Parameters of Laser Drive************************')
-        print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[self.df_laser])
-        print('index of ions that couple to the laser field: ',self.laser_couple)
-        print('detuning delta (measured as deviation from transverse'+freqdic[str(self.delta_ref)]
-              ,np.round(self.delta,2)," [kHz]")
-        print('detuning from eigenfrequency',np.round(self.detuning/(2*np.pi),2),'kHz')
-        print('reference eigenfrequency index: ', self.delta_ref)
-        print('Effective rabi frequency ', np.round(self.Omega_eff,2),' [kHz]')
-        print('Estimated spin-phonon coupling strength:', np.round(self.g(0,0)/(2*np.pi),2),' [kHz]')
-        print('spin phase phis',np.round(self.phase*180/np.pi,2))
-        print('(input in rad but displayed in degs)')
-        print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
         print('index of phonon space included in simulation: ',self.active_phonon )
         print('corresonding phonon space cutoff ', self.pcut)
         print('********************Config of Cooling************************')
         print('Effective cooling rate ', np.round(self.gamma,2)," [kHz]") 
         print('Coolant index ', self.coolant)
-    def update_all(self, trap_config = None, phonon_config=None,  
-                   laser_config = None, cooling_config=None, 
+    def update_all(self, trap_config = None, numeric_config=None, cooling_config=None, 
                    print_text = True) :
         self.update_trap(trap_config, print_text)
-        self.update_phonon(phonon_config, print_text)
-        self.update_laser(laser_config, print_text)
+        self.update_numeric(numeric_config, print_text)
         self.update_cooling(cooling_config, print_text)
     def update_trap(self,trap_config = None, print_text = True):
         '''
@@ -367,13 +325,13 @@ class ions:
         if print_text:
             print('Trap coefficients updated')
             print('Anharmonic coefficients updated')
-    def update_phonon(self, phonon_config = None, print_text = True):
+    def update_numeric(self, numeric_config = None, print_text = True):
         '''
         Set phonon parameters and compute all related attributes. 
         (see pdf document for details)
         Parameters
         ----------
-        phonon_config : dict, optional
+        numeric_config : dict, optional
            Parameters for phonon space configuration. The default is None.
         print_text : bool, optional
           If true, print a message after updating parameters. The default is True.
@@ -383,52 +341,14 @@ class ions:
        None.
 
         '''
-        if phonon_config != None:
-            self.active_phonon = phonon_config['active_phonon']  
-            self.pcut = phonon_config['pcut']
+        if numeric_config != None:
+            self.active_spin = numeric_config['active_spin']  
+            self.active_phonon = numeric_config['active_phonon']  
+            self.pcut = numeric_config['pcut']
+        self.df_spin = len(self.active_spin)
         if print_text:
             self.check_phonon()
             print('Phonon space parameters updated')
-    def update_laser(self, laser_config = None, print_text = True):
-        '''
-        Set laser parameters and compute all related attributes. 
-        (see pdf document for details)
-        Parameters
-        ----------
-        laser_config : dict, optional
-           Parameters for laser configuration. The default is None.
-        print_text : bool, optional
-          If true, print a message after updating parameters. The default is True.
-
-       Returns
-       -------
-       None.
-
-        '''
-        if laser_config != None:
-            self.Omega_eff = laser_config['Omega_eff']  
-            self.df_laser = laser_config['df_laser']
-            self.laser_couple = laser_config['laser_couple']
-            self.delta = laser_config['delta']
-            self.delta_ref = laser_config['delta_ref']
-            self.phase = laser_config['phase']
-        #extract eigenfrequncy in laser drive direction, [MHz]   
-        if self.df_laser == 0: 
-            self.efreq = self.axial_freq 
-        else:   
-            self.efreq = self.radial_freq
-        #compute effective laser frequency mu = omega_{L}- omega{hf} [2pi kHz] 
-        self.mu = 2*np.pi*(1000*self.efreq[self.delta_ref] + self.delta)
-        #compute all detunings from eigenfrequencies in laser drive direction, [2pi kHz] 
-        self.detuning = self.mu - fr_conv(self.efreq, 'khz')
-        #compute real rabi frequency  of the laser drive replaces 
-        if self.df_laser == 0:
-            f_scale = self.fz
-        else:
-            f_scale = self.fx
-        self.Omega = Omega_conv(self.Omega_eff,f_scale)/1000
-        if print_text:
-            print('Laser parameters updated')
     def update_cooling(self, cooling_config = None, print_text = True):
         '''
         Set laser parameters and compute all related attributes. 
@@ -469,12 +389,7 @@ class ions:
         else:
             print('Phonon space setups are consistent')
         print('_____________________________________________________________')    
-    def df_spin(self):
-        '''
-        number of spin degree of freedom to be considered
 
-        '''
-        return len(self.laser_couple)
     def df_phonon(self):
         '''
         output parameteres to construct phonon space
@@ -495,89 +410,6 @@ class ions:
         ph_space.append(ph_N)
         return ph_space
     
-    def plot_freq(self):
-        '''
-        visualize eigenfreqencies and laser frequency
-        '''
-        if self.N == 3:
-            wmlist  = self.efreq*1000
-            lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
-            lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
-            lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
-            froc =  [wmlist[2], wmlist[2]]
-            ftil =  [wmlist[1], wmlist[1]]
-            fcom =  [wmlist[0], wmlist[0]]
-            ylist = [0,1]
-            title = r'$\delta = $' + str(np.round(self.delta,2)) + 'kHz, reference: '+str(self.delta_ref)
-            plt.figure(0)
-            plt.plot(fcom,ylist,label = lab0)
-            plt.plot(ftil,ylist,label = lab1)
-            plt.plot(froc,ylist,label = lab2)
-            las = wmlist[self.delta_ref]+self.delta    
-            labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
-            flas =  [las, las]
-            plt.plot(flas,ylist,'--',label = labl)   
-            plt.ylim(0,1)
-            plt.title(title)
-            plt.xlabel(r'frequecny kHz')
-            plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
-            plt.legend()
-            plt.show()
-        else:
-            print('current module only enables plotting frequency diagram for 3 ion system')
-    def plot_all_freq(self):
-        '''
-        plot all eigenfrequencies of the system
-        '''
-        lab_dic = {0:'com',1:'tilt',2:'rock'}
-        if self.N == 3:
-            wmlist  = self.axial_freq*1000
-            ylist = [0,1]
-            plt.figure(0)
-            for m in range(3):
-                lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
-                fplot =  [wmlist[m], wmlist[m]]
-                plt.plot(fplot ,ylist,'r-',label = lab) 
-            wmlist  = self.radial_freq()*1000
-            plt.figure(0)
-            for m in range(3):
-                lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
-                fplot =  [wmlist[m], wmlist[m]]
-                plt.plot(fplot ,ylist,'b-',label = lab)     
-            plt.ylim(0,1)
-            plt.xlabel(r'frequecny kHz')
-            plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
-            plt.legend()
-        else:
-            print('current module only enables plotting frequency diagram for 3 ion system')
-    def plot_N_freq(self):
-        '''
-        plot all eigenfrequencies of N ion system
-        '''
-        wmlist  = self.Axialfreq()*self.fz*1000
-        ylist = [0,1]
-        plt.figure(0)
-        for m in range(self.N):
-            fplot =  [wmlist[m], wmlist[m]]
-            if m ==0:
-                lab = 'Axial COM' 
-                plt.plot(fplot ,ylist,'r-',label = lab) 
-            else:
-                plt.plot(fplot ,ylist,'r-') 
-        wmlist  = self.Transfreq()*self.fz*1000
-        for m in range(self.N):
-            fplot =  [wmlist[m], wmlist[m]]
-            if m ==0:
-                lab = 'Radial' 
-                plt.plot(fplot ,ylist,'b-',label = lab) 
-            else:
-                plt.plot(fplot ,ylist,'b-') 
-        plt.title('Axial COM: '+str(np.round(self.fz,2))+' MHz, '+ 
-                  'Radial COM: '+str(self.fx)+' MHz')        
-        plt.ylim(0,1)
-        plt.xlabel(r'frequecny kHz')
-        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
-        plt.legend()
     def alpha(self):
         '''
         compute anisotropy coefficient of the trap
@@ -900,33 +732,7 @@ class ions:
         plt.yticks(fontsize = 13)  
         plt.xlabel('Mode index mnp: m,n for radial, p for axial',fontsize = 13)
         plt.grid()       
-    '''
-    _________________________________________________________________________
-    This part computes laser related coefficients
-    '''
-    def g(self,i,m):
-        '''
-        Compute the laser-ion coupling strength between ion i and mode m
-        Parameters
-        ----------
-        i : int
-            ion index
-        m : int
-            eigenmode index
 
-        Returns
-        -------
-        g : float
-            [2pi kHz]
-        '''
-        
-        if self.df_laser == 0:
-            emat = self.axial_mode
-        else:   
-            emat = self.radial_mode
-        
-        coeff = eta(self.efreq[m])*self.Omega*emat[m,i]
-        return coeff
     def expeak(self):
         '''
         compute the expected peak frequencies
@@ -941,4 +747,210 @@ class ions:
         float [J/10**6]
         '''
         return self.g()**2/np.abs(self.w0())
-   
+class Laser():
+    def __init__(self,
+                 config = {'Omega_eff':10,'wavevector':1,'Dk':np.sqrt(2)*2*np.pi / (355*10**(-9)),
+                           'laser_couple':[0,1],'mu':1e3,'phase':0},
+                 ):
+        '''
+        Initialize laser class object with given parameters
+        Parameters
+        ----------
+        laser_config : dict, optional
+            parameters for laser configuration.
+            The default is {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
+                            'delta':20, 'delta_ref':0,'phase':0}.
+            Omega_eff = 10 kHz (Effective Rabi frequency)
+            wavevector = 1 (Laser drive in radial direction, 0 for axial direction)
+            laser_couple = [0,1] (Laser coupled to all two ions)
+            phase  = 0 rad (spin phase)
+            Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) (Effective wavenumber)
+        Returns
+        -------
+        None.
+
+        '''
+        self.update(config)
+        print('Lasers class object initialized.')
+    def update(self, config = None, print_text = True):
+        '''
+        Set laser parameters and compute all related attributes. 
+        (see pdf document for details)
+        Parameters
+        ----------
+        config : dict, optional
+           Parameters for laser configuration. The default is None.
+        print_text : bool, optional
+          If true, print a message after updating parameters. The default is True.
+
+       Returns
+       -------
+       None.
+
+        '''
+        if config != None:
+            self.Omega_eff = config['Omega_eff']  
+            self.wavevector = config['wavevector']
+            self.laser_couple = config['laser_couple']
+            self.mu = config['mu']
+            self.phase = config['phase']
+            self.Dk = config['Dk'] 
+        self.R = self.Recoil_freq()#recoil frequency constant, SI 
+        if print_text:
+            print('Laser parameters updated')
+    def Recoil_freq(self):
+        '''
+        comupte recoil frequency in 2pi Hz
+        '''
+        return (h*self.Dk**2) / (2*MYb171) 
+    def detuning(self,ion0):
+        '''
+        compute detuning [2pi kHz] in a given laser direction
+        
+        Parameters
+        ----------
+        ion0 : ions class object
+        laser0 : Laser class object
+
+        Returns
+        -------
+        np array
+
+        '''
+        dfreq = fr_conv(self.mu, 'hz') - fr_conv(efreq(ion0,self), 'khz')
+        return dfreq
+    def eta(self,f):
+        '''
+        Compute Lamb-Dicke coefficient for vibrational eigenmode with
+        eigenfrequency f
+        input(f)
+        Parameters
+        ----------
+        f : float
+           eigenfrequency [MHz]
+
+        Returns
+        -------
+        float, unit SI
+
+        '''
+        return self.Dk * X0(f) 
+
+    def Omega(self,ion0):
+        '''
+        compute real rabi frequency [2pi kHz] in a given laser direction
+        
+        Parameters
+        ----------
+        ion0 : ions class object
+        laser0 : Laser class object
+
+        Returns
+        -------
+        float
+
+        '''
+        if self.wavevector == 0:
+            f_scale = ion0.fz
+        else:
+            f_scale = ion0.fx
+        return fr_conv(self.Omega_eff,'hz') / self.eta(f_scale)
+    def list_para(self):
+        '''
+        list basic physical parameters of the laser drive 
+
+        '''
+        Coup_dic = {0:'Axial', 1:'Transverse (Radial)'}
+        freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
+        print('                                                                 ')
+        print('********************Parameters of Laser Drive************************')
+        print('Vibrational degree of freedom couples to the laser: '+ Coup_dic[self.wavevector])
+        print('index of ions that couple to the laser field: ',self.laser_couple)
+        print('Effective rabi frequency ', np.round(self.Omega_eff,2),' [kHz]')
+        print('Effective laser frequency ', np.round(self.mu,2),' [kHz]')
+        print('Laser phase phis',np.round(self.phase*180/np.pi,2))
+        print('(input in rad but displayed in degs)')
+def plot_freq(ion0,laser0):
+    '''
+    visualize eigenfreqencies and laser frequency for a 2 or 3 ion system
+    '''
+    if ion0.N == 3 or ion0.N == 2:
+        wmlist  = efreq(ion0,laser0)*1000
+        lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
+        lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
+        fcom =  [wmlist[0], wmlist[0]]
+        ftil =  [wmlist[1], wmlist[1]]
+        ylist = [0,1]
+        plt.figure(0)
+        plt.plot(fcom,ylist,label = lab0)
+        plt.plot(ftil,ylist,label = lab1)
+        if ion0.N == 3:
+            lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
+            froc =  [wmlist[2], wmlist[2]]
+            plt.plot(froc,ylist,label = lab2)
+        las = laser0.mu
+        labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
+        flas =  [las, las]
+        plt.plot(flas,ylist,'--',label = labl)   
+        plt.ylim(0,1)
+        plt.xlabel(r'frequecny kHz')
+        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.legend()
+        plt.show()
+    else:
+        print('current module only enables plotting frequency diagram for 2 or 3 ion system')
+def plot_all_freq(ion0):
+    '''
+    plot all eigenfrequencies of a 2 or 3 ion system
+    '''
+    lab_dic = {0:'com',1:'tilt',2:'rock'}
+    if  ion0.N == 3 or ion0.N == 2:
+        wmlist  = ion0.axial_freq*1000
+        ylist = [0,1]
+        plt.figure(0)
+        for m in range(ion0.N):
+            lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
+            fplot =  [wmlist[m], wmlist[m]]
+            plt.plot(fplot ,ylist,'r-',label = lab) 
+        wmlist  = ion0.radial_freq*1000
+        plt.figure(0)
+        for m in range(ion0.N):
+            lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
+            fplot =  [wmlist[m], wmlist[m]]
+            plt.plot(fplot ,ylist,'b-',label = lab)     
+        plt.ylim(0,1)
+        plt.xlabel(r'frequecny kHz')
+        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.legend()
+        plt.show()
+    else:
+        print('current module only enables plotting frequency diagram for 2,3 ion system')
+def plot_N_freq(ion0):
+    '''
+    plot all eigenfrequencies of N ion system
+    '''
+    wmlist  = ion0.axial_freq*1000
+    ylist = [0,1]
+    plt.figure(0)
+    for m in range(ion0.N):
+        fplot =  [wmlist[m], wmlist[m]]
+        if m ==0:
+            lab = 'Axial COM' 
+            plt.plot(fplot ,ylist,'y-',label = lab) 
+        else:
+            plt.plot(fplot ,ylist,'r-') 
+    wmlist  = ion0.radial_freq*1000
+    for m in range(ion0.N):
+        fplot =  [wmlist[m], wmlist[m]]
+        if m ==0:
+            lab = 'Radial COM' 
+            plt.plot(fplot ,ylist,'k-',label = lab) 
+        else:
+            plt.plot(fplot ,ylist,'b-') 
+    plt.title('Axial COM: '+str(np.round(ion0.fz,2))+' MHz, '+ 
+              'Radial COM: '+str(ion0.fx)+' MHz')        
+    plt.ylim(0,1)
+    plt.xlabel(r'frequecny kHz')
+    plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+    plt.legend()
+    plt.show()

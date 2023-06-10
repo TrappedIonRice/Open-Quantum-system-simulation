@@ -107,8 +107,8 @@ def ereasonance(ion0,nmax1,nmax2):
     mix_mn: list of list, each sublist is the combination of m,n that produces the 
     the reasonance energy
     '''
-    rock_f = -ion0.dmlist()[0]/(2*np.pi)
-    tilt_f = -ion0.dmlist()[1]/(2*np.pi)
+    rock_f = -ion0.detuning[0]/(2*np.pi)
+    tilt_f = -ion0.detuning[1]/(2*np.pi)
     mix_el = np.array([])
     rock_el = np.arange(0,nmax1+1,1)*rock_f
     tilt_el = np.arange(0,nmax2+1,1)*tilt_f

@@ -56,7 +56,7 @@ def ph_list(ion0):
        mlist = ion0.active_phonon[ion0.df_laser]
     return mlist    
 
-def pnum(ion0 = None,df=None):
+def pnum(ion0 = None, laser0 = None, df=None):
     '''
     find the number of phonon spaces coupled to the laser
     
@@ -74,7 +74,7 @@ def pnum(ion0 = None,df=None):
 
     '''
     if df == None:
-        df_couple = ion0.df_laser
+        df_couple = laser0.wavevector
     else:
         df_couple = df
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
@@ -83,7 +83,7 @@ def pnum(ion0 = None,df=None):
         dim = ion0.df_phonon()[1][df_couple]
     return dim    
 
-def p_zero(ion0 = None):
+def p_zero(ion0):
     '''
     construct the zero operator on phonon space
     Parameters
@@ -95,10 +95,9 @@ def p_zero(ion0 = None):
     Qutip Operator
 
     '''
-    Np = pnum(ion0)
     pcut =ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
-        pzero = phon.zero_op(pcut[0],Np)
+        pzero = phon.zero_op(pcut[0],ion0.df_phonon()[1][0])
     else:     #two  phonon spaces
         pzero = tensor(phon.zero_op(pcut[0],ion0.df_phonon()[1][0]),
                        phon.zero_op(pcut[1],ion0.df_phonon()[1][1]))
@@ -116,21 +115,21 @@ def p_I(ion0):
     Qutip Operator
 
     '''
-    Np = pnum(ion0)
     pcut =ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
-        pI = phon.pI(pcut[0],Np)
+        pI = phon.pI(pcut[0],ion0.df_phonon()[1][0])
     else:     #two  phonon spaces
         pI = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),
                     phon.pI(pcut[1],ion0.df_phonon()[1][1]))
     return pI
 
-def p_ladder(ion0=None,mindex=0,atype=0,df=None):
+def p_ladder(ion0=None,laser0 = None, mindex=0,atype=0,df=None):
     '''
     construct the ladder operator on phonon space
     Parameters
     ----------
     ion0 : ion class object
+    laser0 : laser class object
     mindex: int  
         index of phonon space where the ladder operator is acting on    
     atype: int 
@@ -146,11 +145,11 @@ def p_ladder(ion0=None,mindex=0,atype=0,df=None):
     ''' 
     
     if df == None:
-        df_couple = ion0.df_laser #use default
-        Np = pnum(ion0)
+        df_couple = laser0.wavevector #use default
+        Np = pnum(ion0, laser0)
     else:
         df_couple = df #specify the coupling coefficeint
-        Np = pnum(ion0,df_couple)
+        Np = pnum(ion0,df = df_couple)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         if atype == 0:
@@ -188,7 +187,7 @@ def rho_thermal(ion0=None, nbar_list=[],s_state=[0], ket = False):
     Qutip operator
 
     '''
-    Ns = ion0.df_spin()
+    Ns = ion0.df_spin
     isket = spin.spin_state(Ns,s_state)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
@@ -241,7 +240,7 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     Qutip operator
 
     '''
-    Ns = ion0.df_spin()
+    Ns = ion0.df_spin
     isket = spin.spin_state(Ns,s_state)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
@@ -293,7 +292,7 @@ def c_op(ion0=None, nbar_list=[1],normalized=True):
         emat = ion0.radial_mode
     for m in ph_list(ion0):
         nbar = nbar_list[m]
-        cm = tensor(spin.sI(ion0.df_spin()), p_ladder(ion0,mindex,0))
+        cm = tensor(spin.sI(ion0.df_spin), p_ladder(ion0,mindex,0))
         if normalized:
             coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'hz'))
         else:
@@ -318,7 +317,7 @@ def spin_measure(ion0=None,s_config=[0]):
     s_op : Qutip operator
 
     '''
-    s_ket = spin.spin_state(ion0.df_spin(),s_config)
+    s_ket = spin.spin_state(ion0.df_spin,s_config)
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
     return s_op
 def site_spin_measure(ion0=None,index=0):
@@ -335,10 +334,10 @@ def site_spin_measure(ion0=None,index=0):
     s_op : Qutip operator
 
     '''
-    s_op = tensor( 0.5 * (spin.sI(ion0.df_spin()) + spin.sz(ion0.df_spin(),index)),
+    s_op = tensor( 0.5 * (spin.sI(ion0.df_spin) + spin.sz(ion0.df_spin,index)),
                   p_I(ion0))
     return s_op
-def phonon_measure(ion0=None,mindex=0,df=None):
+def phonon_measure(ion0=None,laser0 = None, mindex=0,df=None):
     '''
     Generate operators to measure phonon evolution for excitation transfer systems
     Parameters
@@ -356,13 +355,13 @@ def phonon_measure(ion0=None,mindex=0,df=None):
 
     '''
     if df == None:
-        p_op = p_ladder(ion0,mindex,1)*p_ladder(ion0,mindex,0)
+        p_op = p_ladder(ion0,laser0, mindex,1)*p_ladder(ion0,laser0, mindex,0)
     else:     
-        p_op = p_ladder(ion0,mindex,1,df)*p_ladder(ion0,mindex,0,df)
-    p_op = tensor(spin.sI(ion0.df_spin()),p_op)
+        p_op = p_ladder(ion0,laser0, mindex,1,df)*p_ladder(ion0,laser0,mindex,0,df)
+    p_op = tensor(spin.sI(ion0.df_spin),p_op)
     return p_op    
 
-def pstate_measure(ion0=None,meas_level=0,mindex=0,df=None):
+def pstate_measure(ion0=None,laser0 =None, meas_level=0,mindex=0,df=None):
     '''
     mearsure the population of n=pcut state of a specific phonon space 
     in order to check the validity using a finite phonon space
@@ -380,11 +379,11 @@ def pstate_measure(ion0=None,meas_level=0,mindex=0,df=None):
     Qutip operator.
     '''
     if df == None:
-        df_couple = ion0.df_laser #use default
-        Np = pnum(ion0)
+        df_couple = laser0.wavevector #use default
+        Np = pnum(ion0, laser0)
     else:
         df_couple = df #specify the coupling direction
-        Np = pnum(ion0, df_couple)
+        Np = pnum(ion0, df = df_couple)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         opa = phon.state_measure(pcut[0],Np,meas_level,mindex)
@@ -395,7 +394,7 @@ def pstate_measure(ion0=None,meas_level=0,mindex=0,df=None):
             opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
-    return tensor(spin.sI(ion0.df_spin()),opa)   
+    return tensor(spin.sI(ion0.df_spin),opa)   
     
 
     

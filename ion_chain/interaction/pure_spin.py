@@ -37,7 +37,7 @@ def single_site(Omegax=0, Omegaz=0, ion0=None):
     Qutip operator
 
     '''
-    Ns = ion0.df_spin()
+    Ns = ion0.df_spin
     if Ns == 1:
         Hspin = (2 * np.pi) * (Omegax * tensor(spin.sx(1,0),sp_op.p_I(ion0))  
          -0.5 * Omegaz * tensor(spin.sz(1,0),sp_op.p_I(ion0))) 

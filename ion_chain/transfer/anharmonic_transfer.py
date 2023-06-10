@@ -8,7 +8,7 @@ function: Htot
 """
 import numpy as np
 from qutip import *
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.interaction.spin_phonon as Isp
 import Qsim.ion_chain.interaction.pure_spin as Is
 from  Qsim.ion_chain.ion_system import *
@@ -437,7 +437,7 @@ def H_res2(Omegax, Omegaz, ion1, ion2, ah_term=False,ah_op=0,td=False):
     H_s =  Is.single_site(Omegax, Omegaz, ion1) 
     if ah_term:
         if td:
-            H_arg = res_ah_arg(ion2.mu(),ion1.mu())
+            H_arg = res_ah_arg(ion2.mu,ion1.mu)
             ahlist = []
             for tindex in range(2):
                 ahlist.append([ah_op[tindex], anh_str(tindex,1)])

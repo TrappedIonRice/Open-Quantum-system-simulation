@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Operators on spin space
-functions: sx, sy, sz, zero_op, sI, phid, phiup   
+functions: sx, sy, sz, sry, zero_op, sI, phid, phiup, spin_state   
 @author: zhumj
 """
 import numpy as np

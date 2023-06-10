@@ -13,14 +13,13 @@ from  Qsim.ion_chain.ion_system import *
 '''
 set parameters of the system
 '''    
-ion_sys = ions(trap_config={'N': 2, 'fx': 5, 'fz': 0.2}, 
-                   )
+ion_sys = ions(trap_config={'N': 2, 'fx': 5, 'fz': 0.2}, )
+laser1 = Laser()
+laser1.mu = ion_sys.fx*1000 + 20
+#%%
 #ion_sys.N = 4
 #ion_sys.laser_couple = [0,1,2,3]
 #ion_sys.N = 2
-ion_sys.laser_couple = [0,1]
-ion_sys.fz = 0.2; #axial COM (Confining) frequency MHz
-ion_sys.fx= 5; #transverse COM (Confining) frequency MHz
-Jmat = iscp.Jt(ion_sys)
+Jmat = iscp.Jt(ion_sys,laser1)
 print(Jmat)
 iscp.plotj(Jmat)

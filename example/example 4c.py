@@ -11,7 +11,7 @@ from qutip import *
 import matplotlib.pyplot as plt
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import Qsim.ion_chain.transfer.multi_core as mcs
-import Qsim.ion_chain.transfer.exci_operators as exop
+import Qsim.operator.spin_phonon as sp_op
 from  Qsim.ion_chain.ion_system import *
 from astropy.io import ascii
 from astropy.table import Table
@@ -82,12 +82,12 @@ def spin_evolution_g(task,Garray):
         else: 
             ion_sys.pcut = pcut_list [1]
         ion_sys.gamma = [0,0,g]
-        oplist = [exop.spin_measure(ion_sys,[0,1]),
-                  exop.spin_measure(ion_sys,[1,0])]
+        oplist = [sp_op.spin_measure(ion_sys,[0,1]),
+                  sp_op.spin_measure(ion_sys,[1,0])]
         elist = oplist
-        rho0 = exop.rho_thermal(ion_sys,[[0.01]*3],False,[0,1]) #initial state
+        rho0 = sp_op.rho_thermal(ion_sys,[[0.01]*3],False,[0,1]) #initial state
         H0 = extrans.H_res(J23,E2/2,E3,V,ion_sys)
-        clist1 = exop.c_op(ion_sys,[0.01]*3) #collapse operator
+        clist1 = sp_op.c_op(ion_sys,[0.01]*3) #collapse operator
         result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
         sresult.append(result.expect[0])
     return {task:sresult}   
