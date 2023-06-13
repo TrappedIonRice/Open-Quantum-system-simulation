@@ -894,7 +894,7 @@ def plot_freq(ion0,laser0):
         plt.plot(flas,ylist,'--',label = labl)   
         plt.ylim(0,1)
         plt.xlabel(r'frequecny kHz')
-        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
         plt.legend()
         plt.show()
     else:
@@ -920,7 +920,7 @@ def plot_all_freq(ion0):
             plt.plot(fplot ,ylist,'b-',label = lab)     
         plt.ylim(0,1)
         plt.xlabel(r'frequecny kHz')
-        plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
         plt.legend()
         plt.show()
     else:
@@ -951,6 +951,6 @@ def plot_N_freq(ion0):
               'Radial COM: '+str(ion0.fx)+' MHz')        
     plt.ylim(0,1)
     plt.xlabel(r'frequecny kHz')
-    plt.grid(b=None, which='major', axis='x', color = 'black', linestyle = '--')
+    plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
     plt.legend()
     plt.show()
