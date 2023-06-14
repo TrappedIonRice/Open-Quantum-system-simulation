@@ -26,14 +26,14 @@ def fr_conv(f,unit):
     f : float
         input frequency, in Hz, kHz, or MHz
     unit : str
-        specify the unit, can be 'hz', 'khz', 'mhz'
+        specify the unit, can be 'Hz', 'kHz', 'MHz'
     Returns
     -------
     f_out : float
         output radial frequency, unit of 2pi Hz
 
     '''
-    factor = {'hz':0,'khz':3,'mhz':6}
+    factor = {'Hz':0,'kHz':3,'MHz':6}
     f_out = 2*np.pi * f*10**(factor[unit])
     return f_out
 '''
@@ -42,7 +42,7 @@ subfunction
 def X0(f0):
     #compute the characteristic length scale of the motional mode, [m]
     #input in MHz
-    return np.sqrt(h / (2*MYb171* fr_conv(f0,'mhz')))
+    return np.sqrt(h / (2*MYb171* fr_conv(f0,'MHz')))
 #Compute Transverse and Axial Matrix, eigen modes of the system
 def mask_p(m,N0):
     #generate a mask array for calculating mth diagonal element
@@ -131,7 +131,7 @@ def lc(fz):
     float, unit of m
 
     '''
-    return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'mhz')**2))**(1/3)
+    return (qe**2/ (4*np.pi * eps0 * MYb171 * fr_conv(fz,'MHz')**2))**(1/3)
 
 
 def efreq(ion0,laser0):
@@ -583,7 +583,7 @@ class ions:
         float unit of 1
 
         '''
-        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'mhz')))
+        sigma0 = np.sqrt(0.5*h / (MYb171*fr_conv(self.fz,'MHz')))
         return  sigma0 / (4*self.l0())
     def ah_couple(self, mode_index, real_unit=False):
         '''
@@ -749,7 +749,7 @@ class ions:
         return self.g()**2/np.abs(self.w0())
 class Laser():
     def __init__(self,
-                 config = {'Omega_eff':10,'wavevector':1,'Dk':np.sqrt(2)*2*np.pi / (355*10**(-9)),
+                 config = {'Omega_eff':10,'wavevector':1,'Dk':2*2*np.pi / (355*10**(-9)),
                            'laser_couple':[0,1],'mu':1e3,'phase':0},
                  ):
         '''
@@ -817,7 +817,7 @@ class Laser():
         np array
 
         '''
-        dfreq = fr_conv(self.mu, 'hz') - fr_conv(efreq(ion0,self), 'khz')
+        dfreq = fr_conv(self.mu, 'Hz') - fr_conv(efreq(ion0,self), 'kHz')
         return dfreq
     def eta(self,f):
         '''
@@ -854,7 +854,7 @@ class Laser():
             f_scale = ion0.fz
         else:
             f_scale = ion0.fx
-        return fr_conv(self.Omega_eff,'hz') / self.eta(f_scale)
+        return fr_conv(self.Omega_eff,'Hz') / self.eta(f_scale)
     def list_para(self):
         '''
         list basic physical parameters of the laser drive 
