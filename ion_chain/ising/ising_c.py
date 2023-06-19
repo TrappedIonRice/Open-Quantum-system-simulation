@@ -72,7 +72,6 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
         time dependent Hamiltonian, input of sesolve
     arg_dic1 : dict
         parameter dict
-
     '''
     arg_dic1 = {'r':1j*2*np.pi*laser_r.mu,'rc':1j*2*np.pi*laser_rc.mu,
                 'b':1j*2*np.pi*laser_b.mu,'bc':1j*2*np.pi*laser_bc.mu,

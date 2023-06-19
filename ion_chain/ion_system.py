@@ -183,7 +183,12 @@ class ions:
         axial frequency of the ion trap, [MHz]
     fx : float
         transverse frequency of the ion trap, [MHz]
-        
+    V_mod : float
+        Modulation Amplitude for parameteric amplification, [V]
+    f_mod: float
+        Modulation Frequency for parameteric amplification, [kHz]
+    d_T: float
+        Trap dimension parameter, [um] 
     laser_config:
     Omega_eff: float
          effective laser_dipole Rabi frequency Omega * dK * X_0(fx) [kHz],
@@ -230,7 +235,8 @@ class ions:
     def __init__(self,
                  trap_config = {'N':2,'fx':2,'fz':1},
                  numeric_config = {'active_spin':[0,1], 'active_phonon':[[0,1]],'pcut' : [[5,5]]},
-                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}
+                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]},
+                 para_mod_config = {'f_mod':0,'V_mod':0,'d_T':200}
                  ):
         
         '''
@@ -239,8 +245,8 @@ class ions:
         ----------
         trap_config : dict, optional
             parameters for trap configuration. 
-            The default is {'N':2,'fx':2,'fz':1}:
-            N = 2 ions, fx = 2MHz, fz = 1MHz
+            The default is {'N':2,'fx':2,'fz':1,'f_mod':0,'V_mod':0}:
+            N = 2 ions, fx = 2MHz, fz = 1MHz, f_mod = 0kHz, V_mod = 0V, d_T = 200 um
         numeric_config : dict, optional
             parameters for phonon space configuration. 
             The default is {'active_phonon':[[0,1]],'pcut' : [[5,5]]}.
@@ -248,13 +254,16 @@ class ions:
         cooling_config : dict optional
             parameters for cooling configuration. 
             The default is {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}.
+        para_mod_config : dict optional
+            parameters for parametric modulation of trap frequency
+            The default is {'f_mod':0,'V_mod':0,'d_T':200}.
 
         Returns
         -------
         None.
 
         '''
-        self.update_all(trap_config, numeric_config, cooling_config)        
+        self.update_all(trap_config, numeric_config, cooling_config,para_mod_config)        
         print('Ions class object initialized.')
     def list_para(self):
         '''
@@ -267,7 +276,11 @@ class ions:
         print('Axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
         print('Radial COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
         print('Axial vibrational eigenfrequency', np.round(self.axial_freq,2),'MHz')
-        print('Radial (Transverse) vibrational eigenfrequency', np.round(self.radial_freq,2),'MHz')
+        print('Radial (Transverse) vibrational eigenfrequency', np.round(self.radial_freq,2),'[MHz]')
+        print('Modulation Amplitude for parameteric amplification: ',np.round(self.V_mod,2), '[V]')
+        print('Modulation Frequency for parameteric amplification: ',np.round(self.f_mod,2), '[MHz]')
+        print('Trap dimension parameter: ', self.d_T, '[um]')
+        
         print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
         print('index of phonon space included in simulation: ',self.active_phonon )
@@ -275,11 +288,17 @@ class ions:
         print('********************Config of Cooling************************')
         print('Effective cooling rate ', np.round(self.gamma,2)," [kHz]") 
         print('Coolant index ', self.coolant)
-    def update_all(self, trap_config = None, numeric_config=None, cooling_config=None, 
+        print('********************Config of Trap Modulation************************')
+        print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
+        print(' Modulation Amplitude', np.round(self.f_mod,2)," [kHz]") 
+        print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
+    def update_all(self, trap_config = None, numeric_config=None, cooling_config=None,
+                   para_mod_config = None,
                    print_text = True) :
         self.update_trap(trap_config, print_text)
         self.update_numeric(numeric_config, print_text)
         self.update_cooling(cooling_config, print_text)
+        self.update_PM(para_mod_config, print_text)
     def update_trap(self,trap_config = None, print_text = True):
         '''
         Set trap parameters and compute all related attributes. 
@@ -370,6 +389,27 @@ class ions:
             self.coolant=  cooling_config['coolant']
         if print_text:
             print('Cooling parameters updated')
+    def update_PM(self, para_mod_config = None, print_text = True):
+        '''
+        Set parameters for parametric modulation of trap frequency
+        Parameters
+        ----------
+       para_mod_config : dic, optional
+            Parameters for parametric modulation. The default is None.
+       print_text : bool, optional
+         If true, print a message after updating parameters. The default is True.
+
+        Returns
+        -------
+        None.
+
+        '''
+        if para_mod_config != None:
+           self.f_mod = para_mod_config['f_mod']
+           self.V_mod = para_mod_config['V_mod']
+           self.d_T = para_mod_config['d_T']
+        if print_text:
+            print('Trap parametric modulation updated')
     def check_phonon(self):
         '''
         Check the consistency in set up of phonon space
@@ -747,6 +787,28 @@ class ions:
         float [J/10**6]
         '''
         return self.g()**2/np.abs(self.w0())
+    def PA_coef(self,df_mod,m):
+        '''
+        Compute the coupling strength due to parameteric amplification,
+        2eV / d_t^2
+        df_mod: int
+            modulation direction, 0 for axial, 1 for radial 
+        m:
+            mode index 
+        Returns
+        -------
+        float [2pi kHz]
+
+        '''
+        if df_mod == 0:
+            freq = self.axial_freq
+        else:
+            freq = self.radial_freq
+            #compute everything in SI
+        numer = qe * self.V_mod
+        demoni = ( MYb171 * fr_conv(freq[m],'mhz' ) * (self.d_T*1e-6)**2 )
+        return (numer/demoni)/1000 #convert SI to 2pi kHz
+        
 class Laser():
     def __init__(self,
                  config = {'Omega_eff':10,'wavevector':1,'Dk':np.sqrt(2)*2*np.pi / (355*10**(-9)),

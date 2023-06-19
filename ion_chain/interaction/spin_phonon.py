@@ -27,8 +27,6 @@ def RWA_filter(Hlist,flist,f_crit):
     '''
     Apply rotating wave approximation by selecting terms in the Hamiltonian
     with frequency smaller than a criterion. 
-
-
     Parameters
     ----------
     Hlist : list of time dependent Hamiltonian
@@ -37,11 +35,9 @@ def RWA_filter(Hlist,flist,f_crit):
         rotating frequency of each Hamiltonian in Hlist
     f_crit : float
         critical frequency for filtering, [2pi Hz]
-
     Returns
     -------
     list of filtered time-dependent Hamiltonians
-
     '''
     aop_dic = ['++','+-','-+','--']
     ind_list = []
@@ -77,7 +73,6 @@ def LD_coef(ion0,laser0,i,m):
         ion index
     m : int
         eigenmode index
-
     Returns
     -------
      float unit of 1
@@ -101,7 +96,6 @@ def g(ion0,laser0,i,m):
         ion index
     m : int
         eigenmode index
-
     Returns
     -------
     g : float
@@ -117,7 +111,6 @@ def tstring(N=1,atype=0,las_label=''):
     '''
     Generate the list of time depedent expression for the Hamiltonian of two
     symmetric sideband drives
-
     Parameters
     ----------
     N : int
@@ -132,13 +125,12 @@ def tstring(N=1,atype=0,las_label=''):
         list of parameters
     fstring : list of string
         list of time dependent expressions to be used 
-
     '''
     mstring = []
     fstring = []
     ustr = 'u'+las_label
     for mi in range(1,N+1):
-        newm = "m" + las_label + str(mi)
+        newm = "w" + las_label + str(mi)
         mstring.append(newm)
         if atype == 1:
             fstring.append('cos(t * '+ustr+') * exp(t * ' + newm +")")
@@ -161,11 +153,10 @@ def tstring_general(N=1):
     -------
     mstring : list of string
         list of parameters
-
     '''
     mstring = []
     for mi in range(1,N+1):
-        newm = "m"  + str(mi)
+        newm = "w"  + str(mi)
         mstring.append(newm)
     return mstring   
 
@@ -236,7 +227,7 @@ def Him_td_fir_ord(ion0, laser0, stype = 0,i=0,m=0,sindex=0,mindex = 0, las_labe
     '''
     #set coefficient constants according to the coupling degree of freedom
     ustr = 'u'+las_label
-    mstr = 'm'+str(m+1)
+    mstr = 'w'+str(m+1)
     
     if stype == 1:
         s_op = spin.up(ion0.df_spin,sindex)
@@ -303,8 +294,8 @@ def Him_td_sec_ord(ion0, laser0, stype = 0,i=0,sindex=0, mindex_list=[0,0,0,0], 
     [m_a,mindex_a,m_b,mindex_b] = mindex_list
     
     ustr = 'u'+las_label
-    mstr_a = 'm'+str(m_a+1)
-    mstr_b = 'm'+str(m_b+1)
+    mstr_a = 'w'+str(m_a+1)
+    mstr_b = 'w'+str(m_b+1)
     
     coef0 = -(1/4) * g(ion0,laser0,i,m_a) * g(ion0,laser0,i,m_b) /laser0.Omega(ion0)
     if stype == 1:
@@ -358,7 +349,6 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
     '''
     constuct time-dependent laser-ion interaction Hamiltonian with multiple laser drives
     under power series expansion up to second order. 
-
     Parameters
     ----------
     ion0 : ion class object
@@ -377,7 +367,6 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
     -------
     Hlist : TYPE
         DESCRIPTION.
-
     '''
     #compute the mth element by summing over i for Him for destroy operators
     Hlist = []
@@ -391,10 +380,10 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
                                        str(las_lab),rwa,arg_dic,f_crit)
                 newH2 = Him_td_fir_ord(ion0,laser, 1,i,m,sindex,mindex,
                                        str(las_lab),rwa,arg_dic,f_crit)
-                sindex = sindex + 1
+                sindex += 1
                 Hlist = Hlist + newH1 + newH2
-            mindex = mindex+1 
-        las_lab = las_lab + 1
+            mindex += 1 
+        las_lab += 1
     #Hlist = []
     #print('constructing second order')
     if second_order:
@@ -412,12 +401,71 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
                         newH2 = Him_td_sec_ord(ion0, laser, 1, i,sindex,mlist,
                                                str(las_lab),rwa,arg_dic,f_crit)
                         Hlist = Hlist + newH1 + newH2
-                        mindex_b = mindex_b+1
-                    mindex_a = mindex_a+1;  
-                sindex = sindex + 1
-            las_lab = las_lab + 1
+                        mindex_b += 1
+                    mindex_a += 1;  
+                sindex += 1
+            las_lab += 1
     return Hlist
+def H_m_PA(ion0, m=0, mindex=0, df=1):
+    '''
+    Compute mth term of the Hamiltonian due to parameteric amplification
 
+    Parameters
+    ----------
+    ion0 : ion class object
+    laser0: laser class object, used to specify coupling direction
+    m : int
+        mode index m
+    mindex : int
+        index for phonon operator
+    df: int
+        vibrational degree of freedom where amplification is applied, 0 for axial
+        1 for radial, The default is 1.
+
+    Returns
+    -------
+    list of Qutip operators
+
+    '''
+    mstr = 'w'+str(m+1)
+    exp_plus = 'cos(t * fm) * exp(2 * t * ' +  mstr + ' )'
+    exp_minus = 'cos(t * fm) * exp(-2 * t * ' +  mstr + ' )'
+    p_up = sp_op.p_ladder(ion0,laser0=None,mindex=mindex,atype=1,df=df); 
+    p_down = sp_op.p_ladder(ion0,laser0=None,mindex=mindex,atype=0,df=df)
+    coef = ion0.PA_coef(df,m)
+    #time independent part of H
+    cross_term = tensor(spin.sI(ion0.df_spin), p_up*p_down)
+    H0 = [coef* (cross_term + cross_term.dag()),'cos(t * fm)']
+    H1 = [coef * tensor(spin.sI(ion0.df_spin),p_down*p_down), exp_minus]
+    H2 = [coef * tensor(spin.sI(ion0.df_spin),p_up*p_up), exp_plus]
+    return [H0,H1,H2]
+def H_PA_td(ion0, df=1):
+    '''
+    compute time depedent Hamiltonian for parametric amplification
+    Parameters
+    ----------
+    ion0 : ion class object
+        DESCRIPTION.
+    df : int, optional
+        vibrational degree of freedom where amplification is applied, 0 for axial
+        1 for radial, The default is 1.
+
+    Returns
+    -------
+    Hlist : list
+        time depedent Hamiltonian
+    padic : dict
+        parameter dict
+
+    '''
+    padic = {'fm':fr_conv(ion0.f_mod,'hz')}
+    Hlist = []
+    mindex = 0
+    for m in sp_op.ph_list(ion0):
+        new_H = H_m_PA(ion0, m, mindex, df)
+        Hlist += new_H
+        mindex +=  1
+    return Hlist, padic
 def Him_res(ion0=None, i=0,m=0,sindex=0,mindex=0):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
@@ -551,4 +599,3 @@ def H_res(ion0):
             sindex = sindex + 1
         mindex = mindex+1
     return spterm - H_harmonic(ion0)
-        

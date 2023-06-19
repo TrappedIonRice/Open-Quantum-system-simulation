@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Construct quantum operators used in excitation transfer systems 
-
 @author: zhumj
 """
 import numpy as np
@@ -42,7 +41,6 @@ def summary():
 def ph_list(ion0):
     '''
     Generate a list of phonon index used in computing laser-ion coupling
-
     Parameters
     ----------
     ion0 : ions class object
@@ -67,11 +65,9 @@ def pnum(ion0 = None, laser0 = None, df=None):
         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
         Specified if doing computations with a different coupling direction from the direction
         initialized in ion class object
-
     Returns
     -------
     int, number of phonon spaces coupled to the laser
-
     '''
     if df == None:
         df_couple = laser0.wavevector
@@ -89,11 +85,9 @@ def p_zero(ion0):
     Parameters
     ----------
     ion0 : ion class object
-
     Returns
     -------
     Qutip Operator
-
     '''
     pcut =ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
@@ -109,11 +103,9 @@ def p_I(ion0):
     Parameters
     ----------
     ion0 : ion class object
-
     Returns
     -------
     Qutip Operator
-
     '''
     pcut =ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
@@ -141,7 +133,6 @@ def p_ladder(ion0=None,laser0 = None, mindex=0,atype=0,df=None):
     Returns
     -------
     Qutip Operator
-
     ''' 
     
     if df == None:
@@ -185,7 +176,6 @@ def rho_thermal(ion0=None, nbar_list=[],s_state=[0], ket = False):
     Returns
     -------
     Qutip operator
-
     '''
     Ns = ion0.df_spin
     isket = spin.spin_state(Ns,s_state)
@@ -223,7 +213,6 @@ def rho_thermal(ion0=None, nbar_list=[],s_state=[0], ket = False):
 def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     '''
     Construct initial ket/density matrix that has integer phonon number
-
     Parameters
     ----------
     ion0: ions class object
@@ -238,7 +227,6 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     Returns
     -------
     Qutip operator
-
     '''
     Ns = ion0.df_spin
     isket = spin.spin_state(Ns,s_state)
@@ -282,7 +270,6 @@ def c_op(ion0=None, nbar_list=[1],normalized=True):
     Returns
     -------
     List of Qutip operator
-
     '''
     clist = []
     mindex = 0
@@ -305,7 +292,6 @@ def c_op(ion0=None, nbar_list=[1],normalized=True):
 def spin_measure(ion0=None,s_config=[0]):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
-
     Parameters
     ----------
     ion0 : ion class object
@@ -315,7 +301,6 @@ def spin_measure(ion0=None,s_config=[0]):
     Returns
     -------
     s_op : Qutip operator
-
     '''
     s_ket = spin.spin_state(ion0.df_spin,s_config)
     s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
@@ -332,7 +317,6 @@ def site_spin_measure(ion0=None,index=0):
     Returns
     -------
     s_op : Qutip operator
-
     '''
     s_op = tensor( 0.5 * (spin.sI(ion0.df_spin) + spin.sz(ion0.df_spin,index)),
                   p_I(ion0))
@@ -352,7 +336,6 @@ def phonon_measure(ion0=None,laser0 = None, mindex=0,df=None):
     Returns
     -------
     Qutip operator.
-
     '''
     if df == None:
         p_op = p_ladder(ion0,laser0, mindex,1)*p_ladder(ion0,laser0, mindex,0)
@@ -395,6 +378,3 @@ def pstate_measure(ion0=None,laser0 =None, meas_level=0,mindex=0,df=None):
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return tensor(spin.sI(ion0.df_spin),opa)   
-    
-
-    
