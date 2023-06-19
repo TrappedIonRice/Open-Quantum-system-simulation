@@ -58,7 +58,7 @@ def Jt(ion0,laser0):
                 eij = 0
                 for m in range (N):
                     numer = laser0.R * Omega0 * emat[m,i] * emat[m,j]
-                    demon = 1e6*((fr_conv(laser0.mu,'hz'))**2 - (fr_conv(efreq(ion0,laser0)[m],'khz'))**2)
+                    demon = 1e6*((fr_conv(laser0.mu,'Hz'))**2 - (fr_conv(efreq(ion0,laser0)[m],'kHz'))**2)
                     eij = eij + (numer/demon)
                 J[i,j] = eij/(2*np.pi*10**3)    
     return J

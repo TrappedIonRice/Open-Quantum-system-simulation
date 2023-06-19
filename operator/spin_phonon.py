@@ -281,9 +281,9 @@ def c_op(ion0=None, nbar_list=[1],normalized=True):
         nbar = nbar_list[m]
         cm = tensor(spin.sI(ion0.df_spin), p_ladder(ion0,mindex,0))
         if normalized:
-            coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'hz'))
+            coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
         else:
-            coeff = np.sqrt(fr_conv(ion0.gamma[m],'hz'))
+            coeff = np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
         clist.append(coeff*np.sqrt(1+nbar)*cm)
         clist.append(coeff* np.sqrt(nbar)*cm.dag())
         mindex = mindex + 1                                            

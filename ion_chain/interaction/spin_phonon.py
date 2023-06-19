@@ -12,13 +12,13 @@ from  Qsim.ion_chain.ion_system import *
 def summary():
     print("____________________________________________________________________")
     print("function: H_td")
-    print("Genearte time-dependent Hamiltonian for laser-ion interaction in ordinary frame")
+    print("Generate time-dependent Hamiltonian for laser-ion interaction in ordinary frame")
     print("____________________________________________________________________")
     print("function: H_td_arg")
     print(" Generate an argument dictonary which maps parameters in time-dependent expressions to their actual values")
     print("____________________________________________________________________")
     print("function: H_res")
-    print("Genearte time-independent Hamiltonian for laser-ion interaction in resonant frame")
+    print("Generate time-independent Hamiltonian for laser-ion interaction in resonant frame")
     
 '''
 subfunctions
@@ -524,7 +524,7 @@ def H_td_arg(ion0,laser0,las_label=''):
     '''
     #generate the arg list for solving time dependent SE
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
-    adic = {"u"+las_label:fr_conv(laser0.mu,'hz')}
+    adic = {"u"+las_label:fr_conv(laser0.mu,'Hz')}
     slist, fs = tstring(ion0.N,0,las_label)
     wlist0 = 1j*efreq(ion0,laser0) * 2000* np.pi #compute eigenfrequency list
     for argi in range(ion0.N):
@@ -548,7 +548,7 @@ def H_td_argdic_general(ion0,laser_list):
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
     adic = {}
     for i in range(len(laser_list)):
-        adic["u"+str(i+1)] = 1j*fr_conv(laser_list[i].mu,'hz')
+        adic["u"+str(i+1)] = 1j*fr_conv(laser_list[i].mu,'Hz')
     slist = tstring_general(ion0.N)
     wlist0 = 1j * efreq(ion0,laser_list[0]) * 2000* np.pi #compute eigenfrequency list
     for argi in range(ion0.N):

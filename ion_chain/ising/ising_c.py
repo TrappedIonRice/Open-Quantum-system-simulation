@@ -75,9 +75,9 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
     '''
     arg_dic1 = {'r':1j*2*np.pi*laser_r.mu,'rc':1j*2*np.pi*laser_rc.mu,
                 'b':1j*2*np.pi*laser_b.mu,'bc':1j*2*np.pi*laser_bc.mu,
-                'w1' : 1j*fr_conv(ion0.radial_freq[0],'khz'),
-                'w2' : 1j*fr_conv(ion0.radial_freq[1],'khz'),
-                'w3' : 1j*fr_conv(ion0.radial_freq[2],'khz'),
+                'w1' : 1j*fr_conv(ion0.radial_freq[0],'kHz'),
+                'w2' : 1j*fr_conv(ion0.radial_freq[1],'kHz'),
+                'w3' : 1j*fr_conv(ion0.radial_freq[2],'kHz'),
                 'q':q}
     Hlist = []
     for i in laser_r.laser_couple:
