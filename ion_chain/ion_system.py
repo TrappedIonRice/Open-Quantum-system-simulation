@@ -806,7 +806,7 @@ class ions:
             freq = self.radial_freq
             #compute everything in SI
         numer = qe * self.V_mod
-        demoni = ( MYb171 * fr_conv(freq[m],'mhz' ) * (self.d_T*1e-6)**2 )
+        demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
         return (numer/demoni)/1000 #convert SI to 2pi kHz
         
 class Laser():
