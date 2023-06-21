@@ -70,11 +70,11 @@ def double_site(J12=0, E1=0, E2=0, Vx=0, ion0=None):
     Ns = 2
     #coupling between two sites
     sop = tensor(spin.up(Ns,0)*spin.down(Ns,1),sp_op.p_I(ion0))
-    term1 = fr_conv(J12,'hz') * (sop+sop.dag())
+    term1 = fr_conv(J12,'Hz') * (sop+sop.dag())
     #site energy difference
-    term2 = (fr_conv(E1,'hz') * tensor(spin.sz(Ns,0),sp_op.p_I(ion0))+
-             fr_conv(E2,'hz') * tensor(spin.sz(Ns,1),sp_op.p_I(ion0)))
+    term2 = (fr_conv(E1,'Hz') * tensor(spin.sz(Ns,0),sp_op.p_I(ion0))+
+             fr_conv(E2,'Hz') * tensor(spin.sz(Ns,1),sp_op.p_I(ion0)))
     #coupling between donor/ accpetor states for each site
-    term3 = (fr_conv(Vx,'hz') * 
+    term3 = (fr_conv(Vx,'Hz') * 
              tensor(spin.sx(Ns,0)+spin.sx(Ns,1),sp_op.p_I(ion0)))
     return term1+term2+term3

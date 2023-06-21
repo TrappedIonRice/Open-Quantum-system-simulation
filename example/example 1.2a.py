@@ -76,7 +76,7 @@ print('predicted frequency')
 print(Tthree(eta_com,laser2.Omega(ion_sys),laser1.Omega(ion_sys),delta*2*np.pi,q))
 #compute rwa critirion
 delta_omega = (np.max(ion_sys.radial_freq)- np.min(ion_sys.radial_freq))*1000
-rwa_fc = fr_conv(2*q*(delta_omega+delta+10),'hz') 
+rwa_fc = fr_conv(2*q*(delta_omega+delta+10),'Hz') 
 print('RWA critrion frequency: '+ str(np.round(rwa_fc/(2*np.pi),2))+' [kHz]')
 #10 is an additional factor to make sure all frequencies are included
 #%% construct Hamiltonian 

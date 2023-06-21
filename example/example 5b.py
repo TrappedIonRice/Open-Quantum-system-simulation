@@ -64,7 +64,7 @@ deltaE = [deltaE0]*3
 '''
 construct anharmonic coupling term
 '''
-ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'khz') #kHz
+ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'kHz') #kHz
 operator_a = sp_op.p_ladder(ion2,0,0,0) #destory operator on tilt axial mode
 operator_b =  sp_op.p_ladder(ion2,0,1,1) #create operator on rock radial mode
 #term 1, a * b^+ * b

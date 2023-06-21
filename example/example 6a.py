@@ -74,7 +74,7 @@ s_op3 = sp_op.site_spin_measure(ion2,2)
 construct anharmonic coupling term
 '''
 print('coupling strenght [kHz]',ion2.ah_couple(mconfig)*ion2.fz*1000)
-ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'khz') #kHz
+ah_coef = ion2.ah_couple(mconfig)*fr_conv(ion2.fz,'kHz') #kHz
 operator_a = sp_op.p_ladder(ion2,0,1,0) #creation operator on tilt axial mode
 operator_b =  sp_op.p_ladder(ion2,0,0,1) #destory operator on rock radial mode
 ah_oper =ah_coef*tensor(spin.sI(ion2.df_spin),operator_a*operator_b*operator_b)

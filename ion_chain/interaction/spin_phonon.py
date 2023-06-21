@@ -458,7 +458,7 @@ def H_PA_td(ion0, df=1):
         parameter dict
 
     '''
-    padic = {'fm':fr_conv(ion0.f_mod,'hz')}
+    padic = {'fm':fr_conv(ion0.f_mod,'Hz')}
     Hlist = []
     mindex = 0
     for m in sp_op.ph_list(ion0):

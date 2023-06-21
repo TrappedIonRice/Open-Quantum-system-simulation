@@ -125,7 +125,7 @@ def res_freq_eq(fz,*para):
     Parameters
     ----------
     fz : float
-        radial trapping frequency, variable to be solved [Mhz]
+        radial trapping frequency, variable to be solved [MHz]
     *para : tuple
         parameters to construct the equation
         [fx,w]
@@ -144,7 +144,7 @@ def res_freq_eq2(fz,*para):
     Parameters
     ----------
     fz : float
-        radial trapping frequency, variable to be solved [Mhz]
+        radial trapping frequency, variable to be solved [MHz]
     *para : tuple
         parameters to construct the equation
         [fx,w, N, m ,n , p]
@@ -179,7 +179,7 @@ def fz_cons(fz,*para):
     Parameters
     ----------
     fz : float
-        radial trapping frequency, variable to be solved [Mhz]
+        radial trapping frequency, variable to be solved [MHz]
     *para : tuple
         parameters to construct the equation    
     Returns
