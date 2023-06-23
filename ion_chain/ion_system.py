@@ -290,8 +290,8 @@ class ions:
         print('Coolant index ', self.coolant)
         print('********************Config of Trap Modulation************************')
         print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
-        print(' Modulation Amplitude', np.round(self.f_mod,2)," [kHz]") 
-        print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
+        print(' Modulation Frequency', np.round(self.f_mod,2)," [kHz]")
+        print(' Trap dimension parameter', np.round(self.d_T,2)," [um]")
     def update_all(self, trap_config = None, numeric_config=None, cooling_config=None,
                    para_mod_config = None,
                    print_text = True) :
@@ -806,8 +806,8 @@ class ions:
             freq = self.radial_freq
             #compute everything in SI
         numer = qe * self.V_mod
-        demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
-        return (numer/demoni)/1000 #convert SI to 2pi kHz
+        denomi = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
+        return (numer/denomi)/1000 #convert SI to 2pi kHz
         
 class Laser():
     def __init__(self,
