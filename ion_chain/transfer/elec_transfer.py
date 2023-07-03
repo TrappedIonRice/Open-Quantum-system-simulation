@@ -3,7 +3,8 @@
 Created on Wed Jun  1 15:47:46 2022
 
 @author: zhumj
-Construct Hamiltonian in reasonate rotating frame for the 2 ion open qunatum system used to simulation electron transition between acceptor and donor state
+Construct Hamiltonian of a 2 ion open qunatum system used to simulate electron transition between acceptor and donor state
+in a single site system.
 """
 
 import numpy as np
@@ -43,7 +44,7 @@ def U(Omegaz,lambda0):
 
     '''
     return (Omegaz - lambda0)**2 / (4*lambda0)
-def H_res(Omegax, Omegaz, ion0):
+def H_res(Omegax, Omegaz, ion0, laser0):
     '''
     Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
@@ -54,16 +55,16 @@ def H_res(Omegax, Omegaz, ion0):
     Omegaz : float
         energy difference between the doner and acceptor state  [kHz]
     ion0 : ion class object
-
+    laser0: laser class object
     Returns
     -------
     Heff: Qutip operator
         Effective Hamiltonian in resonant frame
     '''
     H_s =  Is.single_site(Omegax, Omegaz, ion0) 
-    Heff = H_s+ Isp.H_res(ion0)
+    Heff = H_s+ Isp.H_res(ion0, laser0)
     return Heff
-def H_ord(Omegax, Omegaz, ion0):
+def H_ord(Omegax, Omegaz, ion0, laser0):
     '''
     Genearte the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame,
     in the format required by the Qutip solver (string method) 
@@ -75,7 +76,7 @@ def H_ord(Omegax, Omegaz, ion0):
     Omegaz : float
         energy difference between the doner and acceptor state  [kHz]
     ion0 : ion class object
-
+    laser0: laser class object
     Returns
     -------
     Heff: list
@@ -84,8 +85,8 @@ def H_ord(Omegax, Omegaz, ion0):
         dic of argument parameters
     '''
     H_s =  Is.single_site(Omegax, Omegaz, ion0) 
-    Heff = [H_s] + Isp.H_td(ion0,0) + Isp.H_td(ion0,1)
-    H_arg = Isp.H_td_arg(ion0)
+    Heff = [H_s] + Isp.H_td(ion0,laser0,0) + Isp.H_td(ion0,laser0,1)
+    H_arg = Isp.H_td_arg(ion0,laser0)
     return Heff, H_arg
 
         

@@ -54,29 +54,26 @@ def ph_list(ion0):
        mlist = ion0.active_phonon[ion0.df_laser]
     return mlist    
 
-def pnum(ion0 = None, laser0 = None, df=None):
+def pnum(ion0, df):
     '''
     find the number of phonon spaces coupled to the laser
     
     Parameters
     ----------
     ion0 : ions class object
-    df : int, default as none
+    df : int, 
         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
         Specified if doing computations with a different coupling direction from the direction
-        initialized in ion class object
+        initialized in ion class object, in case of two radial spaces, df is used as an index
+        to distinguish them.
     Returns
     -------
     int, number of phonon spaces coupled to the laser
     '''
-    if df == None:
-        df_couple = laser0.wavevector
-    else:
-        df_couple = df
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         dim = ion0.df_phonon()[1][0]
     else:   #two  phonon spaces
-        dim = ion0.df_phonon()[1][df_couple]
+        dim = ion0.df_phonon()[1][df]
     return dim    
 
 def p_zero(ion0):
@@ -115,7 +112,7 @@ def p_I(ion0):
                     phon.pI(pcut[1],ion0.df_phonon()[1][1]))
     return pI
 
-def p_ladder(ion0=None,laser0 = None, mindex=0,atype=0,df=None):
+def p_ladder(ion0,df=1, mindex=0,atype=0):
     '''
     construct the ladder operator on phonon space
     Parameters
@@ -135,12 +132,7 @@ def p_ladder(ion0=None,laser0 = None, mindex=0,atype=0,df=None):
     Qutip Operator
     ''' 
     
-    if df == None:
-        df_couple = laser0.wavevector #use default
-        Np = pnum(ion0, laser0)
-    else:
-        df_couple = df #specify the coupling coefficeint
-        Np = pnum(ion0,df = df_couple)
+    Np = pnum(ion0,df)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         if atype == 0:
@@ -149,17 +141,17 @@ def p_ladder(ion0=None,laser0 = None, mindex=0,atype=0,df=None):
             opa = phon.up(m = mindex,cutoff = pcut[0], N = Np)
     else:     #two  phonon spaces
         if atype == 0:
-            opa = phon.down(m = mindex, cutoff = pcut[df_couple], N = Np)
+            opa = phon.down(m = mindex, cutoff = pcut[df], N = Np)
         else:
-            opa = phon.up(m = mindex, cutoff = pcut[df_couple], N = Np)
+            opa = phon.up(m = mindex, cutoff = pcut[df], N = Np)
         #construct in order axial, transverse
-        if  df_couple ==0:
+        if  df ==0:
             opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0=None, nbar_list=[],s_state=[0], ket = False):
+def rho_thermal(ion0, nbar_list=[],s_state=[0], ket = False):
     '''
     Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
@@ -256,7 +248,7 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     else:
         return tensor(isket,pho)
 
-def c_op(ion0=None, nbar_list=[1],normalized=True):
+def c_op(ion0, nbar_list=[1],normalized=True):
     '''
     Construct the collapse operator for the transfer systems
     Parameters
@@ -273,7 +265,7 @@ def c_op(ion0=None, nbar_list=[1],normalized=True):
     '''
     clist = []
     mindex = 0
-    if ion0.df_laser == 0:
+    if ion0.df_cooling == 0:
         emat = ion0.axial_mode
     else:
         emat = ion0.radial_mode
@@ -321,7 +313,7 @@ def site_spin_measure(ion0=None,index=0):
     s_op = tensor( 0.5 * (spin.sI(ion0.df_spin) + spin.sz(ion0.df_spin,index)),
                   p_I(ion0))
     return s_op
-def phonon_measure(ion0=None,laser0 = None, mindex=0,df=None):
+def phonon_measure(ion0, df=1, mindex=0):
     '''
     Generate operators to measure phonon evolution for excitation transfer systems
     Parameters
@@ -336,15 +328,12 @@ def phonon_measure(ion0=None,laser0 = None, mindex=0,df=None):
     Returns
     -------
     Qutip operator.
-    '''
-    if df == None:
-        p_op = p_ladder(ion0,laser0, mindex,1)*p_ladder(ion0,laser0, mindex,0)
-    else:     
-        p_op = p_ladder(ion0,laser0, mindex,1,df)*p_ladder(ion0,laser0,mindex,0,df)
+    '''  
+    p_op = p_ladder(ion0,df,mindex,1)*p_ladder(ion0,df,mindex,0)
     p_op = tensor(spin.sI(ion0.df_spin),p_op)
     return p_op    
 
-def pstate_measure(ion0=None,laser0 =None, meas_level=0,mindex=0,df=None):
+def pstate_measure(ion0=None,df=1,meas_level=0,mindex=0):
     '''
     mearsure the population of n=pcut state of a specific phonon space 
     in order to check the validity using a finite phonon space
@@ -361,19 +350,14 @@ def pstate_measure(ion0=None,laser0 =None, meas_level=0,mindex=0,df=None):
     -------
     Qutip operator.
     '''
-    if df == None:
-        df_couple = laser0.wavevector #use default
-        Np = pnum(ion0, laser0)
-    else:
-        df_couple = df #specify the coupling direction
-        Np = pnum(ion0, df = df_couple)
+    Np = pnum(ion0, df)
     pcut = ion0.pcut
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         opa = phon.state_measure(pcut[0],Np,meas_level,mindex)
     else:     #two  phonon spaces
-        opa = phon.state_measure(pcut[df_couple],Np,meas_level,mindex)
+        opa = phon.state_measure(pcut[df],Np,meas_level,mindex)
         #construct in order axial, transverse
-        if  df_couple ==0:
+        if  df ==0:
             opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)

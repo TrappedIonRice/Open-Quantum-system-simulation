@@ -183,9 +183,9 @@ class ions:
         axial frequency of the ion trap, [MHz]
     fx : float
         transverse frequency of the ion trap, [MHz]
-    V_mod : float
+    V_mod : list of float
         Modulation Amplitude for parameteric amplification, [V]
-    f_mod: float
+    f_mod: list of float
         Modulation Frequency for parameteric amplification, [kHz]
     d_T: float
         Trap dimension parameter, [um] 
@@ -195,11 +195,6 @@ class ions:
     laser_couple: list of int
         ion index that couples to the laser, for instance [0,1] means couple to 
         ion 0, 1
-    delta: float
-        Laser detuning from a specific eigenfrequency, used to specify laser 
-        frequency.      
-    delta_ref: int 
-        reference eigenfrequency index correspond to delta, 0 for com mode
     phase: float
         spin phase phis [rad]
         
@@ -228,15 +223,17 @@ class ions:
         cooling rate on each phonon space
     coolant: list of int
         index of coolant    
-        
+    df_cooling: int
+        motional degree of freedom on which the cooling is applied, 0 for axial
+        1 for radial.
     important class method:
             
     '''
     def __init__(self,
                  trap_config = {'N':2,'fx':2,'fz':1},
                  numeric_config = {'active_spin':[0,1], 'active_phonon':[[0,1]],'pcut' : [[5,5]]},
-                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]},
-                 para_mod_config = {'f_mod':0,'V_mod':0,'d_T':200}
+                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1],'df_cooling':1},
+                 para_mod_config = {'f_mod':[0],'V_mod':[0],'d_T':200}
                  ):
         
         '''
@@ -256,7 +253,7 @@ class ions:
             The default is {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}.
         para_mod_config : dict optional
             parameters for parametric modulation of trap frequency
-            The default is {'f_mod':0,'V_mod':0,'d_T':200}.
+            The default is {'f_mod':[0],'V_mod':[0],'d_T':200}.
 
         Returns
         -------
@@ -288,9 +285,10 @@ class ions:
         print('********************Config of Cooling************************')
         print('Effective cooling rate ', np.round(self.gamma,2)," [kHz]") 
         print('Coolant index ', self.coolant)
+        print('Motional degree of freedom to be cooled: ', self.df_cooling)
         print('********************Config of Trap Modulation************************')
-        print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
-        print(' Modulation Amplitude', np.round(self.f_mod,2)," [kHz]") 
+        print(' Modulation Amplitude', np.round(np.array(self.V_mod),2)," [V]") 
+        print(' Modulation Amplitude', np.round(np.array(self.f_mod),2)," [kHz]") 
         print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
     def update_all(self, trap_config = None, numeric_config=None, cooling_config=None,
                    para_mod_config = None,
@@ -387,6 +385,7 @@ class ions:
         if cooling_config != None:
             self.gamma =  cooling_config['gamma']  
             self.coolant=  cooling_config['coolant']
+            self.df_cooling=  cooling_config['df_cooling']
         if print_text:
             print('Cooling parameters updated')
     def update_PM(self, para_mod_config = None, print_text = True):
@@ -787,7 +786,7 @@ class ions:
         float [J/10**6]
         '''
         return self.g()**2/np.abs(self.w0())
-    def PA_coef(self,df_mod,m):
+    def PA_coef(self,df_mod,m,pa_index=0):
         '''
         Compute the coupling strength due to parameteric amplification,
         2eV / d_t^2
@@ -795,6 +794,9 @@ class ions:
             modulation direction, 0 for axial, 1 for radial 
         m:
             mode index 
+        pa_index: int
+            index of pa component index, used for multiple wave component case
+            default as 0
         Returns
         -------
         float [2pi kHz]
@@ -805,7 +807,7 @@ class ions:
         else:
             freq = self.radial_freq
             #compute everything in SI
-        numer = qe * self.V_mod
+        numer = qe * self.V_mod[pa_index]
         demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
         return (numer/demoni)/1000 #convert SI to 2pi kHz
         
@@ -820,7 +822,7 @@ class Laser():
         ----------
         laser_config : dict, optional
             parameters for laser configuration.
-            The default is {'Omega_eff':10,'df_laser':1,'laser_couple':[0,1],
+            The default is {'Omega_eff':10,'f_laser':1,'laser_couple':[0,1],
                             'delta':20, 'delta_ref':0,'phase':0}.
             Omega_eff = 10 kHz (Effective Rabi frequency)
             wavevector = 1 (Laser drive in radial direction, 0 for axial direction)

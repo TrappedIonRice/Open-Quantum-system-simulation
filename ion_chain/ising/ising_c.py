@@ -73,6 +73,7 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
     arg_dic1 : dict
         parameter dict
     '''
+    p_df = laser_r.wavevector
     arg_dic1 = {'r':1j*2*np.pi*laser_r.mu,'rc':1j*2*np.pi*laser_rc.mu,
                 'b':1j*2*np.pi*laser_b.mu,'bc':1j*2*np.pi*laser_bc.mu,
                 'w1' : 1j*fr_conv(ion0.radial_freq[0],'kHz'),
@@ -85,7 +86,7 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
         for m in sp_op.ph_list(ion0):
             m_expr = 'w'+str(m+1)
             coefr = 1j/2 * Isp.g(ion0,laser_r,i,m)
-            op_fir =  tensor(s_down,sp_op.p_ladder(ion0,laser_r,m,1));
+            op_fir =  tensor(s_down,sp_op.p_ladder(ion0,p_df ,m,1));
             #first term 
             expr_r1 = ('exp( 1 * t * '+ m_expr + ' ) *  (' 
                        + 'exp( 1 * t * r) + '
@@ -106,7 +107,7 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
             for n in sp_op.ph_list(ion0):
                 n_expr = 'w'+str(n+1)
                 coefb = -1/4 * Isp.g(ion0,laser_b,i,m)*Isp.g(ion0,laser_b,i,n)/ laser_b.Omega(ion0)
-                op_sec =  tensor(s_down,sp_op.p_ladder(ion0,laser_r,m,0)*sp_op.p_ladder(ion0,laser_r,n,0))
+                op_sec =  tensor(s_down,sp_op.p_ladder(ion0,p_df,m,0)*sp_op.p_ladder(ion0,p_df ,n,0))
                 #third term, conjugate of first 
                 sum_mn = '(' + m_expr + ' + ' + n_expr + ')'
                 expr_b1 = ('exp( -1 * t * '+ sum_mn + ' ) *  (' 

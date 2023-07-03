@@ -21,7 +21,7 @@ from astropy.table import Table
 plt.rcParams['figure.dpi']= 200
 #%% set parameters of ion chain
 ion_sys = ions(trap_config={'N': 3, 'fx': 5, 'fz': 1}, 
-                   numeric_config={'active_spin': [0, 1, 2],'active_phonon': [[0]], 'pcut': [[100]]},
+                   numeric_config={'active_spin': [0, 1, 2],'active_phonon': [[0]], 'pcut': [[50]]},
                    )
 
 #%% set parameters of lasers according to the paper
@@ -80,23 +80,25 @@ elist_com = [tensor(spin.sz(N,0),sp_op.p_I(ion_sys)),
           tensor(spin.sz(N,1),sp_op.p_I(ion_sys)),
           tensor(spin.sz(N,2),sp_op.p_I(ion_sys))]
 #solve time dependent SE
-times =  np.arange(0,20,1e-3)
+times =  np.arange(0,5,1e-3)
+Htb_com, arg_tb = iscc.H_com_multi(ion_sys,laser2,laser1,laser4,laser3,q) #construct time-dependent H
+#%%
 print('______________________________________________________________________')
 print('solving  Hamiltonian without PA')
-Htb_com, arg_tb = iscc.H_com_multi(ion_sys,laser2,laser1,laser4,laser3,q) #construct time-dependent H
+
 result1 = sesolve(Htb_com,psi1,times,args = arg_tb,progress_bar=True,options=Options(nsteps=10000)) 
 #%%
-ion_sys.update_PM(para_mod_config = {'f_mod':2*(ion_sys.fx*1000+delta) ,'V_mod':0.6*1e-2,'d_T':200})
+ion_sys.update_PM(para_mod_config = {'f_mod':[2*(ion_sys.fx*1000+delta)],'V_mod':[0.6*1e-1],'d_T':200})
 ion_sys.list_para() #print parameters of the system
 print('parametric amplification parameter g')
 gcoef = ion_sys.PA_coef(1,0)/(2*np.pi)
 phi = ( (delta-gcoef)/(delta+gcoef) )**0.25
-#print(phi)
+print(phi)
 Delta = (gcoef/phi)**2/(4*(100+1e3*ion_sys.fx))
 delta1 = np.sqrt(delta**2 - gcoef**2 )
 #print('')
-#print(Delta/delta1)
-print((1/phi)**2 * delta/delta1)
+print(Delta/delta1)
+#print((1/phi)**4 * delta/delta1)
 #%% simulation with PA
 H_PA_com, arg_Hpa = Isp.H_PA_td(ion_sys) #PA Hamiltonian 
 Heff_com = Htb_com + H_PA_com; arg_com = arg_tb | arg_Hpa #total Hamiltonian
@@ -121,8 +123,8 @@ plt.grid()
 plt.show()
 #%%phonon evolution
 #note to construct these phonon operators, any laser object above can be applied
-mp_state1 = expect(sp_op.pstate_measure(ion_sys,laser1,99,0),result1_pa.states) 
-pplot_pa = expect(sp_op.phonon_measure(ion_sys,laser1, mindex=0), result1_pa.states)
+mp_state1 = expect(sp_op.pstate_measure(ion_sys,1,149,0),result1_pa.states) 
+pplot_pa = expect(sp_op.phonon_measure(ion_sys,1, mindex=0), result1_pa.states)
 #pplot = expect(sp_op.phonon_measure(ion_sys,laser1, mindex=0), result1.states)
 print('Maximum phonon population of highest com phonon space')
 print(np.max(mp_state1))

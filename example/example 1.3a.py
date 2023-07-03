@@ -23,12 +23,13 @@ import copy
 '''
 set parameters of the system
 '''    
-ion_sys = ions(trap_config={'N': 2, 'fx': 5, 'fz': 0.2}, 
-                   numeric_config={'active_spin': [0, 1],'active_phonon': [[0, 1]], 'pcut': [[20,20]]},
+delta = 25
+ion_sys = ions(trap_config={'N': 2, 'fx': 3, 'fz': 1}, 
+                   numeric_config={'active_spin': [0, 1],'active_phonon': [[0, 1]], 'pcut': [[50,50]]},
                    )
 ion_sys.list_para() #print parameters of the system
 laser1 = Laser(config = {'Omega_eff':30,'wavevector':1,'Dk':np.sqrt(2)*2*np.pi / (355*10**(-9)),
-                         'laser_couple':[0,1], 'mu':100+1e3*ion_sys.fx,'phase':0})
+                         'laser_couple':[0,1], 'mu':delta+1e3*ion_sys.fx,'phase':0})
 laser1.list_para()
 Bz = 0 #Effective magnetic field
 N = ion_sys.N
@@ -40,14 +41,13 @@ spin_config = np.array([0,0])
 psi1 = sp_op.ini_state(ion_sys,spin_config,[[0,0]],1)
 elist1 = [tensor(spin.sz(N,0),sp_op.p_I(ion_sys)),tensor(spin.sz(N,1),sp_op.p_I(ion_sys))]
 #solve time dependent SE
-times =  np.arange(0,4,10**(-3))
+times =  np.arange(0,0.1,10**(-4))
 print('______________________________________________________________________')
 print('solving for Hamiltonian without PA')
 result1 = sesolve(Heff,psi1,times,args = arg0,progress_bar=True,options=Options(nsteps=1000)) 
 #%% with PA
-delta = 100
 #set modulation parameters
-ion_sys.update_PM(para_mod_config = {'f_mod':2*(ion_sys.fx*1000+delta) ,'V_mod':0.9,'d_T':200})
+ion_sys.update_PM(para_mod_config = {'f_mod':[2*(ion_sys.fx*1000+delta)] ,'V_mod':[0.1],'d_T':200})
 ion_sys.list_para() #print parameters of the system
 print('scale factor phi')
 gcoef = ion_sys.PA_coef(1,0)/(2*np.pi)
@@ -84,9 +84,9 @@ plt.grid()
 plt.show()
 #%%phonon evolution
 #note to construct these phonon operators, any laser object above can be applied
-mp_state1 = expect(sp_op.pstate_measure(ion_sys,laser1,19,0),result2.states) 
-#pplot_pa = expect(sp_op.phonon_measure(ion_sys,laser1, mindex=0), result2.states)
-#pplot = expect(sp_op.phonon_measure(ion_sys,laser1, mindex=0), result1.states)
+mp_state1 = expect(sp_op.pstate_measure(ion_sys,1,19,0),result2.states) 
+pplot_pa = expect(sp_op.phonon_measure(ion_sys,1, mindex=0), result2.states)
+pplot = expect(sp_op.phonon_measure(ion_sys,1, mindex=0), result1.states)
 print('Maximum phonon population of highest com phonon space')
 print(np.max(mp_state1))
 plt.plot(times,pplot,label = 'no pa')

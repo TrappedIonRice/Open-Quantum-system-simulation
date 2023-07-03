@@ -114,7 +114,8 @@ plt.show()
 #%%phonon evolution
 #note to construct these phonon operators, any laser object above can be applied
 mp_state1 = expect(sp_op.pstate_measure(ion_sys,laser1,5,0),result1.states) 
-pplot = expect(sp_op.phonon_measure(ion_sys,laser1, mindex=0), result1.states)
+df_p = 1 #for phonon measurements
+pplot = expect(sp_op.phonon_measure(ion_sys,df_p, mindex=0), result1.states)
 print('Maximum phonon population of highest com phonon space')
 print(np.max(mp_state1))
 plt.plot(times,pplot,label = 'Phonon')
