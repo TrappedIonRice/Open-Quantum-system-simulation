@@ -287,15 +287,11 @@ class ions:
         print('Coolant index ', self.coolant)
         print('Motional degree of freedom to be cooled: ', self.df_cooling)
         print('********************Config of Trap Modulation************************')
-<<<<<<< HEAD
-        print(' Modulation Amplitude', np.round(np.array(self.V_mod),2)," [V]") 
-        print(' Modulation Amplitude', np.round(np.array(self.f_mod),2)," [kHz]") 
-        print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
-=======
+
         print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
         print(' Modulation Frequency', np.round(self.f_mod,2)," [kHz]")
         print(' Trap dimension parameter', np.round(self.d_T,2)," [um]")
->>>>>>> origin/new_class_structure
+
     def update_all(self, trap_config = None, numeric_config=None, cooling_config=None,
                    para_mod_config = None,
                    print_text = True) :
@@ -813,15 +809,9 @@ class ions:
         else:
             freq = self.radial_freq
             #compute everything in SI
-<<<<<<< HEAD
         numer = qe * self.V_mod[pa_index]
         demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
         return (numer/demoni)/1000 #convert SI to 2pi kHz
-=======
-        numer = qe * self.V_mod
-        denomi = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
-        return (numer/denomi)/1000 #convert SI to 2pi kHz
->>>>>>> origin/new_class_structure
         
 class Laser():
     def __init__(self,
