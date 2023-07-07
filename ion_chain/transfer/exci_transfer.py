@@ -23,10 +23,10 @@ def summary():
     '''
     print('___________________________________________________________________')
     print('H_res')
-    print('Genearte time-independent Hamiltonian for 2 site excitation transfer system in resonant interaction frame')
+    print('Generate time-independent Hamiltonian for 2 site excitation transfer system in resonant interaction frame')
     print('___________________________________________________________________')
     print('H_ord')
-    print('Genearte the time-dependent Hamiltonian for 2 site excitation transfer system in ordinary interaction frame')
+    print('Generate time-dependent Hamiltonian for 2 site excitation transfer system in ordinary interaction frame')
 
 def H_ord(J12, E1, E2, Vx, ion0):
     '''

@@ -22,10 +22,10 @@ def summary():
     print('compute the activation energy to reasonance conformation')
     print('___________________________________________________________________')
     print('H_res')
-    print('Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame')
+    print('Generate time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame')
     print('___________________________________________________________________')
     print('H_ord')
-    print('Genearte the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame')
+    print('Generate the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame')
 
 def U(Omegaz,lambda0):
     '''
