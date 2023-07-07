@@ -13,6 +13,7 @@ import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
 from  Qsim.ion_chain.ion_system import *
 import Qsim.operator.spin_phonon as sp_op
+import Qsim.ion_chain.interaction.dissipation as disp
 #%%
 '''
 parameters of the system, use the same parameter in quantum regime 
@@ -42,7 +43,7 @@ simulation with 1 mode, reproduce curve C in Fig 3(B)
 elist = [sp_op.spin_measure(ion_sys,[0,1])]
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys,laser1)
-clist1 = sp_op.c_op(ion_sys,[0.01],False)
+clist1 = disp.cooling(ion_sys,[0.01],False)
 rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01]],s_state=[0],ket = False)
 tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(delta))
