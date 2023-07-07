@@ -30,15 +30,12 @@ def summary():
     print("function: ini_state")
     print("Construct initial ket/density matrix that has integer phonon number")
     print("____________________________________________________________________")
-    print("function: c_op")
-    print("Construct the collapse operator for the transfer systems")
-    print("____________________________________________________________________")
     print("function: spin_measure")
     print("Construct operators to measure spin evolution for excitation transfer")
     print("____________________________________________________________________")
     print("function: phonon_measure")
     print("Construct operators to measure phonon evolution for excitation transfer")
-def ph_list(ion0):
+def ph_list(ion0,df=1):
     '''
     Generate a list of phonon index used in computing laser-ion coupling
     Parameters
@@ -247,39 +244,6 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
         return rho0
     else:
         return tensor(isket,pho)
-
-def c_op(ion0, nbar_list=[1],normalized=True):
-    '''
-    Construct the collapse operator for the transfer systems
-    Parameters
-    ----------
-    ion0 : ion class object
-    nbar_list: list of float
-        average phonon number of each phonon space
-    normalized: bool
-        if normalized, all cooling coefficient will be multiplied by
-        corresponding Eigenmode matrix element
-    Returns
-    -------
-    List of Qutip operator
-    '''
-    clist = []
-    mindex = 0
-    if ion0.df_cooling == 0:
-        emat = ion0.axial_mode
-    else:
-        emat = ion0.radial_mode
-    for m in ph_list(ion0):
-        nbar = nbar_list[m]
-        cm = tensor(spin.sI(ion0.df_spin), p_ladder(ion0,mindex,0))
-        if normalized:
-            coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
-        else:
-            coeff = np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
-        clist.append(coeff*np.sqrt(1+nbar)*cm)
-        clist.append(coeff* np.sqrt(nbar)*cm.dag())
-        mindex = mindex + 1                                            
-    return clist
 
 def spin_measure(ion0=None,s_config=[0]):
     '''
