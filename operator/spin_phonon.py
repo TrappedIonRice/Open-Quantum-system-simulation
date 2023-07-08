@@ -299,7 +299,7 @@ def phonon_measure(ion0, df=1, mindex=0):
 
 def pstate_measure(ion0=None,df=1,meas_level=0,mindex=0):
     '''
-    mearsure the population of n=pcut state of a specific phonon space 
+    measure the population of n=pcut state of a specific phonon space
     in order to check the validity using a finite phonon space
     ion0 : ion class object
     meas_level: int
