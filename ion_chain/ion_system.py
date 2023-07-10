@@ -219,12 +219,8 @@ class ions:
         vibrational degrees of freedoms are considered.
     
     cooling config
-    gamma: list of float
-        cooling rate on each phonon space
     coolant: list of int
         index of coolant    
-    df_cooling: int
-        motional degree of freedom on which the cooling is applied, 0 for axial
         1 for radial.
     important class method:
             
@@ -232,7 +228,7 @@ class ions:
     def __init__(self,
                  trap_config = {'N':2,'fx':2,'fz':1},
                  numeric_config = {'active_spin':[0,1], 'active_phonon':[[0,1]],'pcut' : [[5,5]]},
-                 cooling_config = {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1],'df_cooling':1},
+                 cooling_config = {'coolant' : [1]},
                  para_mod_config = {'f_mod':[0],'V_mod':[0],'d_T':200}
                  ):
         
@@ -249,8 +245,8 @@ class ions:
             The default is {'active_phonon':[[0,1]],'pcut' : [[5,5]]}.
             consider all 2 modes in axial/radial direction and set cutoff level at 5
         cooling_config : dict optional
-            parameters for cooling configuration. 
-            The default is {'gamma':[0.1 * 20, 0.1*20],'coolant' : [1]}.
+            parameters for sympathetic cooling configuration. 
+            The default is {coolant' : [1]}.
         para_mod_config : dict optional
             parameters for parametric modulation of trap frequency
             The default is {'f_mod':[0],'V_mod':[0],'d_T':200}.
@@ -283,9 +279,7 @@ class ions:
         print('index of phonon space included in simulation: ',self.active_phonon )
         print('corresonding phonon space cutoff ', self.pcut)
         print('********************Config of Cooling************************')
-        print('Effective cooling rate ', np.round(self.gamma,2)," [kHz]") 
         print('Coolant index ', self.coolant)
-        print('Motional degree of freedom to be cooled: ', self.df_cooling)
         print('********************Config of Trap Modulation************************')
 
         print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
@@ -332,7 +326,10 @@ class ions:
         self.axial_freq = self.fz * np.sqrt(self.axial_eval)
         #check if the radial tensor is positive definite
         if np.min(self.radial_eval) < 0:
-            print("Negtive radialverse frequency, the system is unstable")
+            print('=================================================')
+            print('---------------------WARNING---------------------')
+            print("Negative radial-eigenvalues, the ion configuration is unstable")
+            print('=================================================')
             self.radial_freq = self.fz * np.sqrt(self.radial_eval+0j)
         else:
             self.radial_freq = self.fz * np.sqrt(self.radial_eval)
@@ -385,9 +382,7 @@ class ions:
 
         '''
         if cooling_config != None:
-            self.gamma =  cooling_config['gamma']  
             self.coolant=  cooling_config['coolant']
-            self.df_cooling=  cooling_config['df_cooling']
         if print_text:
             print('Cooling parameters updated')
     def update_PM(self, para_mod_config = None, print_text = True):
@@ -812,7 +807,59 @@ class ions:
         numer = qe * self.V_mod[pa_index]
         demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
         return (numer/demoni)/1000 #convert SI to 2pi kHz
+
+class Ions_asy(ions):
+    '''
+    A subclass of class ions for asymmetric confinment in radial directions
+    '''
+    def __init__(self,
+                 trap_config = {'N':2,'fx':2,'fz':1,'offset':0},
+                 numeric_config = {'active_spin':[0,1], 'active_phonon':[[0,1]],'pcut' : [[5,5]]},
+                 cooling_config = {'coolant' : [1]},
+                 para_mod_config = {'f_mod':[0],'V_mod':[0],'d_T':200}
+                 ):
+        super().__init__(trap_config,numeric_config,cooling_config,para_mod_config)
+    def update_trap(self,trap_config = None, print_text = True):
+        '''
+        Set trap parameters and compute all related attributes. 
+        with a new parameter: freq_offset,
+        specifying the offset in [kHz] of the radial eigenfrequncies
+
+        '''
+        super().update_trap(trap_config,print_text)
+        if trap_config != None:
+            self.freq_offset = trap_config['offset']
+        self.radial_freq1 = self.radial_freq  #first set of frequencies 
+        self.radial_freq2 =  self.radial_freq + self.freq_offset/1000
+    def list_para(self):
+        '''
+        list basic physical parameters of the trapped ion chain 
+
+        '''
+        print('________________________________________________________________')
+        print('********************Setup of the Trap************************')
+        print('number of ions', self.N)
+        print('Axial COM (Confining) frequency ',np.round(self.fz,2),' [MHz]')
+        print('Radial COM (Confining) frequency ',np.round(self.fx,2), '[MHz]')
+        print('Axial vibrational eigenfrequency', np.round(self.axial_freq,2),'MHz')
+        print('Radial (Transverse) vibrational eigenfrequency (1st set)', np.round(self.radial_freq1,3),'[MHz]')
+        print('Radial (Transverse) vibrational eigenfrequency (2nd set)', np.round(self.radial_freq2,3),'[MHz]')
+        print('Modulation Amplitude for parameteric amplification: ',np.round(self.V_mod,2), '[V]')
+        print('Modulation Frequency for parameteric amplification: ',np.round(self.f_mod,2), '[MHz]')
+        print('Trap dimension parameter: ', self.d_T, '[um]')
         
+        print('                                                                 ')
+        print('********************Config of Numeric Calculation************************')
+        print('index of phonon space included in simulation: ',self.active_phonon )
+        print('corresonding phonon space cutoff ', self.pcut)
+        print('********************Config of Cooling************************')
+        print('Coolant index ', self.coolant)
+        print('********************Config of Trap Modulation************************')
+
+        print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
+        print(' Modulation Frequency', np.round(self.f_mod,2)," [kHz]")
+        print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
+    
 class Laser():
     def __init__(self,
                  config = {'Omega_eff':10,'wavevector':1,'Dk':2*2*np.pi / (355*10**(-9)),
@@ -828,6 +875,7 @@ class Laser():
                             'delta':20, 'delta_ref':0,'phase':0}.
             Omega_eff = 10 kHz (Effective Rabi frequency)
             wavevector = 1 (Laser drive in radial direction, 0 for axial direction)
+                          In case of an asymmetric setup, use 1 for x, 2 for y (offset)
             laser_couple = [0,1] (Laser coupled to all two ions)
             phase  = 0 rad (spin phase)
             Dk = np.sqrt(2)*2*np.pi / (355*10**(-9)) (Effective wavenumber)

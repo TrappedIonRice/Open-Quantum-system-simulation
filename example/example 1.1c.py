@@ -119,7 +119,7 @@ plt.xticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.grid()
 plt.show()
-#%%simulate large heating rate, 3 quanta/ms consider com mode onlycom_cut
+#%%simulate large heating rate, 3 quanta/ms consider com mode only
 com_cut = 50
 ion_sys.pcut= [[com_cut]]; ion_sys.active_phonon=[[0]]
 ion_sys.list_para()

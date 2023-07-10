@@ -9,7 +9,7 @@ from qutip import *
 import Qsim.operator.spin as spin
 import Qsim.operator.spin_phonon as sp_op
 from  Qsim.ion_chain.ion_system import *
-def cooling(ion0, nbar_list=[1],normalized=True):
+def cooling(ion0, gamma_list = [1], nbar_list=[1], df=1, normalized=True):
     '''
     Construct the collapse operator for the transfer systems
     Parameters
@@ -26,17 +26,17 @@ def cooling(ion0, nbar_list=[1],normalized=True):
     '''
     clist = []
     mindex = 0
-    if ion0.df_cooling == 0:
+    if df == 0:
         emat = ion0.axial_mode
     else:
         emat = ion0.radial_mode
-    for m in sp_op.ph_list(ion0,ion0.df_cooling):
+    for m in sp_op.ph_list(ion0, df):
         nbar = nbar_list[m]
-        cm = tensor(spin.sI(ion0.df_spin), sp_op.p_ladder(ion0,ion0.df_cooling,mindex,0))
+        cm = tensor(spin.sI(ion0.df_spin), sp_op.p_ladder(ion0,df,mindex,0))
         if normalized:
-            coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
+            coeff = np.abs(emat[m,ion0.coolant[0]])*np.sqrt(fr_conv(gamma_list[m],'Hz'))
         else:
-            coeff = np.sqrt(fr_conv(ion0.gamma[m],'Hz'))
+            coeff = np.sqrt(fr_conv(gamma_list[m],'Hz'))
         clist.append(coeff*np.sqrt(1+nbar)*cm)
         clist.append(coeff* np.sqrt(nbar)*cm.dag())
         mindex = mindex + 1                                            
