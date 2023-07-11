@@ -38,10 +38,8 @@ times =  np.arange(0,1,10**(-4))
 result0 = mesolve(H0,rho,times,clist,progress_bar=True,options=Options(nsteps=1000)) 
 #%%plot phonon population 
 df_p = 1 #for phonon measurements
-mp_state1 = expect(sp_op.pstate_measure(ion_sys,df_p,49,0),result0.states) 
+sp_op.phonon_cutoff_error(result0.states, ion_sys, df=1, mindex=0,plot=True)
 pplot = expect(sp_op.phonon_measure(ion_sys,df_p, mindex=0), result0.states)
-print('Maximum phonon population of highest com phonon space')
-print(np.max(mp_state1))
 plt.plot(times,pplot,label = 'Phonon')
 plt.xlabel(r'$t$ [ms]',fontsize = 14)
 #title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'
@@ -105,10 +103,8 @@ plt.legend(fontsize = 12)
 plt.grid()
 plt.show()
 #%%plot phonon population 
-mp_state1 = expect(elist1[3],result1.states) 
+sp_op.phonon_cutoff_error(result1.states, ion_sys, df=1, mindex=0,plot=True)
 pplot = expect(elist1[2], result1.states)
-print('Maximum phonon population of highest com phonon space')
-print(np.max(mp_state1))
 plt.plot(times,pplot,label = 'Phonon')
 plt.xlabel(r'$t$ [ms]',fontsize = 14)
 #title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'
@@ -152,10 +148,8 @@ plt.legend(fontsize = 12)
 plt.grid()
 plt.show()
 #%%plot phonon population 
-mp_state2 = expect(elist2[3],result2.states) 
+sp_op.phonon_cutoff_error(result2.states, ion_sys, df=1, mindex=0,plot=True)
 pplot2 = expect(elist2[2], result2.states)
-print('Maximum phonon population of highest com phonon space')
-print(np.max(mp_state2))
 plt.plot(times,pplot2,label = 'Phonon')
 plt.xlabel(r'$t$ [ms]',fontsize = 14)
 #title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'

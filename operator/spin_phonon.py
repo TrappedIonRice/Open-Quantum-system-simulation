@@ -7,6 +7,7 @@ import numpy as np
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 from  Qsim.ion_chain.ion_system import *
+import sigfig
 def summary():
     print("____________________________________________________________________")
     print("function: ph_list")
@@ -297,19 +298,18 @@ def phonon_measure(ion0, df=1, mindex=0):
     p_op = tensor(spin.sI(ion0.df_spin),p_op)
     return p_op    
 
-def pstate_measure(ion0=None,df=1,meas_level=0,mindex=0):
+def pstate_measure(ion0, df=1,meas_level=0,mindex=0):
     '''
     measure the population of n=pcut state of a specific phonon space
     in order to check the validity using a finite phonon space
     ion0 : ion class object
+    df : int, default as none
+         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
     meas_level: int
         phonon state level to be measured    
     mindex: int  
         index of phonon space to be measured    
-    df : int, default as none
-         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
-         Specified if doing computations with a different coupling direction from the direction
-         initialized in ion class object    
+    
     Returns
     -------
     Qutip operator.
@@ -326,3 +326,60 @@ def pstate_measure(ion0=None,df=1,meas_level=0,mindex=0):
         else:
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return tensor(spin.sI(ion0.df_spin),opa)   
+
+def phonon_cutoff_error(states, ion0, df=1, mindex=0,plot=False,log_scale=True):
+    '''
+    Compute the maximum occupation of the highest allowed phonon state
+    as the error for choosing a finite phonon cutoff, and plot the phonon distribution in 
+    fock basis of the corresponding state. 
+
+    Parameters
+    ----------
+    states : list of states (result.state)
+        state at different times extracted from qutip sesolve/mesolve result
+    ion0 : ion class object
+    df : int, default as none
+         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+   mindex: int  
+       index of phonon space to be measured    
+    plot : bool, optional
+        If true, plot phonon distribution, The default is False.
+
+    Returns
+    -------
+    p_max : float
+        cutoff error to the second significant digit.
+
+    '''
+    if ion0.df_phonon()[0] == 1: #only consider one phonon space
+        meas_level = ion0.pcut[0][mindex]-1
+        #index for tracing
+        tindex = ion0.df_spin + mindex
+    else:     #two  phonon spaces
+        meas_level = ion0.pcut[df][mindex]-1
+        if df == 0:
+            tindex = ion0.df_spin + mindex
+        if df == 1: 
+            tindex = ion0.df_spin + ion0.df_phonon()[0][1] + mindex
+    p_high = expect(pstate_measure(ion0, df, meas_level, mindex),states)
+    max_index = np.argmax(p_high)
+    p_max = sigfig.round(p_high[max_index],2)
+    print('Estimated phonon cutoff error: ', p_max)
+    if plot:
+        plt.figure()
+        pstate = states[max_index].ptrace([tindex])
+        plot_fock_distribution(pstate)
+        if log_scale:
+            plt.yscale('log')
+            plt.ylim(np.min(pstate.diag())/10,10*np.max(pstate.diag()))
+        plt.show()
+    return p_max
+    
+    
+    
+    
+        
+     
+    
+    
+    
