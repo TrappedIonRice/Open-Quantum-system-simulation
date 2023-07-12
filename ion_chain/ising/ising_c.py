@@ -127,3 +127,67 @@ def H_com_multi(ion0,laser_r,laser_b,laser_rc,laser_bc,q):
                 H4 = [coefb* op_sec.dag(), expr_b2]
                 Hlist = Hlist + [H3,H4]
     return Hlist, arg_dic1
+def H_com_asy(ion0, laser_xr, laser_xb, laser_yr, laser_yb):
+    '''
+    Construct the Hamitonian in ordinary frame for the second schema after RWA, since 
+    we only consider terms that rotating at small frequency, it is sufficient to specify 
+    the frequnencies using a single detuning delta0, there is no need to define 
+    the frequency of each laser
+    Parameters
+    ----------
+    ion0 : Ion_asy class object
+    laser_xr : Laser class object
+        red sideband in x direction
+    laser_xb : Laser class object 
+        blue sideband in x direction
+    laser_yr : Laser class object
+        red sideband in y direction
+    laser_yb : Laser class object
+        blue sideband in y direction
+    Returns
+    -------
+    Hlist : list of Qutip operators
+        Time dependent Hamiltonian 
+    arg_dic : dict
+        mapping of coefficients in time-dependent part
+
+    '''
+    delta0 = fr_conv(-laser_xr.mu - 1e3*ion0.fx, 'Hz')
+    arg_dic = {'d':1j*delta0}
+    expr_plus1 = 'exp( 1 * d * t )'; expr_minus1 = 'exp( -1 * d * t )'
+    expr_plus2 = 'exp( 2 * d * t )'; expr_minus2 = 'exp( -2 * d * t )'
+    H1 = tensor(spin.zero_op(ion0.N),sp_op.p_zero(ion0))
+    H2 = tensor(spin.zero_op(ion0.N),sp_op.p_zero(ion0))
+    H3 = tensor(spin.zero_op(ion0.N),sp_op.p_zero(ion0))
+    H4 = tensor(spin.zero_op(ion0.N),sp_op.p_zero(ion0))
+    #first order terms, coefficient, (coupling to com makes them the same)
+    coef_x1 = 0.5j*Isp.g(ion0,laser_xr,0,0);  coef_y1 = 0.5j*Isp.g(ion0,laser_yb,0,0)
+    #print('first order coupling coefficients')
+    #print(coef_x1,coef_y1)
+    #second order terms, coefficients
+    coef_x2 = -0.25*(Isp.g(ion0,laser_xb,0,0))**2/laser_xb.Omega(ion0)
+    coef_y2 = -0.25*(Isp.g(ion0,laser_yr,0,0))**2/laser_yr.Omega(ion0)
+    #print('second order coupling coefficients')
+    #print(coef_x2,coef_y2)
+    #phonon operators, in this case we use df=0 for x and df = 1 for y
+    #which means the first phonon space in the product is for x-motion
+    a_down = sp_op.p_ladder(ion0,df=0,mindex=0,atype=0);
+    a_up = sp_op.p_ladder(ion0,df=0,mindex=0,atype=1);
+    b_down = sp_op.p_ladder(ion0,df=1,mindex=0,atype=0);
+    b_up = sp_op.p_ladder(ion0,df=1,mindex=0,atype=0);
+    for i in laser_xr.laser_couple:
+        s_up = spin.up(ion0.df_spin,i); s_down = spin.down(ion0.df_spin,i)
+        
+        #terms rotating with exp( d*t )
+        
+        H1 = H1 + coef_x1*tensor(s_up,a_down) - coef_y1*tensor(s_down,b_down)
+        #terms rotating with exp(- d*t )
+        H2 = H2 - coef_x1*tensor(s_down,a_up) + coef_y1*tensor(s_up,b_up)
+        #terms rotating with exp( -2d*t )
+        H3 = H3 + coef_x2*tensor(s_up, a_up*a_up) + coef_y2*tensor(s_down, b_up*b_up)
+        #terms rotating with exp( 2d*t )
+        H4 = H4 + coef_x2*tensor(s_down, a_down*a_down) + coef_y2*tensor(s_up, b_down*b_down)
+    Hlist = [[H1, expr_plus1], [H2, expr_minus1], 
+             [H3, expr_minus2], [H4, expr_plus2]]
+    return Hlist, arg_dic
+        

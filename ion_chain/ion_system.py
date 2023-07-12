@@ -150,8 +150,10 @@ def efreq(ion0,laser0):
     '''
     if laser0.wavevector == 0: 
         freq = ion0.axial_freq 
-    else:   
+    elif laser0.wavevector == 1:   
         freq = ion0.radial_freq
+    else:   
+        freq = ion0.radial_freq2
     return freq
 
 def summary():
@@ -807,7 +809,64 @@ class ions:
         numer = qe * self.V_mod[pa_index]
         demoni = ( MYb171 * fr_conv(freq[m],'MHz' ) * (self.d_T*1e-6)**2 )
         return (numer/demoni)/1000 #convert SI to 2pi kHz
+    
+    def plot_freq(self,show_axial = False, laser_list=[]):
+        '''
+        visualize eigenfreqencies and laser frequency for an ion system
 
+        Parameters
+        ----------
+        show_axial : bool, optional
+            If true, plot all axial frequencies. The default is False.
+        laser_list : list of class Laser objects, optional
+            List of laser drives to be plotted. The laser freuqencies will 
+            not be plotted if this list is empty. The default is [].
+        Returns
+        -------
+        None.
+
+        '''
+        lab_dic = {0:'com',1:'tilt',2:'rock'}
+        wmlist1  = self.axial_freq*1000; wmlist2  = self.radial_freq*1000
+        ylist = [0,1]
+        if self.N == 3 or self.N == 2:
+            for m in range(self.N):
+                if m == 0:
+                    lw = 4
+                else:
+                    lw = 2
+                lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist2[m],1)) + 'kHz' 
+                plt.plot([wmlist2[m], wmlist2[m]] ,ylist,'b-',label = lab, linewidth= lw)
+                if show_axial:
+                    lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist1[m],1)) + 'kHz' 
+                    plt.plot([wmlist1[m], wmlist1[m]] ,ylist,'r-',label = lab, linewidth= lw) 
+        else:
+            for m in range(self.N): 
+                if m ==0:
+                    lab = 'Radial COM' 
+                    plt.plot([wmlist2[m], wmlist2[m]] ,ylist,'b-',label = lab, linewidth= 4) 
+                    if show_axial:
+                        lab = 'Axial COM' 
+                        plt.plot([wmlist1[m], wmlist1[m]] ,ylist,'r-',label = lab, linewidth= 4) 
+                else:
+                    plt.plot([wmlist2[m], wmlist2[m]] ,ylist,'b-',linewidth = 2)
+                    if show_axial:
+                        plt.plot([wmlist1[m], wmlist1[m]] ,ylist,'r-',linewidth= 2) 
+            plt.title('Axial COM: '+str(np.round(self.fz,2))+' MHz, '+ 
+                      'Radial COM: '+str(self.fx)+' MHz')   
+        #plot laser frequency
+        if laser_list != []:
+            for laser0 in laser_list:
+                las = laser0.mu
+                labl = r'$f_{L}$ = ' + str(np.round(las ,1)) + 'kHz'
+                flas = [las, las]
+                plt.plot(flas,ylist,'--',label = labl, linewidth = 4)   
+        plt.ylim(0,1)
+        plt.xlabel(r'frequecny kHz')
+        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.legend()
+        plt.show()
+        
 class Ions_asy(ions):
     '''
     A subclass of class ions for asymmetric confinment in radial directions
@@ -859,7 +918,60 @@ class Ions_asy(ions):
         print(' Modulation Amplitude', np.round(self.V_mod,2)," [V]") 
         print(' Modulation Frequency', np.round(self.f_mod,2)," [kHz]")
         print(' Trap dimension parameter', np.round(self.d_T,2)," [um]") 
-    
+    def plot_freq(self, show_axial = False, show_neg =  False , laser_list=[]):
+        '''
+        visualize eigenfreqencies and laser frequency for an ion system
+
+        Parameters
+        ----------
+        show_axial : bool, optional
+            If true, plot all axial frequencies. The default is False.
+        laser_list : list of class Laser objects, optional
+            List of laser drives to be plotted. The laser freuqencies will 
+            not be plotted if this list is empty. The default is [].
+        Returns
+        -------
+        None.
+
+        '''
+        ylist = [0,1] 
+        wmlist_a  = self.axial_freq*1000; 
+        wmlist_rx  = self.radial_freq1*1000; wmlist_ry  = self.radial_freq2*1000
+        for m in range(self.N): 
+            if m ==0:
+                lab = 'Radial(x) COM' 
+                plt.plot([wmlist_rx[m], wmlist_rx[m]] ,ylist,'b-',label = lab, linewidth= 4) 
+                lab = 'Radial(y) COM' 
+                plt.plot([wmlist_ry[m], wmlist_ry[m]] ,ylist,'g-',label = lab, linewidth= 4) 
+                if show_axial:
+                    lab = 'Axial COM' 
+                    plt.plot([wmlist_a[m], wmlist_a[m]] ,ylist,'r-',label = lab, linewidth= 4) 
+                if show_neg:
+                    plt.plot([-wmlist_rx[m], -wmlist_rx[m]] ,ylist,'b-',linewidth= 4)
+                    plt.plot([-wmlist_ry[m], -wmlist_ry[m]] ,ylist,'g-',linewidth= 4) 
+            else:
+                plt.plot([wmlist_rx[m], wmlist_rx[m]] ,ylist,'b-',linewidth = 2)
+                plt.plot([wmlist_ry[m], wmlist_ry[m]] ,ylist,'g-',linewidth = 2)
+                if show_axial:
+                    plt.plot([wmlist_a[m], wmlist_a[m]] ,ylist,'r-',linewidth= 2) 
+                if show_neg:
+                    plt.plot([-wmlist_rx[m], -wmlist_rx[m]] ,ylist,'b-',linewidth= 2)
+                    plt.plot([-wmlist_ry[m], -wmlist_ry[m]] ,ylist,'g-', linewidth= 2)
+        plt.title('Axial COM: '+str(np.round(self.fz,2))+' MHz, '+ 
+                  'Radial COM: '+str(self.fx)+' MHz' + ', Offset: ' +str(self.freq_offset)+ 'kHz')  
+ 
+        #plot laser frequency
+        if laser_list != []:
+            for laser0 in laser_list:
+                las = laser0.mu
+                labl = r'$f_{L}$ = ' + str(np.round(las ,1)) + 'kHz'
+                flas = [las, las]
+                plt.plot(flas,ylist,'--',label = labl, linewidth = 4)   
+        plt.ylim(0,1)
+        plt.xlabel(r'frequecny kHz')
+        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
+        plt.legend()
+        plt.show()
 class Laser():
     def __init__(self,
                  config = {'Omega_eff':10,'wavevector':1,'Dk':2*2*np.pi / (355*10**(-9)),
@@ -966,15 +1078,17 @@ class Laser():
         '''
         if self.wavevector == 0:
             f_scale = ion0.fz
-        else:
+        elif self.wavevector == 1:
             f_scale = ion0.fx
+        else:
+            f_scale = ion0.radial_freq2[0]
         return fr_conv(self.Omega_eff,'Hz') / self.eta(f_scale)
     def list_para(self):
         '''
         list basic physical parameters of the laser drive 
 
         '''
-        Coup_dic = {0:'Axial', 1:'Transverse (Radial)'}
+        Coup_dic = {0:'Axial', 1:'Transverse (Radial x)', 2:'Transverse (Radial y)'}
         freqdic = {'0':'COM freq','1':'tilt freq','2':'rock freq'}
         print('                                                                 ')
         print('********************Parameters of Laser Drive************************')
@@ -984,87 +1098,6 @@ class Laser():
         print('Effective laser frequency ', np.round(self.mu,2),' [kHz]')
         print('Laser phase phis',np.round(self.phase*180/np.pi,2))
         print('(input in rad but displayed in degs)')
-def plot_freq(ion0,laser0):
-    '''
-    visualize eigenfreqencies and laser frequency for a 2 or 3 ion system
-    '''
-    if ion0.N == 3 or ion0.N == 2:
-        wmlist  = efreq(ion0,laser0)*1000
-        lab0 = r'$f_{com}$ = ' + str(np.round(wmlist[0],1)) + 'kHz'
-        lab1 = r'$f_{tilt}$ = ' + str(np.round(wmlist[1],1)) + 'kHz'
-        fcom =  [wmlist[0], wmlist[0]]
-        ftil =  [wmlist[1], wmlist[1]]
-        ylist = [0,1]
-        plt.figure(0)
-        plt.plot(fcom,ylist,label = lab0)
-        plt.plot(ftil,ylist,label = lab1)
-        if ion0.N == 3:
-            lab2 = r'$f_{rock}$ = ' + str(np.round(wmlist[2],1)) + 'kHz'
-            froc =  [wmlist[2], wmlist[2]]
-            plt.plot(froc,ylist,label = lab2)
-        las = laser0.mu
-        labl = r'$f_{laser}$ = ' + str(np.round(las ,1)) + 'kHz'
-        flas =  [las, las]
-        plt.plot(flas,ylist,'--',label = labl)   
-        plt.ylim(0,1)
-        plt.xlabel(r'frequecny kHz')
-        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
-        plt.legend()
-        plt.show()
-    else:
-        print('current module only enables plotting frequency diagram for 2 or 3 ion system')
-def plot_all_freq(ion0):
-    '''
-    plot all eigenfrequencies of a 2 or 3 ion system
-    '''
-    lab_dic = {0:'com',1:'tilt',2:'rock'}
-    if  ion0.N == 3 or ion0.N == 2:
-        wmlist  = ion0.axial_freq*1000
-        ylist = [0,1]
-        plt.figure(0)
-        for m in range(ion0.N):
-            lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
-            fplot =  [wmlist[m], wmlist[m]]
-            plt.plot(fplot ,ylist,'r-',label = lab) 
-        wmlist  = ion0.radial_freq*1000
-        plt.figure(0)
-        for m in range(ion0.N):
-            lab =  r'$f_{'+lab_dic[m]+'}$ = ' + str(np.round(wmlist[m],1)) + 'kHz'
-            fplot =  [wmlist[m], wmlist[m]]
-            plt.plot(fplot ,ylist,'b-',label = lab)     
-        plt.ylim(0,1)
-        plt.xlabel(r'frequecny kHz')
-        plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
-        plt.legend()
-        plt.show()
-    else:
-        print('current module only enables plotting frequency diagram for 2,3 ion system')
-def plot_N_freq(ion0):
-    '''
-    plot all eigenfrequencies of N ion system
-    '''
-    wmlist  = ion0.axial_freq*1000
-    ylist = [0,1]
-    plt.figure(0)
-    for m in range(ion0.N):
-        fplot =  [wmlist[m], wmlist[m]]
-        if m ==0:
-            lab = 'Axial COM' 
-            plt.plot(fplot ,ylist,'y-',label = lab) 
-        else:
-            plt.plot(fplot ,ylist,'r-') 
-    wmlist  = ion0.radial_freq*1000
-    for m in range(ion0.N):
-        fplot =  [wmlist[m], wmlist[m]]
-        if m ==0:
-            lab = 'Radial COM' 
-            plt.plot(fplot ,ylist,'k-',label = lab) 
-        else:
-            plt.plot(fplot ,ylist,'b-') 
-    plt.title('Axial COM: '+str(np.round(ion0.fz,2))+' MHz, '+ 
-              'Radial COM: '+str(ion0.fx)+' MHz')        
-    plt.ylim(0,1)
-    plt.xlabel(r'frequecny kHz')
-    plt.grid(visible=True, which='major', axis='x', color = 'black', linestyle = '--')
-    plt.legend()
-    plt.show()
+
+
+
