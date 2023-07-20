@@ -27,7 +27,7 @@ def summary():
     print("generate the initial density operator for the phonon space of 1 ion composed with pure states with population following a thermal distribution ")
 def up(m=0,cutoff=[2],N=1):
     '''
-    generate the creation ladder operator acting on the mth (python index) ion of system of N ions
+    generate the creation ladder operator acting on the mth phonon mode of a system of N modes
     Input: (m,cutoff,N)
     Parameters
     ----------
@@ -58,7 +58,7 @@ def up(m=0,cutoff=[2],N=1):
     return lup
 def down(m=0,cutoff=[2],N=1):
     '''
-    generate the annihilation ladder operator acting on the mth (python index) ion of system of N ions
+    generate the annihilation ladder operator acting on the mth phonon mode of a system of N modes
     Input: (m,cutoff,N)
     Parameters
     ----------
@@ -90,7 +90,7 @@ def down(m=0,cutoff=[2],N=1):
     
 def zero_op(cutoff,N):
     '''
-    generate the zero operator acting on the system of N ions
+    generate the zero operator acting on the system of N modes
     Input: (cutoff,N)
     Parameters
     ----------

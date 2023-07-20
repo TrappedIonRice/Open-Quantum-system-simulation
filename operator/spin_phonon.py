@@ -49,7 +49,7 @@ def ph_list(ion0,df=1):
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         mlist = ion0.active_phonon[0]
     else:   #two  phonon spaces
-       mlist = ion0.active_phonon[ion0.df_laser]
+       mlist = ion0.active_phonon[df]
     return mlist    
 
 def pnum(ion0, df):
