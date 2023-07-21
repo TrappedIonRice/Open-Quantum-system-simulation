@@ -23,6 +23,10 @@ def summary():
 '''
 subfunctions
 '''    
+#Used for genearting correct strings, 
+#specifies the motional degree freedom of which the laser is coupling to,
+df_dic={0:'z',1:'x',2:'y'}
+
 def RWA_filter(Hlist,flist,f_crit):
     '''
     Apply rotating wave approximation by selecting terms in the Hamiltonian
@@ -138,7 +142,7 @@ def tstring(N=1,atype=0,las_label=''):
             fstring.append('cos(t * '+ustr+') * exp(-1 * (t * ' + newm +"))")
     return mstring, fstring        
 
-def tstring_general(N=1):
+def tstring_general(N=1,df_lab=''):
     '''
     Generate the list of time depedent expression for the Hamiltonian of an arbitrary
     laser drive
@@ -156,7 +160,7 @@ def tstring_general(N=1):
     '''
     mstring = []
     for mi in range(1,N+1):
-        newm = "w"  + str(mi)
+        newm = "w"  + str(mi) + df_lab
         mstring.append(newm)
     return mstring   
 
@@ -326,9 +330,11 @@ def Him_td_fir_ord(ion0, laser0, stype = 0,i=0,m=0,sindex=0,mindex = 0, las_labe
         Hamiltonina H im, Qobj
     '''
     #set coefficient constants according to the coupling degree of freedom
-    ustr = 'u'+las_label
-    mstr = 'w'+str(m+1)
     p_df = laser0.wavevector
+    df_lab = df_dic[p_df]
+    ustr = 'u'+las_label+df_lab 
+    mstr = 'w'+str(m+1)+df_lab
+    
     if stype == 1:
         s_op = spin.up(ion0.df_spin,sindex)
         nu_expr = '* exp( -1 * (t * ' + ustr +' ) )'; u_coef = -1
@@ -393,11 +399,14 @@ def Him_td_sec_ord(ion0, laser0, stype = 0,i=0,sindex=0, mindex_list=[0,0,0,0], 
     #set coefficient constants according to the coupling degree of freedom
     [m_a,mindex_a,m_b,mindex_b] = mindex_list
     p_df = laser0.wavevector
-    ustr = 'u'+las_label
-    mstr_a = 'w'+str(m_a+1)
-    mstr_b = 'w'+str(m_b+1)
-    
-    coef0 = -(1/4) * g(ion0,laser0,i,m_a) * g(ion0,laser0,i,m_b) /laser0.Omega(ion0)
+    df_lab = df_dic[p_df]
+    ustr = 'u'+las_label+df_lab
+    mstr_a = 'w'+str(m_a+1)+df_lab
+    mstr_b = 'w'+str(m_b+1)+df_lab
+    if laser0.Omega_eff!=0:
+        coef0 = -(1/4) * g(ion0,laser0,i,m_a) * g(ion0,laser0,i,m_b) /laser0.Omega(ion0)
+    else:
+        coef0 = 0
     if stype == 1:
         s_op = spin.up(ion0.df_spin,sindex)
         nu_expr = '* exp( -1 * (t * ' + ustr +' ) )'; u_coef = -1
@@ -465,8 +474,8 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
         rwa criterion, [2pi kHz] neglect all terms with frequency above it
     Returns
     -------
-    Hlist : TYPE
-        DESCRIPTION.
+    Hlist : list of Qutip operators
+        Time-dependent Hamiltonian
     '''
     #compute the mth element by summing over i for Him for destroy operators
     Hlist = []
@@ -502,10 +511,38 @@ def H_td_multi_drives(ion0, laser_list, second_order = False, rwa = False, arg_d
                                                str(las_lab),rwa,arg_dic,f_crit)
                         Hlist = Hlist + newH1 + newH2
                         mindex_b += 1
-                    mindex_a += 1;  
+                    mindex_a += 1 
                 sindex += 1
             las_lab += 1
     return Hlist
+
+def H_td_multi_drives_asy(ion0, laser_list, second_order = False, rwa = False, arg_dic = {},f_crit=0):
+    '''
+    constuct time-dependent laser-ion interaction Hamiltonian with multiple laser drives
+    under power series expansion up to second order. 
+    Parameters
+    ----------
+    ion0 : Ion_asy class object
+    laser_list : list of list of laser object
+        all laser sidebands applied
+    second_order: bool
+        if True, consider second order terms in the power series expansion
+    rwa: bool
+        if True, automatically apply rotating wave approximation by neglecting
+        terms with frequency larger than rwa criterion. 
+    arg_dic: dict
+        parameter dict for RWA
+    f_crit: float
+        rwa criterion, [2pi kHz] neglect all terms with frequency above it
+    Returns
+    -------
+    Hlist : TYPE
+        DESCRIPTION.
+    '''
+    # x-motional radial mode
+    Hlist1 = H_td_multi_drives(ion0, laser_list[0], second_order, rwa, arg_dic, f_crit)
+    Hlist2 = H_td_multi_drives(ion0, laser_list[1], second_order, rwa, arg_dic, f_crit)
+    return Hlist1 + Hlist2
 '''
 functions for parametric amplification
 '''
@@ -597,7 +634,7 @@ def H_harmonic(ion0,laser0):
         mindex = mindex+1
     return hterm
 
-def H_td_argdic_general(ion0,laser_list):    
+def H_td_argdic_general(ion0,laser_list,df_lab=''):    
     '''
     Generate an argument dictonary which maps parameters in time-dependent 
     expressions to their actual values
@@ -614,9 +651,10 @@ def H_td_argdic_general(ion0,laser_list):
     #generate the arg list for solving time dependent SE
     #wlist is the list of eigenfrequencies, mu is the frequency of the laser
     adic = {}
+    df_lab = df_dic[laser_list[0].wavevector]
     for i in range(len(laser_list)):
-        adic["u"+str(i+1)] = 1j*fr_conv(laser_list[i].mu,'Hz')
-    slist = tstring_general(ion0.N)
+        adic["u"+str(i+1)+df_lab] = 1j*fr_conv(laser_list[i].mu,'Hz')
+    slist = tstring_general(ion0.N,df_lab)
     wlist0 = 1j * efreq(ion0,laser_list[0]) * 2000* np.pi #compute eigenfrequency list
     for argi in range(ion0.N):
         adic[slist[argi]] = wlist0[argi]

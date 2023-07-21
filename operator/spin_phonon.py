@@ -42,6 +42,11 @@ def ph_list(ion0,df=1):
     Parameters
     ----------
     ion0 : ions class object
+    df : int, 
+        vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+        Specified if doing computations with a different coupling direction from the direction
+        initialized in ion class object, in case of two radial spaces, df is used as an index
+        to distinguish them.
     Returns
     -------
     list of int
@@ -49,6 +54,9 @@ def ph_list(ion0,df=1):
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         mlist = ion0.active_phonon[0]
     else:   #two  phonon spaces
+    #check if two radial df
+       if isinstance(ion0,Ions_asy):
+           df = df - 1
        mlist = ion0.active_phonon[df]
     return mlist    
 
@@ -71,6 +79,9 @@ def pnum(ion0, df):
     if ion0.df_phonon() [0]== 1: #only consider one phonon space
         dim = ion0.df_phonon()[1][0]
     else:   #two  phonon spaces
+    #check if two radial df
+        if isinstance(ion0,Ions_asy):
+            df = df - 1    
         dim = ion0.df_phonon()[1][df]
     return dim    
 
@@ -138,6 +149,9 @@ def p_ladder(ion0,df=1, mindex=0,atype=0):
         else:
             opa = phon.up(m = mindex,cutoff = pcut[0], N = Np)
     else:     #two  phonon spaces
+    #check if two radial df
+        if isinstance(ion0,Ions_asy):
+            df = df - 1    
         if atype == 0:
             opa = phon.down(m = mindex, cutoff = pcut[df], N = Np)
         else:
@@ -319,6 +333,9 @@ def pstate_measure(ion0, df=1,meas_level=0,mindex=0):
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         opa = phon.state_measure(pcut[0],Np,meas_level,mindex)
     else:     #two  phonon spaces
+    #check if two radial df
+        if isinstance(ion0,Ions_asy):
+            df = df - 1    
         opa = phon.state_measure(pcut[df],Np,meas_level,mindex)
         #construct in order axial, transverse
         if  df ==0:
@@ -339,7 +356,8 @@ def phonon_cutoff_error(states, ion0, df=1, mindex=0,plot=False,log_scale=True):
         state at different times extracted from qutip sesolve/mesolve result
     ion0 : ion class object
     df : int, default as none
-         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial x
+         2: radial y (only for Ions_asy subclass)
    mindex: int  
        index of phonon space to be measured    
     plot : bool, optional
@@ -356,11 +374,14 @@ def phonon_cutoff_error(states, ion0, df=1, mindex=0,plot=False,log_scale=True):
         #index for tracing
         tindex = ion0.df_spin + mindex
     else:     #two  phonon spaces
-        meas_level = ion0.pcut[df][mindex]-1
-        if df == 0:
+    #check if two radial df
+        if isinstance(ion0,Ions_asy):
+            pdf = df - 1    
+        meas_level = ion0.pcut[pdf][mindex]-1
+        if pdf == 0:
             tindex = ion0.df_spin + mindex
-        if df == 1: 
-            tindex = ion0.df_spin + ion0.df_phonon()[0][1] + mindex
+        if pdf == 1: 
+            tindex = ion0.df_spin + ion0.df_phonon()[1][0] + mindex
     p_high = expect(pstate_measure(ion0, df, meas_level, mindex),states)
     max_index = np.argmax(p_high)
     p_max = sigfig.round(p_high[max_index],2)

@@ -212,6 +212,11 @@ class ions:
         (0 always means com mode)
         For instance, [[1,2],[0,2]] means consider the tilt, 
         rock mode for axial motion com, rock mode for 1 radial motion.
+    active_df_motion: list of int
+        motional degrees of freedom being considered, required only in case of 
+        including both radial degrees of freedoms
+        Radial: 1 for x, 2 for y
+        Axial: 0 for z
     pcut: list of list of int
         Cutoff of phonon space size for each phonon space to be considered, 
         needs to be consistent with active_phonon. 
@@ -278,8 +283,10 @@ class ions:
         
         print('                                                                 ')
         print('********************Config of Numeric Calculation************************')
+        print('index of spin space included in simulation: ',self.active_spin )
         print('index of phonon space included in simulation: ',self.active_phonon )
         print('corresonding phonon space cutoff ', self.pcut)
+        #print('index of corresponding motional degrees of freedom', self.active_df_motion)
         print('********************Config of Cooling************************')
         print('Coolant index ', self.coolant)
         print('********************Config of Trap Modulation************************')
@@ -361,7 +368,8 @@ class ions:
         '''
         if numeric_config != None:
             self.active_spin = numeric_config['active_spin']  
-            self.active_phonon = numeric_config['active_phonon']  
+            self.active_phonon = numeric_config['active_phonon']
+            #self.active_df_motion = numeric_config['active_df_motion']
             self.pcut = numeric_config['pcut']
         self.df_spin = len(self.active_spin)
         if print_text:

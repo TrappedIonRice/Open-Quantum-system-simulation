@@ -171,10 +171,11 @@ def H_com_asy(ion0, laser_xr, laser_xb, laser_yr, laser_yb):
     #print(coef_x2,coef_y2)
     #phonon operators, in this case we use df=0 for x and df = 1 for y
     #which means the first phonon space in the product is for x-motion
-    a_down = sp_op.p_ladder(ion0,df=0,mindex=0,atype=0);
-    a_up = sp_op.p_ladder(ion0,df=0,mindex=0,atype=1);
-    b_down = sp_op.p_ladder(ion0,df=1,mindex=0,atype=0);
-    b_up = sp_op.p_ladder(ion0,df=1,mindex=0,atype=0);
+    pdf_x = laser_xr.wavevector;  pdf_y = laser_yr.wavevector
+    a_down = sp_op.p_ladder(ion0,df=pdf_x,mindex=0,atype=0);
+    a_up = sp_op.p_ladder(ion0,df=pdf_x,mindex=0,atype=1);
+    b_down = sp_op.p_ladder(ion0,df=pdf_y,mindex=0,atype=0);
+    b_up = sp_op.p_ladder(ion0,df=pdf_y,mindex=0,atype=1);
     for i in laser_xr.laser_couple:
         s_up = spin.up(ion0.df_spin,i); s_down = spin.down(ion0.df_spin,i)
         

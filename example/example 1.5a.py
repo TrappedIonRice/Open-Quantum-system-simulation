@@ -113,13 +113,28 @@ plt.xticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.grid()
 plt.show() 
-#%%
-sp_op.phonon_cutoff_error(result1.states, ion_sys, df=0, mindex=0,plot=True)
-pplot = expect(sp_op.phonon_measure(ion_sys,0,mindex=0), result1.states)
+#%%phonon evolution
+#x phonon modes
+sp_op.phonon_cutoff_error(result1.states, ion_sys, df=1, mindex=0,plot=True)
+pplot = expect(sp_op.phonon_measure(ion_sys,1,mindex=0), result1.states)
 plt.plot(times,pplot,label = 'Phonon')
 plt.xlabel(r'$t$ [ms]',fontsize = 14)
 #title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'
-plt.ylabel(r'$<a^+ a>$',fontsize = 14)
+plt.ylabel(r'$<a^+ a>$(x)',fontsize = 14)
+#plt.title(title,fontsize = 14)
+plt.yticks(fontsize = 14)
+plt.xticks(fontsize = 14)
+plt.legend(fontsize = 12)
+plt.grid()
+plt.show()
+#%%phonon evolution
+#y phonon modes
+sp_op.phonon_cutoff_error(result1.states, ion_sys, df=2, mindex=0,plot=True)
+pplot = expect(sp_op.phonon_measure(ion_sys,2,mindex=0), result1.states)
+plt.plot(times,pplot,label = 'Phonon')
+plt.xlabel(r'$t$ [ms]',fontsize = 14)
+#title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'
+plt.ylabel(r'$<a^+ a>$(y)',fontsize = 14)
 #plt.title(title,fontsize = 14)
 plt.yticks(fontsize = 14)
 plt.xticks(fontsize = 14)
