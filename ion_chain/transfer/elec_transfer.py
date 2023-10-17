@@ -44,7 +44,7 @@ def U(Omegaz,lambda0):
 
     '''
     return (Omegaz - lambda0)**2 / (4*lambda0)
-def H_res(Omegax, Omegaz, ion0, laser0):
+def H_res(Omegax, Omegaz, ion0, laser0, i_type):
     '''
     Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
@@ -62,7 +62,7 @@ def H_res(Omegax, Omegaz, ion0, laser0):
         Effective Hamiltonian in resonant frame
     '''
     H_s =  Is.single_site(Omegax, Omegaz, ion0) 
-    Heff = H_s+ Isp.H_res(ion0, laser0)
+    Heff = H_s+ Isp.H_res(ion0, laser0, i_type)
     return Heff
 def H_ord(Omegax, Omegaz, ion0, laser0):
     '''

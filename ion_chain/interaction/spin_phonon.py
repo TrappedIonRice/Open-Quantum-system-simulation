@@ -193,7 +193,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
         Hamiltonina H im, Qobj
     '''
     #set coefficient constants according to the coupling degree of freedom
-    p_df = laser0.wavevector
+    p_df = laser0.wavevector #phonons coupled to the lasers
     p_opa = sp_op.p_ladder(ion0,p_df,mindex,atype)
     if i_type == 1:
         s_oper = sigma_phi(ion0.df_spin,sindex,laser0.phase)
@@ -201,7 +201,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
     return g(ion0,laser0,i,m)*H 
-def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0):
+def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
     which discribes the coupling between ion i and mode m
@@ -220,8 +220,12 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0):
     '''
     #set coefficient constants according to the coupling degree of freedom
     p_df = laser0.wavevector
-    p_opa = sp_op.p_ladder(ion0,p_df,mindex,0) + sp_op.p_ladder(ion0,p_df,mindex,1) 
-    H = tensor(spin.sz(ion0.df_spin,sindex),p_opa)
+    p_opa = sp_op.p_ladder(ion0,p_df,mindex,0) + sp_op.p_ladder(ion0,p_df,mindex,1)
+    if i_type == 1:
+        s_oper = sigma_phi(ion0.df_spin,sindex,laser0.phase)#laser0.phase=0->sx, #laser0.phase=np.pi/2->sy
+    else:
+        s_oper = spin.sz(ion0.df_spin,sindex)
+    H = tensor(s_oper,p_opa)
     return 0.5*g(ion0,laser0,i,m)*H 
 
 def H_td(ion0,laser0, atype=0,i_type = 0,las_label=''): 
@@ -276,10 +280,10 @@ def H_td_arg(ion0,laser0,las_label=''):
         adic[slist[argi]] = wlist0[argi]
     return adic 
 
-def H_res(ion0,laser0):
+def H_res(ion0,laser0,i_type):
     '''
-    Compute the time-independent Hamiltonian e for ion-lasesr
-    interaction with a single drive in resonant fram
+    Compute the time-independent Hamiltonian e for ion-laser
+    interaction with a single drive in resonant frame
     Input: 
         ion0, ion class object
     '''
@@ -288,7 +292,7 @@ def H_res(ion0,laser0):
     for m in sp_op.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
         for i in laser0.laser_couple:
-            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex)
+            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type)
             sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)
