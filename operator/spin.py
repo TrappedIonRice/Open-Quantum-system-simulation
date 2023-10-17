@@ -232,4 +232,69 @@ def spin_state(N=1,config=[0]):
         isket = fock(2,config[0])
         for i in range(1,N):
             isket = tensor(isket,fock(2,config[i])) 
-    return isket        
+    return isket
+def ammt_measure(state,N):
+    '''
+    Compute total angulare momentum vector for a ensamble of N spin 1/2
+
+    Parameters
+    ----------
+    state : Qutip ket/density matrix
+        state of the spin system
+    N: int
+        Number of spins in the system 
+    Returns
+    -------
+    np array of float, [<Sx>,<Sy>,<Sz>]
+    '''  
+    ammt = np.zeros(3) 
+    for i in range(N):
+        sx_e = 0.5*expect(sx(N,i),state)
+        sy_e = 0.5*expect(sy(N,i),state)
+        sz_e = 0.5*expect(sz(N,i),state)
+        ammt += np.array([sx_e,sy_e,sz_e])
+    return ammt
+def MSD(state,N):
+    '''
+    Compute MSD mean spin direction for a N spin system 
+
+    Parameters
+    ----------
+    state : Qutip ket/density matrix
+        state of the spin system
+    N: int
+        Number of spins in the system 
+
+    Returns
+    -------
+    np array of float, [nx,ny,nz]
+    
+    '''
+    ammt = ammt_measure(state,N)
+    return ammt/np.linalg.norm(ammt)
+def Jn_operator(n_vec,N):
+    '''
+    Compute operator Jn acting on spin-boson system
+
+    Parameters
+    ----------
+    n_vec : np.array
+        unit vector specifying the direction of Jn
+    N: int
+        Number of spins in the system 
+    p_I : Qutip operator
+        Identity operator of phonon space
+    Returns
+    -------
+    float
+
+    '''
+    Jx = zero_op(N)
+    Jy = zero_op(N)
+    Jz = zero_op(N)
+    for i in range(N):
+        Jx += sx(N,i)
+        Jy += sy(N,i)
+        Jz += sz(N,i)
+    Jn = 0.5*(n_vec[0]*Jx + n_vec[1]*Jy+ n_vec[2]*Jz)
+    return Jn

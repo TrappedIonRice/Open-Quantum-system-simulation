@@ -11,7 +11,148 @@ import matplotlib.pyplot as plt
 import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import sigfig
-def H_res(delta=0,E=0,V=0,Omega=0,cutoff=2):
+from scipy.optimize import minimize
+def unit_vec_conv(phi,theta):
+    '''
+    generate cartesian coordiants of a  vector on 
+    unit sphere given two angular parameters
+    '''
+    x = np.sin(phi)*np.cos(theta)
+    y = np.sin(phi)*np.sin(theta)
+    z = np.cos(phi)
+    return np.array([x,y,z])
+def polar_conv(n_vec):
+    '''
+    Convert a unit vector in cartesian coorinate in to
+    polar coordinate theta, phi
+
+    Parameters
+    ----------
+    n_vec : np array
+        unit vector
+
+    Returns
+    -------
+    spherical coordinates 
+
+    '''
+    phi = np.arccos(n_vec[2])
+    if n_vec[2] == 1:
+        theta = 0
+    else:
+        xy_proj = np.sqrt(n_vec[0]**2+n_vec[1]**2)
+        if n_vec[1]>0:
+            theta = np.arccos(n_vec[0]/xy_proj)
+        else:
+            theta = 2*np.pi - np.arccos(n_vec[0]/xy_proj)
+    return [phi,theta]
+def rotation_trans(n_vec):
+    '''
+    Conostruct the transformation matrix that converts the coordinate in rotated 
+    system (z for MSD) to the original coordinate system (z for Sz)
+    
+
+    Parameters
+    ----------
+    n_vec: np array of 3d vector
+        new z axis (MSD vec) expressed in original coordinate
+    Returns
+    -------
+    3*3 np matrix
+
+    '''
+    #convert to polar coordinate
+    [phi,theta] = polar_conv(n_vec)
+    Rmat = np.zeros((3,3))
+    Rmat[0] = [np.cos(theta)*np.cos(phi), -np.sin(theta), np.cos(theta)*np.sin(phi)]
+    Rmat[1] = [np.sin(theta)*np.cos(phi), np.cos(theta), np.sin(theta)*np.sin(phi)]
+    Rmat[2] = [-np.sin(phi), 0, np.cos(phi)]
+    return Rmat
+def orthognal_unit_vec(vec,theta):
+    '''
+    generate unit vectors orthogonal to a given MSD vec
+
+    Parameters
+    ----------
+    vec : np array of float
+        MSD unit vector
+    theta: float
+        second angular coordinate
+    Returns
+    -------
+    unit vector, np array 
+
+    '''
+    new_coord = [np.cos(theta),np.sin(theta),0]
+    return np.dot(rotation_trans(vec),new_coord)
+def var_orthogonal(state,N_spin, theta):
+    '''
+    For a given state and a polar coorinate theta, compute the 
+    variance of orthogonal spin operator
+
+    Parameters
+    ----------
+    state : Qutip operator
+        state of N spin system
+    theta : float
+        polar coordinate
+
+    Returns
+    -------
+    float, spin squeezing parameter epsilon_H
+
+    '''
+    n_vec0 = spin.MSD(state,N_spin)
+    n_vec = orthognal_unit_vec(n_vec0 ,theta)
+    Jn_per = spin.Jn_operator(n_vec, N_spin)
+    return variance(Jn_per,state)
+def min_var_eq(theta,*para):
+    '''
+    function to be minized for finding minimum orthogonal variance
+    '''
+    theta = theta[0]
+    state= para[0]; N_spin = para[1]; 
+    return var_orthogonal(state,N_spin, theta)
+def min_var_para(state,N_spin):
+    '''
+    Find minimum spin squeezing in N spin system
+
+    Parameters
+    ----------
+    state : Qutip operator
+        state of N spin system
+    N_spin : int
+        number of spin space in the system
+
+    Returns
+    -------
+    float
+
+    '''
+    para0 = (state,N_spin)
+    return minimize(min_var_eq, 0, args=para0 )
+def sq_para(var,state,N_spin):
+    n_vec0 = spin.MSD(state,N_spin)
+    Jn = spin.Jn_operator(n_vec0, N_spin)
+    return 2*var/ (expect(state,Jn))**2
+#analytic formula for minimum vairance\
+def min_var_analytic(state,N_spin):
+    #compute vector n1, n2
+    n_vec = spin.MSD(state,N_spin)
+    [phi,theta] = polar_conv(n_vec)
+    n1 = np.array([-np.sin(theta),np.cos(theta),0])
+    n2 = np.array([np.cos(phi)*np.cos(theta),
+                   np.cos(phi)*np.sin(theta),
+                   -np.sin(phi)])
+    J1 = spin.Jn_operator(n1,N_spin)
+    J2 = spin.Jn_operator(n2,N_spin)
+    term1 = expect(J1* J1+ J2 * J2,state)
+    term2 = expect(J1*J1 - J2*J2, state)
+    term3 = 0.5*expect(J1*J2 + J2*J1, state)
+    result = 0.5*(term1 - 
+                  np.sqrt(term2**2 + 4*term3**2))
+    return result
+def H_res(delta=0,E=0,V=0,Omega=0,cutoff=2, alpha = 1,op_type = 'x'):
     '''
     construct the Hamiltonian for the model, consider 
     rocking mode only, the second ion is used as coolant
@@ -41,12 +182,27 @@ def H_res(delta=0,E=0,V=0,Omega=0,cutoff=2):
     sigma_x3 = tensor(spin.sx(N=2,i=1),phon.pI([cutoff],1)) 
     sigma_y1 = tensor(spin.sy(N=2,i=0),phon.pI([cutoff],1)) 
     sigma_y3 = tensor(spin.sy(N=2,i=1),phon.pI([cutoff],1)) 
+    sigma_z1 = tensor(spin.sz(N=2,i=0),phon.pI([cutoff],1)) 
+    sigma_z3 = tensor(spin.sz(N=2,i=1),phon.pI([cutoff],1)) 
     # harmonic term
     Hh = delta * a_up * a_down
     #spin term
     Hs = E * (sigma_y1+sigma_y3) + V * (sigma_x1+sigma_x3)
     #spin phonon coupling
-    Hsp = Omega * (a_up+a_down) * (sigma_x1+sigma_x3)
+    if op_type == 'x':
+        spin_op = sigma_x1 + alpha*sigma_x3
+        print('spin phonon operator: sigma_x')
+    elif op_type == 'xy+':
+        spin_op = (sigma_x1+sigma_y1) + alpha*(sigma_x3+sigma_y3)
+        print('spin phonon operator: sigma_x + sigma_y')
+    elif op_type == 'xy-':
+        spin_op = (sigma_x1-sigma_y1) + alpha*(sigma_x3-sigma_y3)
+        print('spin phonon operator: sigma_x - sigma_y')
+    elif op_type == 'z':
+        spin_op = sigma_z1 + alpha*sigma_z3
+        Hs = E * (sigma_z1+sigma_z3) + V * (sigma_x1+sigma_x3)
+        print('spin phonon operator: sigma_z')
+    Hsp = Omega * (a_up+a_down) * spin_op
     H0 = 2*np.pi* (Hh+Hs+Hsp)
     return H0
 def cooling(gamma=0, nbar=0, cutoff=2):
