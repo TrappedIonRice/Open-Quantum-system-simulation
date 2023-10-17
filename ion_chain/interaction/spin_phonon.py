@@ -187,8 +187,9 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
         mindex: int
             index to construct phonon operator
         i_type: int default as 0
-            type of interaction, set to 1 for ising interactions
-            
+            type of interaction, 
+            0 for sigma_z
+            set to 1 for ising interactions (sigma_phi)            
     Output:
         Hamiltonina H im, Qobj
     '''
@@ -215,6 +216,10 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
             index to construct spin operator
         mindex: int
             index to construct phonon operator
+        i_type: int default as 0
+            type of interaction, 
+            0 for sigma_z
+            set to 1 for ising interactions (sigma_phi)   
     Output:
         Hamiltonina H im, Qobj
     '''
@@ -228,7 +233,7 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
     H = tensor(s_oper,p_opa)
     return 0.5*g(ion0,laser0,i,m)*H 
 
-def H_td(ion0,laser0, atype=0,i_type = 0,las_label=''): 
+def H_td(ion0,laser0, atype=0, i_type = 0,las_label=''): 
     '''
     Compute the list of H correponding to time-dependent Hamiltonian for ion-lasesr
     interaction with a pair of symmetric red/blue sidebands drive as a input for qutip solver
@@ -238,7 +243,9 @@ def H_td(ion0,laser0, atype=0,i_type = 0,las_label=''):
         atype: int
             phonon opeartor type, 0 for destroy, 1 for create
         i_type: int default as 0
-            type of interaction, set to 1 for ising interactions 
+            type of interaction, 
+            0 for sigma_z
+            set to 1 for ising interactions (sigma_phi)   
         las_label: str, default as ''
             extra label for the laser drive, specify when using more than 1 laser drives    
     '''
@@ -283,9 +290,23 @@ def H_td_arg(ion0,laser0,las_label=''):
 def H_res(ion0,laser0,i_type):
     '''
     Compute the time-independent Hamiltonian e for ion-laser
-    interaction with a single drive in resonant frame
-    Input: 
-        ion0, ion class object
+    interaction with a single drive in resonant frame  
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    laser0 : laser class object
+
+    i_type: int default as 0
+        type of interaction, 
+        0 for sigma_z
+        set to 1 for ising interactions (sigma_phi)   
+
+    Returns
+    -------
+    None.
+
     '''
     spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
     mindex = 0 #this index is used for phonon operators

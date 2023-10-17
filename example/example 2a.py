@@ -22,7 +22,6 @@ delta = 20 #detuning from com mode
 ion_sys = ions(trap_config = {'N':2,'fx':2,'fz':1}) #construct a two ion system using class ions
 ion_sys.coolant = [1] #ion 2 as coolant
 ion_sys.active_phonon = [[0]] #consider only com mode
-ion_sys.gamma = [0.05*np.abs(delta)/(2*np.pi),0] #cool com mode
 ion_sys.active_spin = [0]
 ion_sys.pcut = [[20]]
 ion_sys.update_all(print_text = False)
@@ -43,7 +42,7 @@ simulation with 1 mode, reproduce curve C in Fig 3(B)
 elist = [sp_op.spin_measure(ion_sys,[0,1])]
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys,laser1)
-clist1 = disp.cooling(ion_sys,[0.01],False)
+clist1 = disp.cooling(ion_sys, [0.05*np.abs(delta)/(2*np.pi)],[0.01],False)
 rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01]],s_state=[0],ket = False)
 tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(delta))

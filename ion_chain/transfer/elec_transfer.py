@@ -44,7 +44,7 @@ def U(Omegaz,lambda0):
 
     '''
     return (Omegaz - lambda0)**2 / (4*lambda0)
-def H_res(Omegax, Omegaz, ion0, laser0, i_type):
+def H_res(Omegax, Omegaz, ion0, laser0, i_type=0):
     '''
     Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
@@ -64,7 +64,7 @@ def H_res(Omegax, Omegaz, ion0, laser0, i_type):
     H_s =  Is.single_site(Omegax, Omegaz, ion0) 
     Heff = H_s+ Isp.H_res(ion0, laser0, i_type)
     return Heff
-def H_ord(Omegax, Omegaz, ion0, laser0):
+def H_ord(Omegax, Omegaz, ion0, laser0, i_type=0):
     '''
     Genearte the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame,
     in the format required by the Qutip solver (string method) 
@@ -85,7 +85,7 @@ def H_ord(Omegax, Omegaz, ion0, laser0):
         dic of argument parameters
     '''
     H_s =  Is.single_site(Omegax, Omegaz, ion0) 
-    Heff = [H_s] + Isp.H_td(ion0,laser0,0) + Isp.H_td(ion0,laser0,1)
+    Heff = [H_s] + Isp.H_td(ion0,laser0,0, i_type) + Isp.H_td(ion0,laser0,1, i_type)
     H_arg = Isp.H_td_arg(ion0,laser0)
     return Heff, H_arg
 

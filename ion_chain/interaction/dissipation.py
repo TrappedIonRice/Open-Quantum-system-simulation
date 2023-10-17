@@ -15,6 +15,8 @@ def cooling(ion0, gamma_list = [1], nbar_list=[1], df=1, normalized=True):
     Parameters
     ----------
     ion0 : ion class object
+    gamma_list: list of float
+        effective cooling rate for each phonon space
     nbar_list: list of float
         average phonon number of each phonon space
     normalized: bool

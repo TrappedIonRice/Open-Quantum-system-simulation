@@ -19,6 +19,7 @@ import Qsim.ion_chain.transfer.elec_transfer as etrans
 #import Qsim.ion_chain.ising.ising_ce as isce
 from  Qsim.ion_chain.ion_system import *
 import Qsim.operator.spin_phonon as sp_op
+import Qsim.ion_chain.interaction.dissipation as disp
 #%%
 '''
 parameters of the system, use the same parameter in quantum regime, first simulate with a single mode 
@@ -27,7 +28,6 @@ delta = 20 #detuning from com mode
 ion_sys = ions(trap_config = {'N':2,'fx':2,'fz':1}) #construct a two ion system using class ions
 ion_sys.coolant = [1] #ion 2 as coolant
 ion_sys.active_phonon = [[0]] #consider only com mode
-ion_sys.gamma = [0.05*np.abs(delta)/(2*np.pi),0] #cool com mode
 ion_sys.active_spin = [0]
 ion_sys.pcut = [[10]]
 ion_sys.update_all(print_text = False)
@@ -45,7 +45,7 @@ deltaE = -5*np.abs(delta) #note site energy difference is negative by definition
 elist = [sp_op.spin_measure(ion_sys,[0,1])]
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys,laser1)
-clist1 = sp_op.c_op(ion_sys,[0.01],False)
+clist1 = disp.cooling(ion_sys, [0.05*np.abs(delta)/(2*np.pi)], [0.01],False)
 rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01]],s_state=[0],ket = False)
 tplot = np.arange(0,100,1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(delta))
@@ -54,7 +54,6 @@ result = mesolve(H0,rho0,times,clist1,elist,progress_bar=True,options=Options(ns
 rhoee1 = result.expect[0]
 #%%
 #simulation with 2 modes, use cutoff 2 for first mode because we are only cooling com mode
-ion_sys.gamma = [0.05*np.abs(delta)/(2*np.pi),0]
 ion_sys.active_phonon = [[0,1]] 
 ion_sys.pcut = [[10,2]]
 elist2 = [sp_op.spin_measure(ion_sys,[0])]
@@ -62,7 +61,7 @@ ion_sys.list_para()
 #%%
 #solve time evolution for a single energy splitting
 H0  = etrans.H_res(Omegax,deltaE,ion_sys,laser1)
-clist2 = sp_op.c_op(ion_sys,[0.01,0.01],False)
+clist2 = disp.cooling(ion_sys, [0.05*np.abs(delta)/(2*np.pi),0] , [0.01,0.01],False)
 rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01,0.01]],s_state=[0],ket = False)
 print("__________________________________________________________")
 print("solving time evolution (2 mode) for deltaE =", deltaE)
@@ -72,12 +71,11 @@ rhoee2 = result2.expect[0]
 #simulation with complete H, solving time dependent H cost more time
 ion_sys.active_phonon = [[0,1]] 
 ion_sys.pcut = [[10,2]]
-ion_sys.gamma = [0.05*np.abs(delta)/(2*np.pi),0]
 elist3 = [sp_op.spin_measure(ion_sys,[0])]
 ion_sys.list_para()
 rho0 = sp_op.rho_thermal(ion_sys,[[0.01,0.01]],s_state=[0],ket = False)
 Hce, arg0 = etrans.H_ord(Omegax,deltaE,ion_sys,laser1)
-clist3 = sp_op.c_op(ion_sys,[0.01,0.01],False)
+clist3 = disp.cooling(ion_sys,[0.05*np.abs(delta)/(2*np.pi),0],[0.01,0.01],False)
 #%%
 print("__________________________________________________________")
 print("solving time evolution using time-dependent H in ordinary frame, for deltaE =", deltaE)

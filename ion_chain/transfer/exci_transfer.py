@@ -56,7 +56,7 @@ def H_ord(J12, E1, E2, Vx, ion0):
     Heff = [H_s]+ Isp.H_td(ion0,0) + Isp.H_td(ion0,1)
     H_arg = Isp.H_td_arg(ion0)
     return Heff, H_arg
-def H_res(J12, E1, E2, Vx, ion0,i_type):
+def H_res(J12, E1, E2, Vx, ion0, i_type = 0):
     '''
     construct Hamiltonian in reasonant rotating frame and collpase operators of 3 ion system 
     used for simulating excitation transfer between 2 sites
@@ -73,6 +73,10 @@ def H_res(J12, E1, E2, Vx, ion0,i_type):
     
     ion0: ions class object
         the object that represent the system to be simulated
+    i_type: int default as 0
+       type of interaction, 
+       0  for sigma_z
+       set to 1 for ising interactions (sigma_phi)   
     Returns
     -------
     Heff
@@ -80,7 +84,7 @@ def H_res(J12, E1, E2, Vx, ion0,i_type):
         Hamiltonian in reasonant rotating frame
     '''   
     H_s =  Is.double_site(J12, E1, E2, Vx, ion0)
-    Heff = H_s + Isp.H_res(ion0,itype)
+    Heff = H_s + Isp.H_res(ion0,i_type)
     return Heff
 
 def ereasonance(ion0,nmax1,nmax2):
