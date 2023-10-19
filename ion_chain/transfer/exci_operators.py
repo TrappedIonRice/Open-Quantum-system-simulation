@@ -313,8 +313,8 @@ def spin_measure(ion0,s_config):
     ----------
     ion0 : ion class object
     index : list of int
-        specify the spin state to be projected, 0 for spin up, 1 for spin down
-        [0,1] means up, down state
+        specify the spin state to be projected,
+        example: 0 for spin up, 1 for spin down, [0,1] means up, down state, etc.
     Returns
     -------
     s_op : Qutip operator

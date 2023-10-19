@@ -18,7 +18,7 @@ def summary():
     print("Compute Hamiltonian for single site spin interaction between two ionic states")
     print("function: single_site")
     print("Compute Hamiltonian for spin interaction of a two site system ")
-def single_site(Omegax=0, Omegaz=0, ion0=None):
+def single_site(ion0=None,Omegax=0, Omegay=0,Omegaz=0):
     '''
     Compute Hamiltonian for single site spin interaction 
     between the two ionic states for each enabled ion site, 
@@ -27,9 +27,11 @@ def single_site(Omegax=0, Omegaz=0, ion0=None):
     Parameters
     ----------
     Omegax : float/list of float 
-        coupling coefficient between the doner and acceptor state for each site [kHz]
+        coupling coefficient between the up and down state for each site [kHz]
+    Omegay : float/list of float
+        coupling coefficient between the up and down state for each site [kHz]
     Omegaz : float/list of float
-        energy difference between the doner and acceptor state for each site  [kHz]
+        energy difference between the up and down state for each site  [kHz]
     ion0 : ion class object
     
     Returns
@@ -37,16 +39,26 @@ def single_site(Omegax=0, Omegaz=0, ion0=None):
     Qutip operator
 
     '''
+    # The 0.5 factors are there to ensure Omegaxyz are the Rabi frequencies of the population evoution
     Ns = ion0.df_spin
     if Ns == 1:
-        Hspin = (2 * np.pi) * (Omegax * tensor(spin.sx(1,0),sp_op.p_I(ion0))  
-         -0.5 * Omegaz * tensor(spin.sz(1,0),sp_op.p_I(ion0))) 
+        Hspin = (2 * np.pi) * (
+                0.5 * Omegax * tensor(spin.sx(1,0),sp_op.p_I(ion0))+
+                0.5 * Omegay * tensor(spin.sy(1,0), sp_op.p_I(ion0))+
+                0.5 * Omegaz * tensor(spin.sz(1,0),sp_op.p_I(ion0))
+        )
     else:
-        Hspin = (2 * np.pi) * (Omegax[0] * tensor(spin.sx(Ns,0),sp_op.p_I(ion0))  
-         -0.5 * Omegaz[0] * tensor(spin.sz(Ns,0),sp_op.p_I(ion0)))
+        Hspin = (2 * np.pi) * (
+                0.5 * Omegax[0] * tensor(spin.sx(Ns,0),sp_op.p_I(ion0))+
+                0.5 * Omegay[0] * tensor(spin.sy(Ns, 0), sp_op.p_I(ion0))+
+                0.5 * Omegaz[0] * tensor(spin.sz(Ns,0),sp_op.p_I(ion0))
+        )
         for i in range(1,Ns):
-            Hspin = Hspin + (2 * np.pi) * (Omegax[i] * tensor(spin.sx(Ns,i),sp_op.p_I(ion0))  
-             -0.5 * Omegaz[i] * tensor(spin.sz(Ns,i),sp_op.p_I(ion0)))
+            Hspin = Hspin + (2 * np.pi) * (
+                    0.5 * Omegax[i] * tensor(spin.sx(Ns,i),sp_op.p_I(ion0))+
+                    0.5 * Omegay[i] * tensor(spin.sy(Ns, i), sp_op.p_I(ion0))+
+                    0.5 * Omegaz[i] * tensor(spin.sz(Ns,i),sp_op.p_I(ion0))
+            )
     return Hspin
 def double_site(J12=0, E1=0, E2=0, Vx=0, ion0=None):
     '''
