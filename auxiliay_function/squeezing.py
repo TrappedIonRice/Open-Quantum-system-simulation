@@ -37,7 +37,7 @@ def polar_conv(n_vec):
 
     '''
     phi = np.arccos(n_vec[2])
-    if n_vec[2] == 1:
+    if (n_vec[0] == 0 and n_vec[1] == 0):
         theta = 0
     else:
         xy_proj = np.sqrt(n_vec[0]**2+n_vec[1]**2)
@@ -130,12 +130,18 @@ def min_var_para(state,N_spin):
 
     '''
     para0 = (state,N_spin)
-    return minimize(min_var_eq, 0, args=para0 )
+    #estimate the angle for minimum variance
+    est_list = np.linspace(0, 2*np.pi,100)
+    varlist = []
+    for phi in est_list:
+        varlist.append(var_orthogonal(state, N_spin, phi))
+    start = np.min(np.array(varlist))        
+    return minimize(min_var_eq, start, args=para0 )
 def sq_para(var,state,N_spin):
     n_vec0 = spin.MSD(state,N_spin)
     Jn = spin.Jn_operator(n_vec0, N_spin)
-    return 2*var/ (expect(state,Jn))**2
-#analytic formula for minimum vairance\
+    return 2*var/ (expect(Jn,state))**2
+#analytic formula for minimum vairance
 def min_var_analytic(state,N_spin):
     #compute vector n1, n2
     n_vec = spin.MSD(state,N_spin)
@@ -152,6 +158,34 @@ def min_var_analytic(state,N_spin):
     result = 0.5*(term1 - 
                   np.sqrt(term2**2 + 4*term3**2))
     return result
+def optimal_squeezing_angle(state,N_spin,plot=False):
+    #compute optimal squeezing angle
+    n_vec = spin.MSD(state,N_spin)
+    [phi,theta] = polar_conv(n_vec)
+    n1 = np.array([-np.sin(theta),np.cos(theta),0])
+    n2 = np.array([np.cos(phi)*np.cos(theta),
+                   np.cos(phi)*np.sin(theta),
+                   -np.sin(phi)])
+    print(n1,n2)
+    J1 = spin.Jn_operator(n1,N_spin)
+    J2 = spin.Jn_operator(n2,N_spin)
+    term1 = expect(J1* J1+ J2 * J2,state)
+    A = expect(J1*J1 - J2*J2, state)
+    B = expect(J1*J2 + J2*J1, state)
+    #print(A,B)
+    if B <= 0:
+        phi = 0.5*np.arccos(-A/np.sqrt(A**2+B**2))
+    else:
+        phi = np.pi - 0.5*np.arccos(-A/np.sqrt(A**2+B**2))
+    if plot:
+        #construct the vector on Bloch sphere
+        opt_vec =  n1*np.cos(phi) + n2*np.sin(phi)
+        bs_plot = qutip.Bloch()
+        bs_plot.make_sphere()
+        bs_plot.add_vectors(n_vec)
+        bs_plot.add_vectors(opt_vec)
+        bs_plot.show()
+    return phi
 def H_res(delta=0,E=0,V=0,Omega=0,cutoff=2, alpha = 1,op_type = 'x'):
     '''
     construct the Hamiltonian for the model, consider 
