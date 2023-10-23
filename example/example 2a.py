@@ -13,7 +13,7 @@ import Qsim.operator.phonon as phon
 import Qsim.ion_chain.transfer.elec_transfer as etrans
 from  Qsim.ion_chain.ion_system import *
 import Qsim.operator.spin_phonon as sp_op
-import Qsim.ion_chain.interaction.dissipation as disp
+import Qsim.auxiliay_function.data_fitting as fit
 #%%
 '''
 parameters of the system, use the same parameter in quantum regime 
@@ -34,15 +34,16 @@ laser1.laser_couple = [0]
 laser1.mu = 1e3*ion_sys.fx-delta
 laser1.list_para()
 #%%
-Omegax = 0.01*np.abs(delta)
-deltaE = -5*np.abs(delta) #note site energy difference is negative by definition  
+Omegax = 0.01*np.abs(delta)*2
+deltaE = 5*np.abs(delta) #note site energy difference is negative by definition  
 '''
 simulation with 1 mode, reproduce curve C in Fig 3(B)
 '''
 elist = [sp_op.spin_measure(ion_sys,[0,1])]
 #solve time evolution for a single energy splitting
-H0  = etrans.H_res(Omegax,deltaE,ion_sys,laser1)
-clist1 = disp.cooling(ion_sys, [0.05*np.abs(delta)/(2*np.pi)],[0.01],False)
+H0  = etrans.H_res(ion_sys,laser1,Omegax=Omegax,Omegay=0,Omegaz=deltaE,i_type=0)
+clist1 = disp.cooling(ion_sys,gamma_list = [0.05*np.abs(delta)/(2*np.pi),0],
+                      nbar_list = [0.01],df=1, normalized = False)
 rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01]],s_state=[0],ket = False)
 tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(delta))
@@ -61,3 +62,6 @@ plt.grid()
 plt.yticks(fontsize = 13)
 plt.xticks(fontsize = 13)
 plt.show()
+#%% fit data from t= 50-200
+drate = fit.fit_et_decay(tplot,rhoee1,fit_interval=[500,2000],plot=True,all_parameter=False)
+print('estimated decay rate, [2pi/omega0]', drate)
