@@ -2,8 +2,9 @@
 """
 Created on Wed Jun  1 15:47:46 2022
 
-@author: zhumj
-A class that contains basic physical and computational parameters of 1-D N ion system with 1 laser drive
+@author: zhumj, gp
+class ions(): a class that contains basic physical and computational parameters of 1-D N ion system with 1 laser drive
+class Laser(): a class that contains physical properties of the laser field (amplitude, frequency, phase and momentum)
 """
 
 import matplotlib.pyplot as plt
