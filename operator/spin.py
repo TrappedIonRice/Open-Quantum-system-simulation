@@ -26,6 +26,22 @@ def summary():
     print("____________________________________________________________________")
     print("function: phiup")
     print("construct a state with all N ions in spin up")
+# spin eigenstates, 0 for eigenvalue 1 and 1 for eigenvalue of -1
+sxket_0 = 1/np.sqrt(2) * ( basis(2,0) + basis(2,1) )
+sxket_1 = 1/np.sqrt(2) * ( basis(2,0) - basis(2,1) )
+
+syket_0 = 1/np.sqrt(2) * ( basis(2,0) + 1j*basis(2,1) )
+syket_1 = 1/np.sqrt(2) * ( basis(2,0) - 1j*basis(2,1) )
+
+szket_0 = basis(2,0)
+szket_1 = basis(2,1)
+
+spin_dic = {'x0': sxket_0, 'x1': sxket_1,
+            'y0': syket_0, 'y1': syket_1,
+            'z0': szket_0, 'z1': szket_1} 
+
+#functions to use
+
 def sx(N=1,i=0):
     '''
     generate the sigmax operator acting on the ith (python index) spin 1/2
@@ -211,27 +227,30 @@ def phiup(N):
     for i in range(N-1):
         istate = tensor(istate, basis(2, 0))
     return istate
-def spin_state(N=1,config=[0]):
+def spin_state(config = ['z0']):
     """
-    construct a state with all N ions, the spin
-    of each ion can be specified 
+    construct a direct product state with all N ions, the spin
+    of each ion can be specified as x,y,z (+1-1)eigenstate
     input(N)
     Parameters
     ----------
-    N : int
-        number of ions in the system, N > 1
-    config: list of int
-        specify the spin configuration, 0 for up and 1 for down 
+    config: list of str
+        specify the spin configuration, each string is in form 'i0', 'i1'
+        with i being x,y,z, 0 for eigenvalue 1 (up ) and 1 for eigenvalue -1 
+        (down)
+        for instance, ['x0','z1'] gives the direct product state of
+        1/sqrt[2] (|0>+|1>) and |1>
     Returns
     -------
     Qutip ket
     """
+    N = len(config)
     if N == 1:
-        isket = fock(2,config[0])
+        isket = spin_dic[config[0]]
     else:    
-        isket = fock(2,config[0])
+        isket = spin_dic[config[0]]
         for i in range(1,N):
-            isket = tensor(isket,fock(2,config[i])) 
+            isket = tensor(isket,spin_dic[config[i]]) 
     return isket
 def ammt_measure(state,N):
     '''
