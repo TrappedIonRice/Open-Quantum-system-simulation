@@ -239,6 +239,52 @@ def H_res(delta=0,E=0,V=0,Omega=0,cutoff=2, alpha = 1,op_type = 'x'):
     Hsp = Omega * (a_up+a_down) * spin_op
     H0 = 2*np.pi* (Hh+Hs+Hsp)
     return H0
+def H_res_xx(delta=0,E=0,V=0,Omega=0,cutoff=2,op_type = 'x'):
+    '''
+    construct the Hamiltonian for the model, consider 
+    rocking mode only, the second ion is used as coolant
+
+    Parameters
+    ----------
+    delta : float, optional
+        harmonic energy level. The default is 0.
+    E : float, optional
+        sigma_y coupling. The default is 0.
+    V : float, optional
+        sigma_x coupling. The default is 0.
+    Omega : float, optional
+        spin phonon coupling. The default is 0.
+    cutoff : int, optional
+        phonon space cutoff. The default is 2.
+
+    Returns
+    -------
+    None.
+
+    '''
+    #operators
+    a_up = tensor(spin.sI(2),phon.up(m=0,cutoff=[cutoff],N=1))
+    a_down = tensor(spin.sI(2),phon.down(m=0,cutoff=[cutoff],N=1))
+    sigma_x1 = tensor(spin.sx(N=2,i=0),phon.pI([cutoff],1)) 
+    sigma_x3 = tensor(spin.sx(N=2,i=1),phon.pI([cutoff],1)) 
+    sigma_y1 = tensor(spin.sy(N=2,i=0),phon.pI([cutoff],1)) 
+    sigma_y3 = tensor(spin.sy(N=2,i=1),phon.pI([cutoff],1)) 
+    sigma_z1 = tensor(spin.sz(N=2,i=0),phon.pI([cutoff],1)) 
+    sigma_z3 = tensor(spin.sz(N=2,i=1),phon.pI([cutoff],1)) 
+    # harmonic term
+    Hh = delta * a_up * a_down
+    #spin term
+    Hs = E*sigma_z1 + V * (sigma_x1*sigma_x3)
+    #spin phonon coupling
+    if op_type == 'x':
+        spin_op = sigma_x1 - sigma_x3
+        print('spin phonon operator: sigma_x')
+    elif op_type == 'z':
+        spin_op = sigma_z1 - sigma_z3
+        print('spin phonon operator: sigma_z')
+    Hsp = Omega * (a_up+a_down) * spin_op
+    H0 = 2*np.pi* (Hh+Hs+Hsp)
+    return H0
 def cooling(gamma=0, nbar=0, cutoff=2):
     clist = []
     cm = tensor(spin.sI(2),phon.down(m=0,cutoff=[cutoff],N=1))
@@ -250,6 +296,11 @@ def cooling(gamma=0, nbar=0, cutoff=2):
 def init_state(spin_state, p_num, cutoff):
     ket0 = tensor(spin_state,fock(cutoff,p_num))
     rho = ket0*ket0.dag()
+    return rho
+def init_thermal(spin_state, nbar, cutoff):
+    pmat = phon.inip_thermal(cutoff,nbar)
+    smat =  spin_state*spin_state.dag()
+    rho = tensor(smat,pmat)
     return rho
 def phonon_measure(cutoff):
     op = tensor(spin.sI(2),

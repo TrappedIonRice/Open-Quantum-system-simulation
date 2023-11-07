@@ -163,7 +163,7 @@ def p_ladder(ion0,df=1, mindex=0,atype=0):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0, nbar_list=[],s_state=[0], ket = False):
+def rho_thermal(ion0, nbar_list=[],s_config=[0], ket = False, s_state=None):
     '''
     Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
@@ -173,17 +173,22 @@ def rho_thermal(ion0, nbar_list=[],s_state=[0], ket = False):
     ket: bool, default as false
         if true, output state as ket for a pure superposition of fock states
         if false, output the usual density matrix used for thermal state
-    s_state: list of int
+    s_config: list of int. used to initialize the system is a pure spin up/down state
         specify initial spin state, 0 for up, 1 of down, default as 0 
     nbar_list: list of list of float
         average phonon number of each phonon space
+    s_state: Qutip density matrix
+        a density matrix for spin space of the system
     Returns
     -------
     Qutip operator
     '''
-    Ns = ion0.df_spin
-    isket = spin.spin_state(Ns,s_state)
-    ini_sdm = isket*isket.dag()
+    if s_state == None:
+        Ns = ion0.df_spin
+        isket = spin.spin_state(Ns,s_config)
+        ini_sdm = isket*isket.dag()
+    else:
+        ini_sdm = s_state
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for mindex in range(ion0.df_phonon()[1][0]):
             nbar = nbar_list[0][mindex]
@@ -260,21 +265,27 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     else:
         return tensor(isket,pho)
 
-def spin_measure(ion0=None,s_config=[0]):
+def spin_measure(ion0=None,s_config=[0],s_state=None):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
     Parameters
     ----------
     ion0 : ion class object
-    index : list of int
+    index : list of int, used only for tensor product basis states
         specify the spin state to be projected, 0 for spin up, 1 for spin down
         [0,1] means up, down state
+    state: Qutip ket
+        specify the spin state to be projected
     Returns
     -------
     s_op : Qutip operator
     '''
-    s_ket = spin.spin_state(ion0.df_spin,s_config)
-    s_op = tensor(s_ket*s_ket.dag(), p_I(ion0))
+    if s_state == None:
+        s_ket = spin.spin_state(ion0.df_spin,s_config)
+        s_mat = s_ket*s_ket.dag()
+    else:
+        s_mat = s_state * s_state.dag()
+    s_op = tensor(s_mat, p_I(ion0))
     return s_op
 def site_spin_measure(ion0=None,index=0):
     '''

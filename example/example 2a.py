@@ -34,17 +34,22 @@ laser1.laser_couple = [0]
 laser1.mu = 1e3*ion_sys.fx-delta
 laser1.list_para()
 #%%
-Omegax = 0.01*np.abs(delta)*2
-deltaE = 5*np.abs(delta) #note site energy difference is negative by definition  
+omegax = 0.01*np.abs(delta)*2
+omegay = 0.01*np.abs(delta)*0
+deltaE = 5*np.abs(delta)  #note site energy difference is negative by definition 
+n0=2
+df_p = 1 #for phonon measurements
 '''
 simulation with 1 mode, reproduce curve C in Fig 3(B)
 '''
-elist = [sp_op.spin_measure(ion_sys,[0,1])]
+elist = [sp_op.spin_measure(ion_sys,[0]),
+         sp_op.phonon_measure(ion_sys,df_p, mindex=1)#tilt mode population
+]
 #solve time evolution for a single energy splitting
-H0  = etrans.H_res(ion_sys,laser1,Omegax=Omegax,Omegay=0,Omegaz=deltaE,i_type=0)
+H0  = etrans.H_res(ion_sys,laser1, Omegax=omegax,Omegay=omegay,Omegaz=deltaE,i_type=0)#i_type=0->zz, i_type=1->laser phase (0 for x, pi/2 for y)
 clist1 = disp.cooling(ion_sys,gamma_list = [0.05*np.abs(delta)/(2*np.pi),0],
                       nbar_list = [0.01],df=1, normalized = False)
-rho0 = sp_op.rho_thermal(ion_sys,nbar_list=[[0.01]],s_state=[0],ket = False)
+rho0 = sp_op.rho_thermal(ion_sys, nbar_list=[[0.01]],s_config=[0],ket = False)
 tplot = np.arange(0,200,0.1)
 times = tplot*2*np.pi/(2*np.pi*np.abs(delta))
 print("solving time evolution (1 mode) for deltaE =", deltaE)

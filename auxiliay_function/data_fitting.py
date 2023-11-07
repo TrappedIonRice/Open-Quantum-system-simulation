@@ -8,6 +8,7 @@ Functions for curve fitting
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+from scipy import integrate
 
 '''
 fitting electron transfer data
@@ -28,6 +29,27 @@ def et_osc_decay(t, A,k, B,q, w,phi,C):
 '''
 functions to use
 '''
+
+def et_decay_integrate(tdata,pdata):
+    '''
+    Extract decay rate by performing a numeric integration
+
+    Parameters
+    ----------
+    tdata : np array
+        normalized time
+    pdata : np array
+        excited state population
+
+    Returns
+    -------
+    transfer rate
+
+    '''
+    I1 = integrate.simpson(pdata, tdata)
+    I2 = integrate.simpson(tdata*pdata, tdata)
+    return I1/I2
+
 def fit_et_decay(tdata,pdata,fit_interval='all',plot=False,
                  all_parameter=False):
     '''

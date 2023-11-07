@@ -12,11 +12,29 @@ import Qsim.operator.phonon as phon
 import Qsim.operator.spin_phonon as sp_op
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 from  Qsim.ion_chain.ion_system import *
+import Qsim.auxiliay_function.data_fitting as fit
+plt.rcParams['figure.dpi']= 100
 #%%
 '''
 parameters of the system, in this example, we compute the evolution at type 1
 resonance at Delta E = 1*delta_rock
-'''       
+'''  
+delta = 100 #detuning from com mode
+ion_sys = ions(trap_config = {'N':3,'fx':2,'fz':1}) #construct a two ion system using class ions
+ion_sys.coolant = [2] #ion 3 as coolant
+ion_sys.active_phonon = [[0,1,2]] #consider only com mode
+ion_sys.active_spin = [0,1]
+ion_sys.pcut = [[2,2,8]]
+ion_sys.update_all(print_text = False)
+ion_sys.list_para() #print parameters
+#%%
+laser1 = Laser()
+laser1.Omega_eff = 50
+laser1.wavevector = 1 
+laser1.laser_couple = [0]
+laser1.mu = 1e3*ion_sys.radial_freq[2]-delta
+laser1.list_para()
+#%%     
 ion_sys = ions() 
 ion_sys.N = 3
 ion_sys.df_laser = 1 #couple to Radial vibrational modes
