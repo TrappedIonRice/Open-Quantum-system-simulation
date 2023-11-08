@@ -163,7 +163,7 @@ def p_ladder(ion0,df=1, mindex=0,atype=0):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
-def rho_thermal(ion0, nbar_list=[],s_config=[0], ket = False, s_state=None):
+def rho_thermal(ion0, nbar_list=[],s_config=['z0'], ket = False, s_state=None):
     '''
     Construct initial density matrix/ket for pure state according to a thermal distribution
     Parameters
@@ -185,7 +185,7 @@ def rho_thermal(ion0, nbar_list=[],s_config=[0], ket = False, s_state=None):
     '''
     if s_state == None:
         Ns = ion0.df_spin
-        isket = spin.spin_state(Ns,s_config)
+        isket = spin.spin_state(s_config)
         ini_sdm = isket*isket.dag()
     else:
         ini_sdm = s_state
@@ -219,7 +219,7 @@ def rho_thermal(ion0, nbar_list=[],s_config=[0], ket = False, s_state=None):
         rho0 = tensor(ini_sdm,pho)
         return rho0    
 
-def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
+def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], state_type=0):
     '''
     Construct initial ket/density matrix that has integer phonon number
     Parameters
@@ -238,7 +238,7 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     Qutip operator
     '''
     Ns = ion0.df_spin
-    isket = spin.spin_state(Ns,s_state)
+    isket = spin.spin_state(s_config)
     ini_sdm = isket*isket.dag()
     if ion0.df_phonon()[0] == 1: #only consider one phonon space
         for m in range(ion0.df_phonon()[1][0]):
@@ -265,7 +265,7 @@ def ini_state(ion0=None,s_state = [0], p_state = [[0]], state_type=0):
     else:
         return tensor(isket,pho)
 
-def spin_measure(ion0=None,s_config=[0],s_state=None):
+def spin_measure(ion0=None,s_config=['z0'],s_state=None):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
     Parameters
@@ -281,7 +281,7 @@ def spin_measure(ion0=None,s_config=[0],s_state=None):
     s_op : Qutip operator
     '''
     if s_state == None:
-        s_ket = spin.spin_state(ion0.df_spin,s_config)
+        s_ket = spin.spin_state(s_config)
         s_mat = s_ket*s_ket.dag()
     else:
         s_mat = s_state * s_state.dag()
