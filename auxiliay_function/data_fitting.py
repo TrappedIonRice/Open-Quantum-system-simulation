@@ -15,10 +15,18 @@ fitting electron transfer data
 '''
 def et_decay(t,A,k,B):
     '''
-    exponential dedcay
+    exponential decay
     
     '''
-    return A*np.exp(-k*t) + B 
+    return A*np.exp(-k*t) + B
+
+
+def norm_et_decay(t, A, k, B):
+    '''
+    exponential decay normalized to 1
+
+    '''
+    return  (1-B)*np.exp(-k * t) + B
 def et_osc_decay(t, A,k, B,q, w,phi,C):
     '''
     oscillating exponential decay
@@ -88,14 +96,14 @@ def fit_et_decay(tdata,pdata,fit_interval='all',plot=False,
     else:
         start = fit_interval[0]; end = fit_interval[1]
     ftdata = tdata[start:end]; fpdata = pdata[start:end]
-    coef, pcov=curve_fit(et_decay,ftdata,fpdata,p0=[1,0,0],
+    coef, pcov=curve_fit(norm_et_decay,ftdata,fpdata,p0=[1,0,0],
                          bounds=([0,0,0], [1.5,100,1]),maxfev=5000)
     if plot:
         plt.figure()
         #plot raw data
         plt.plot(tdata,pdata,label='data')
         #plot fit
-        plt.plot(tdata, et_decay(tdata, *coef), 'r--',
+        plt.plot(tdata, norm_et_decay(tdata, *coef), 'r--',
          label='fit: A=%5.3f, k=%5.3f, B=%5.3f' % tuple(coef))
         plt.ylabel(r'$p_\uparrow$',fontsize = 13)      
         plt.xticks(fontsize = 13)  
