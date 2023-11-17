@@ -9,6 +9,16 @@ functions for multi-core parallel computation using package multiprocess
 import Qsim.ion_chain.transfer.exci_transfer as extrans
 import numpy as np
 from qutip import *
+import multiprocessing as mp
+from tqdm import tqdm
+import datetime
+import pandas as pd
+from operator import itemgetter 
+#from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN
+
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
 def summary():
     '''
@@ -88,7 +98,7 @@ def generate_fplist(peaks,sep,r):
         nflist = np.arange(ele-r,ele+r+sep,sep)
         farray =  np.concatenate((farray,nflist))
     return np.unique(farray)  
-def generate_task(core_num,flist, para_list=[]):
+def generate_task(core_num, var_list, para_list=()):
     '''
     generate an np array that has higher resolution at expected position of the peaks 
     Parameters
@@ -97,8 +107,8 @@ def generate_task(core_num,flist, para_list=[]):
     ----------
     core_num : int
         number of cores used for parallel computation
-    flist : np array
-        array of a frequency variable, used as the axis for spiltting task array
+    var_list : list
+        list of variables for each simualtion 
     ion0: ion class object    
     para_list : np array
         list of parameters to charaterize H, specification is not required for simple cases
@@ -116,30 +126,54 @@ def generate_task(core_num,flist, para_list=[]):
     
 
     '''
-    length = np.size(flist) // core_num
-    splitter = np.arange(0,np.size(flist),length)[1:]
-    if np.size(flist) % core_num == 0:
-        splitter = np.append(splitter,np.size(flist))
+    vlength = len(var_list)
+    '''
+    if vlength < core_num:
+        core_num = vlength
+    task_length = Decimal(str(vlength/core_num)).quantize(Decimal('1.'), rounding=ROUND_HALF_DOWN)
+    print(int(task_length))
+    splitter = np.arange(0, vlength, int(task_length))[1:]
+    print(splitter)
+    if np.size(splitter) < core_num:
+        splitter = np.append(splitter,vlength)
+    elif np.size(splitter) > core_num:
+        splitter = np.delete(splitter,vlength)
     else:
-        splitter[np.size(splitter)-1] = np.size(flist)
-    inlist = np.split(flist,splitter)
+        splitter[np.size(splitter)-1] = vlength
+    inlist = np.split(iarray,splitter)    
+    '''
+    #generate a index array 
+    iarray = np.arange(0,vlength)
+    inlist = list(split(list(iarray), core_num))
     #generate task dictionary
     tdict = {}
     for i in range(core_num):
-        tdict[str(i)] = [inlist[i]]  + para_list
+        new_vlist = itemgetter(*list(inlist[i]))(var_list)
+        print(isinstance(new_vlist, tuple))
+        if not isinstance(new_vlist, tuple):
+            new_vlist= (new_vlist,)
+            
+        tdict[str(i)] = new_vlist  + para_list
     #print('task dictionary', tdict)
     return tdict
-   
-def spin_evol(task,parray):
+  
+def ME_multi_H(task,Hlist,sim_para):
     '''
     solve time evolution for a single energy splitting
     Parameters
     ----------
     task : string 
         task name
-    Elist : np array
-        input site energy to be computed for the task
-
+    Hlist : list of Qutip operators
+        Hamiltonians to be simulated
+    sim_para : dict 
+        A dictionary that takes the following format:
+           {
+            'rho' : , (initial density matrix)
+            't_array':, (time array for sampling dynamics)
+            'elist' : , (list of observables to be evaluated)
+            'clist' :  (list of collapse operators to construct Lindbladian operator)
+            }
     Returns
     -------
         task: task name
@@ -147,19 +181,60 @@ def spin_evol(task,parray):
         evolution at different deltaE
     '''
     #read parameters:
-    Earray = parray[0]; Hpara = parray[1]
-    ion_sys = parray[2]; rho0 = parray[3]
-    elist = parray[4]; times0 = parray[5][0]; times1 = parray[5][1]
-    J23 = Hpara[0]; E3 = Hpara[1]; V =  Hpara[2]
+    rho_s = sim_para['rho'] ; t_array_s = sim_para['t_array'] ; 
+    clist_s = sim_para['clist'] ; elist_s = sim_para['elist'] ; 
     
     sresult = []
-    for E2 in Earray:
-        H0, clist1 = extrans.Htot(J23,E2,E3,V,ion_sys,0)
-        #print("solving time evolution for interval 1")
-        result0 = mesolve(H0,rho0,times0,clist1,[],progress_bar=True,options=Options(nsteps=10000)) 
-        #print("solving time evolution for interval 2")
-        result1 = mesolve(H0,result0.states[-1],times1,clist1,elist,progress_bar=True,options=Options(nsteps=100000))
-        pplot1 =  np.append(expect(elist[0],result0.states),result1.expect[0])
-        sresult.append(pplot1)
+    for H in Hlist:
+        result = mesolve(H,rho_s,t_array_s,clist_s,elist_s,progress_bar=True,options=Options(nsteps=100000))
+        rhoee = result.expect[0]
+        sresult.append(rhoee)
     return {task:sresult}       
 
+def multi_H_parallel(task_func,sim_para,Hlist,n_cpu):
+    '''
+    Simulate electron transfer given a list of Hamiltonian using parallel computing
+    
+    Parameters
+    ----------
+    task_func: python function
+        function to be called for simualtion
+    sim_para : dict 
+        A dictionary that takes the following format:
+            {
+             'rho' : , (initial density matrix)
+             't_array':, (time array for sampling dynamics)
+             'elist' : , (list of observables to be evaluated)
+             'clist' :  (list of collapse operators to construct Lindbladian operator)
+             }
+    Hlist : list of qutip operators
+        the list of H to be simulated 
+    n_cpu: int
+        number of cpu to be used for simluation 
+    Returns
+    -------
+    p_result, list of all simulation results
+
+    '''
+    tdict = generate_task(n_cpu,Hlist)
+    #print('task dictionary', tdict) 
+    #if __name__ == '__main__':
+    print('start parallel computing')
+    print('number of cores used:',n_cpu,'/',mp.cpu_count())
+    start_t = datetime.datetime.now() #record starting time
+    pool = mp.Pool(n_cpu)
+    results = [pool.apply_async(task_func, args=(ntask, H_array,sim_para)) 
+               for ntask, H_array in tdict.items()]
+    pool.close()
+    result_list_tqdm = [] #generate progress bar
+    for result in tqdm(results):
+        result_list_tqdm.append(result.get()) 
+    end_t = datetime.datetime.now()
+    elapsed_sec = (end_t - start_t).total_seconds()
+    print("time consumed " + "{:.2f}".format(elapsed_sec) + "s")    
+    sevl = [] #combine all the results
+    for i in range(n_cpu):
+        sevl = sevl + result_list_tqdm[i][str(i)]
+    print('________________________________________________________________')   
+    print('all computation completed')    
+    return sevl

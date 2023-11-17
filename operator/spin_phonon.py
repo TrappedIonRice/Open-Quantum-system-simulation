@@ -265,7 +265,7 @@ def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], state_type=0):
     else:
         return tensor(isket,pho)
 
-def spin_measure(ion0=None,s_config=['z0'],s_state=None):
+def spin_measure(ion0,s_config=['z0'],s_state=None):
     '''
     Generate operators to measure spin evolution for excitation transfer systems
     Parameters
