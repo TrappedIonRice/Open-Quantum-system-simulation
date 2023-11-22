@@ -165,7 +165,7 @@ def p_ladder(ion0,df=1, mindex=0,atype=0):
 
 def rho_thermal(ion0, nbar_list=[],s_config=['z0'], ket = False, s_state=None):
     '''
-    Construct initial density matrix/ket for pure state according to a thermal distribution
+    Construct initial density matrix/ket for pure spin state according to a thermal phonon distribution
     Parameters
     ----------
     ion0: ions class object
@@ -219,7 +219,7 @@ def rho_thermal(ion0, nbar_list=[],s_config=['z0'], ket = False, s_state=None):
         rho0 = tensor(ini_sdm,pho)
         return rho0    
 
-def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], state_type=0):
+def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], ket = False):
     '''
     Construct initial ket/density matrix that has integer phonon number
     Parameters
@@ -230,9 +230,9 @@ def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], state_type=0):
         specify initial spin state, 0 for up, 1 of down
     p_state: list of list of int 
         specified phonon number for the state
-    state_type: type of state to be generated 
-        0 for density matrix
-        1 for ket
+    ket: bool, default as false
+        if true, output state as ket for a pure superposition of fock states
+        if false, output the usual density matrix used for thermal state
     Returns
     -------
     Qutip operator
@@ -260,10 +260,16 @@ def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], state_type=0):
         pho = tensor(pho1,pho2)       
     dpmat = pho*pho.dag()
     rho0 = tensor(ini_sdm,dpmat)
-    if state_type == 0:
-        return rho0
+    #if state_type == 0:
+    #    return rho0
+    #else:
+    #    return tensor(isket,pho)
+    if ket:
+        ket0 = tensor(isket,pho)
+        return ket0
     else:
-        return tensor(isket,pho)
+        rho0 = tensor(ini_sdm,pho)
+        return rho0
 
 def spin_measure(ion0=None,s_config=['z0'],s_state=None):
     '''
