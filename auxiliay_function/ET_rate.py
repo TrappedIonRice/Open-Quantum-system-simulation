@@ -145,7 +145,7 @@ def plot_ET_rate_Fermi(E_start,E_end,p_cutoff,g_fac,V_fac,nbar,state_type='therm
         plt.xlabel(r'$\Delta E [\hbar\omega_0]$',fontsize = 16)
         plt.ylabel(r'$2 \pi k / \omega_0$',fontsize = 16)
         plt.yticks(fontsize = 16)
-        plt.xticks(np.arange(0, 13,1),fontsize = 16)
+        plt.xticks(np.arange(0, E_end,1),fontsize = 16)
         #plt.xlim(1,12)
         #plt.legend(fontsize = 15)
         plt.grid()
