@@ -15,6 +15,22 @@ def FC_matrix(cutoff,gf):
     a = phon.down(0,[cutoff],1)
     aop = (gf*(a.dag() - a)).expm()
     return aop
+def plot_FC_coef(cutoff, gf, n, tot_points):
+    #plot FC coefficient for a given initial fock state n 
+    mat = FC_matrix(cutoff,gf)
+    fcplot = np.abs(mat[n,n:tot_points+n].reshape(tot_points))**2
+    splot = np.arange(0, tot_points,1)
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(splot,fcplot,'*',markersize=12)
+    plt.xlabel(r'$\nu''$',fontsize = 16)
+    plt.ylabel(r'$FC$',fontsize = 16)
+    plt.yticks(fontsize = 16)
+    plt.xticks(np.arange(0, 13,1),fontsize = 16)
+    #plt.xlim(1,12)
+    #plt.legend(fontsize = 15)
+    plt.grid()
+    plt.show()
+    print(fcplot)
 def FC_sum(cutoff,E_split,gf,nbar,state_type='thermal'):
     '''
     Compute the sum of FC coefficient for a given energy splitting,
@@ -41,7 +57,8 @@ def FC_sum(cutoff,E_split,gf,nbar,state_type='thermal'):
     if state_type == 'thermal':
         pdist = phon.p_thermal(cutoff,nbar)
     elif state_type == 'fock':
-        pdist = np.abs(np.array(fock(cutoff,nbar)))
+        pdist = np.zeros(cutoff)
+        pdist[nbar] = 1 
     else:
         print('Incorrect specification of state type, allowed types are thermal, fock')
         return 0
@@ -133,3 +150,36 @@ def plot_ET_rate_Fermi(E_start,E_end,p_cutoff,g_fac,V_fac,nbar,state_type='therm
         #plt.legend(fontsize = 15)
         plt.grid()
         plt.show()
+
+def ET_2level(t,V,gamma,nu,gf,cutoff):
+    '''
+    
+
+    Parameters
+    ----------
+    t : float
+        time for evaluation
+    V : float
+        Site coupling strength in 2pi kHz, coefficient for sigma_x
+    gamma : float
+        dissipation rate in 2pi kHz
+    nu : int
+        initial vibrational state
+    gf : float
+        effective s-p coupling factor
+    cutoff : int
+        cutoff of SHO operator
+ 
+ 
+
+    Returns
+    -------
+    pd : TYPE
+        DESCRIPTION.
+
+    '''
+    FC_coeff = FC_matrix(cutoff,gf)[0,nu]
+    d = np.sqrt(gamma**2 - 4*V**2 * FC_coeff+0j)
+    pd = np.exp(-gamma*t) * (np.cosh(d*t/2) + gamma/d * np.sinh(d*t/2))**2
+    return pd
+    

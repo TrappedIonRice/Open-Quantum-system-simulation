@@ -163,6 +163,70 @@ def p_ladder(ion0,df=1, mindex=0,atype=0):
             opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
     return opa    
 
+def p_displace(ion0, df=1, mindex=0, alpha=0):
+    '''
+    construct displacement operator on phonon space of a ion system
+    Parameters
+    ----------
+    ion0 : ion class object
+    df : int, default as none
+         vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+         Specified if doing computations with a different coupling direction from the direction
+         initialized in ion class object  
+    mindex: int  
+        index of phonon space where the displacement operator is acting on    
+    alpha: float 
+        position displacement of the mode
+    Returns
+    -------
+    Qutip Operator
+    '''
+    Np = pnum(ion0,df)
+    pcut = ion0.pcut
+    if ion0.df_phonon()[0] == 1: #only consider one phonon space
+        opa = phon.displacement(m=mindex ,alpha = alpha, cutoff=pcut[0],N= Np)
+    else:     #two  phonon spaces
+    #check if two radial df
+        if isinstance(ion0,Ions_asy):
+            df = df - 1    
+        opa =phon.displacement(m=mindex ,alpha = alpha, cutoff=pcut[df],N= Np)
+        #construct in order axial, transverse
+        if  df ==0:
+            opa = tensor(opa,phon.pI(pcut[1],ion0.df_phonon()[1][1]))
+        else:
+            opa = tensor(phon.pI(pcut[0],ion0.df_phonon()[1][0]),opa)
+    return opa 
+def displaced_state(state0,ion0, ket= False,df=1, mindex=0, alpha=0):
+    '''
+    Apply displacement opeartor exp(\alpha  a^\dag - \alpha^* a )
+    on a pure fock state 
+
+    Parameters
+    ----------
+    state0 : qutip state
+        density matrix or ket representation of a pure fock state
+    ion0 : ion class object
+    ket : bool
+        if the input/output would be ket or density matrix The default is False.
+     df : int, default as none
+          vibrational degree of freedom that couples to the laser, 0: axial, 1: radial
+          Specified if doing computations with a different coupling direction from the direction
+          initialized in ion class object  
+     mindex: int  
+         index of phonon space where the displacement operator is acting on    
+     alpha: float 
+         position displacement of the mode
+    Returns
+    -------
+    Qutip state
+
+    '''
+    dop = tensor(spin.sI(ion0.df_spin),p_displace(ion0, df, mindex, alpha))
+    if ket:
+        return dop*state0
+    else:
+        return dop*state0*dop.dag()
+    
 def rho_thermal(ion0, nbar_list=[],s_config=['z0'], ket = False, s_state=None):
     '''
     Construct initial density matrix/ket for pure spin state according to a thermal phonon distribution
@@ -268,7 +332,7 @@ def ini_state(ion0=None,s_config=['z0'], p_state = [[0]], ket = False):
         ket0 = tensor(isket,pho)
         return ket0
     else:
-        rho0 = tensor(ini_sdm,pho)
+        rho0 = tensor(ini_sdm,dpmat)
         return rho0
 
 def spin_measure(ion0,s_config=['z0'],s_state=None):

@@ -56,6 +56,7 @@ def up(m=0,cutoff=[2],N=1):
             else:
                 lup = tensor(lup,nextop)
     return lup
+
 def down(m=0,cutoff=[2],N=1):
     '''
     generate the annihilation ladder operator acting on the mth phonon mode of a system of N modes
@@ -87,7 +88,40 @@ def down(m=0,cutoff=[2],N=1):
             else:
                ldown = tensor(ldown,nextop)
     return ldown
+def displacement(m=0,alpha = 0, cutoff=[2],N=1):
+    '''
+    generate the displacement operator acting on the mth phonon mode of a system of N modes
+    Input: (m,cutoff,N)
+    Parameters
+    ----------
+    m : int
+        python index of the mode that the operator acts on
+    alpha: float
+        position displacement of mode m 
+    cutoff :  list of int
+        cut off level of each phonon space 
+    N : int
+        total number of phonon spaces
     
+    Returns
+    -------
+    Qutip Operator
+
+    '''
+    if N == 1: 
+        dop = displace(cutoff[0], alpha)
+    else:
+        for j in range(N):
+            if j == m:
+                nextop = displace(cutoff[j], alpha)
+            else:
+                nextop = qeye(cutoff[j])
+            if j == 0:
+                dop = nextop
+            else:
+                dop = tensor(dop,nextop)
+    return dop
+
 def zero_op(cutoff,N):
     '''
     generate the zero operator acting on the system of N modes

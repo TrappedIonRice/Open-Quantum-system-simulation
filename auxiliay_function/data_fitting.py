@@ -34,6 +34,18 @@ def et_osc_decay(t, A,k, B,q, w,phi,C):
     result =  (A*np.exp(-k*t) +
                B*np.exp(-q*t)*np.cos(w*t+phi) + C)
     return result
+
+def et_decay_real(t, gamma, d):
+    result = np.exp(-gamma*t) * (np.cosh(d*t/2) + gamma/d * np.sinh(d*t/2))**2
+    return result
+
+def et_decay_img(t,B, gamma, d):
+    result = (1-B)*np.exp(-gamma*t) * (np.cos(d*t/2) + gamma/d * np.sin(d*t/2))**2+B
+    return result
+
+def et_osc_decay_2(t, A, k, w):
+    result = (1-A)* np.exp(-k*t) * (np.cos(w*t))**2 + A
+    return result
 '''
 functions to use
 '''
@@ -184,3 +196,37 @@ def fit_et_osc_decay(tdata,pdata,fit_interval='all',plot=False,
         return coef, pcov
     else:
         return coef[[1,3]]
+
+def fit_et_decay_general(tdata,pdata,f_type = 'real', fit_interval='all',plot=False,
+                 all_parameter=False):
+    if fit_interval == 'all':
+        start = 0; end = np.size(tdata)-1
+    else:
+        start = fit_interval[0]; end = fit_interval[1]
+    if f_type == 'real':
+        model = et_decay_real
+    elif f_type == 'img':
+        model = et_decay_img
+    else:
+        return 0
+    ftdata = tdata[start:end]; fpdata = pdata[start:end]
+    coef, pcov=curve_fit(et_osc_decay_2,ftdata,fpdata,p0=[0,0,0],
+                         bounds=([-1,0,0], [1,10,10]),maxfev=5000)
+    print(coef)
+    if plot:
+        plt.figure()
+        #plot raw data
+        plt.plot(tdata,pdata,label='data')
+        #plot fit
+        plt.plot(tdata, model(tdata, *coef), 'r--', label= 'fit')
+        plt.ylabel(r'$p_\uparrow$',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 13)
+        plt.grid()    
+        plt.legend()
+        plt.show()
+    if all_parameter:
+        return coef, pcov
+    else:
+        return coef[1]
