@@ -44,7 +44,7 @@ def U(Omegaz,lambda0):
 
     '''
     return (Omegaz - lambda0)**2 / (4*lambda0)
-def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0):
+def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normalized=False):
     '''
     Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
@@ -56,13 +56,15 @@ def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0):
         energy difference between the doner and acceptor state  [kHz]
     ion0 : ion class object
     laser0: laser class object
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
     Returns
     -------
     Heff: Qutip operator
         Effective Hamiltonian in resonant frame
     '''
     H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
-    Heff = H_s+ Isp.H_res(ion0, laser0, i_type)
+    Heff = H_s+ Isp.H_res(ion0, laser0, i_type, normalized)
     return Heff
 def H_ord(Omegax, Omegay,Omegaz, ion0, laser0, i_type=0):  ## Included Omegay
     '''

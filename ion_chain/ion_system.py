@@ -1071,10 +1071,10 @@ class Laser():
         '''
         return self.Dk * X0(f) 
 
-    def Omega(self,ion0):
+    def Omega(self,ion0,m):
         '''
         compute real rabi frequency [2pi kHz] in a given laser direction
-        
+        for vibrational mode m given the effective rabi frequncy set
         Parameters
         ----------
         ion0 : ions class object
@@ -1086,11 +1086,11 @@ class Laser():
 
         '''
         if self.wavevector == 0:
-            f_scale = ion0.fz
+            f_scale = ion0.axial_freq[m]
         elif self.wavevector == 1:
-            f_scale = ion0.fx
+            f_scale = ion0.radial_freq[m]
         else:
-            f_scale = ion0.radial_freq2[0]
+            f_scale = ion0.radial_freq2[m]
         return fr_conv(self.Omega_eff,'Hz') / self.eta(f_scale)
     def list_para(self):
         '''

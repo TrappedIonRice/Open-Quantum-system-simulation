@@ -65,7 +65,7 @@ def RWA_filter(Hlist,flist,f_crit):
    '''
     return new_Hlist
 
-def LD_coef(ion0,laser0,i,m):
+def LD_coef(ion0,laser0,i,m,normalized=False):
     '''
     Compute the laser-ion coupling strength [2pi kHz] between ion i and mode m
     Parameters
@@ -77,6 +77,8 @@ def LD_coef(ion0,laser0,i,m):
         ion index
     m : int
         eigenmode index
+    noramlized: bool
+        if True, normalize the coefficient with the corresponding eigenmode index
     Returns
     -------
      float unit of 1
@@ -85,10 +87,13 @@ def LD_coef(ion0,laser0,i,m):
         emat = ion0.axial_mode
     else:   
         emat = ion0.radial_mode
-    coeff = laser0.eta(efreq(ion0,laser0)[m])*emat[m,i] 
+    if normalized:
+        coeff = laser0.eta(efreq(ion0,laser0)[m])*emat[m,i] 
+    else:
+        coeff = laser0.eta(efreq(ion0,laser0)[m]) 
     return coeff
 
-def g(ion0,laser0,i,m):
+def g(ion0,laser0,i,m,normalized=False):
     '''
     Compute the laser-ion coupling strength [2pi kHz] between ion i and mode m
     Parameters
@@ -100,12 +105,14 @@ def g(ion0,laser0,i,m):
         ion index
     m : int
         eigenmode index
+    noramlized: bool
+        if True, normalize the coefficient with the corresponding eigenmode index
     Returns
     -------
     g : float
         [2pi kHz]
     '''
-    return LD_coef(ion0,laser0,i,m)*laser0.Omega(ion0)
+    return LD_coef(ion0,laser0,i,m,normalized)*laser0.Omega(ion0,m)
 
 def sigma_phi(N,i,phase):
     #print(phase)
@@ -202,7 +209,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
     return g(ion0,laser0,i,m)*H 
-def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
+def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
     which discribes the coupling between ion i and mode m
@@ -219,7 +226,9 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
         i_type: int default as 0
             type of interaction, 
             0 for sigma_z
-            set to 1 for ising interactions (sigma_phi)   
+            set to 1 for ising interactions (sigma_phi)
+       noramlized: bool
+            if True, normalize the coefficient with the corresponding eigenmode index
     Output:
         Hamiltonina H im, Qobj
     '''
@@ -231,7 +240,7 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0):
     else:
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
-    return 0.5*g(ion0,laser0,i,m)*H 
+    return 0.5*np.abs(g(ion0,laser0,i,m,normalized))*H 
 
 def H_td(ion0,laser0, atype=0, i_type = 0,las_label=''): 
     '''
@@ -287,7 +296,7 @@ def H_td_arg(ion0,laser0,las_label=''):
         adic[slist[argi]] = wlist0[argi]
     return adic 
 
-def H_res(ion0,laser0,i_type):
+def H_res(ion0,laser0,i_type,normalized=False):
     '''
     Compute the time-independent Hamiltonian e for ion-laser
     interaction with a single drive in resonant frame  
@@ -302,7 +311,8 @@ def H_res(ion0,laser0,i_type):
         type of interaction, 
         0 for sigma_z
         set to 1 for ising interactions (sigma_phi)   
-
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
     Returns
     -------
     None.
@@ -313,7 +323,7 @@ def H_res(ion0,laser0,i_type):
     for m in sp_op.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
         for i in laser0.laser_couple:
-            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type)
+            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
             sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)
