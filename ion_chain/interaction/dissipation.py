@@ -65,3 +65,20 @@ def heating(ion0, hr_list, df=1):
         clist.append(coeff*cm.dag())
         mindex = mindex + 1                                            
     return clist
+def dephasing(ion0, clist = [], gamma_deph):
+    '''
+    Construct the dephasing collapse operator for the transfer systems
+    Parameters
+    ----------
+    ion0: ion class object
+    clist: existing Qutip dissipator operators
+    gamma_deph: float
+        effective dephasing rate in the site basis (z), units of kHz
+    Returns
+    -------
+    List of Qutip operators
+    '''
+    cm = tensor(spin.sz(ion0.df_spin), sp_op.p_I(ion0))
+    coeff = np.sqrt(fr_conv(gamma_deph,'Hz'))
+    clist.append(coeff*cm)                                         
+    return clist
