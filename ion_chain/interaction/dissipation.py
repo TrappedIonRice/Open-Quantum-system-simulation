@@ -65,7 +65,7 @@ def heating(ion0, hr_list, df=1):
         clist.append(coeff*cm.dag())
         mindex = mindex + 1                                            
     return clist
-def dephasing(ion0, clist = [], gamma_deph):
+def dephasing(ion0, clist = [], gamma_deph=0.0):
     '''
     Construct the dephasing collapse operator for the transfer systems
     Parameters
