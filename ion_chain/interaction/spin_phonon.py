@@ -212,7 +212,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
 def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
-    which discribes the coupling between ion i and mode m
+    which describes the coupling between ion i and mode m
     Input: 
         ion0: ion class object
         i: int
@@ -240,7 +240,56 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
     else:
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
+    return 0.5*np.abs(g(ion0,laser0,i,m,normalized))*H
+
+def Him_bsb(ion0, laser0, i=0,m=0,sindex=0,mindex=0,normalized=False):
+    '''
+    Compute the i,m th component for blue sideband coupling, 
+    which describes the coupling between ion i and mode m
+    Input: 
+        ion0: ion class object
+        i: int
+            ion index 
+        m: int
+            phonon space index
+        sindex: int
+            index to construct spin operator
+        mindex: int
+            index to construct phonon operator
+       normalized: bool
+            if True, normalize the coefficient with the corresponding eigenmode index
+    Output:
+        Hamiltonina H im, Qobj
+    '''
+    #set coefficient constants according to the coupling degree of freedom
+    p_df = laser0.wavevector
+    H = tensor(spin.up(ion0.df_spin,sindex),sp_op.p_ladder(ion0,p_df,mindex,1))+tensor(spin.down(ion0.df_spin,sindex),sp_op.p_ladder(ion0,p_df,mindex,0))
     return 0.5*np.abs(g(ion0,laser0,i,m,normalized))*H 
+
+
+def Him_rsb(ion0, laser0, i=0,m=0,sindex=0,mindex=0,normalized=False):
+    '''
+    Compute the i,m th component for red sideband coupling, 
+    which describes the coupling between ion i and mode m
+    Input: 
+        ion0: ion class object
+        i: int
+            ion index 
+        m: int
+            phonon space index
+        sindex: int
+            index to construct spin operator
+        mindex: int
+            index to construct phonon operator
+       normalized: bool
+            if True, normalize the coefficient with the corresponding eigenmode index
+    Output:
+        Hamiltonina H im, Qobj
+    '''
+    #set coefficient constants according to the coupling degree of freedom
+    p_df = laser0.wavevector
+    H = tensor(spin.up(ion0.df_spin,sindex),sp_op.p_ladder(ion0,p_df,mindex,0))+tensor(spin.down(ion0.df_spin,sindex),sp_op.p_ladder(ion0,p_df,mindex,1))
+    return 0.5*np.abs(g(ion0,laser0,i,m,normalized))*H     
 
 def H_td(ion0,laser0, atype=0, i_type = 0,las_label=''): 
     '''
@@ -324,6 +373,40 @@ def H_res(ion0,laser0,i_type,normalized=False):
         sindex = 0 #this index is used for spin operators
         for i in laser0.laser_couple:
             spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
+            sindex = sindex + 1
+        mindex = mindex + 1
+    return spterm - H_harmonic(ion0,laser0)
+    
+def H_sideband(ion0,laser0,normalized=False,sb_type=0):
+    '''
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction with sideband drive
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    laser0 : laser class object
+
+    normalized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    sb_type: int default as 0
+        type of sideband drive
+        0 for bsb, 1 for rsb
+    Returns
+    -------
+    None.
+
+    '''
+    spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
+    mindex = 0 #this index is used for phonon operators
+    for m in sp_op.ph_list(ion0):
+        sindex = 0 #this index is used for spin operators
+        for i in laser0.laser_couple:
+            if sb_type == 0:
+                spterm = spterm + Him_bsb(ion0,laser0,i,m,sindex,mindex,normalized)
+            else:
+                spterm = spterm + Him_rsb(ion0,laser0,i,m,sindex,mindex,normalized)
             sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)

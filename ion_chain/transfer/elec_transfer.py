@@ -46,7 +46,7 @@ def U(Omegaz,lambda0):
     return (Omegaz - lambda0)**2 / (4*lambda0)
 def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normalized=False):
     '''
-    Genearte time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
+    Generate time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
 
     Parameters
     ----------
@@ -66,6 +66,28 @@ def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normalized=False)
     H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
     Heff = H_s+ Isp.H_res(ion0, laser0, i_type, normalized)
     return Heff
+    
+def H_sideband( ion0, laser0, normalized=False,sb_type=0):
+    '''
+    Generate time-independent sideband Hamiltonian
+
+    Parameters
+    ----------
+    ion0 : ion class object
+    laser0: laser class object
+    normalized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    sb_type: int default as 0
+         type of sideband drive
+         0 for bsb, 1 for rsb
+    Returns
+    -------
+    Heff: Qutip operator
+        Effective Hamiltonian in resonant frame
+    '''
+    Heff = Isp.H_sideband(ion0, laser0, normalized,sb_type=0)
+    return Heff
+    
 def H_ord(Omegax, Omegay,Omegaz, ion0, laser0, i_type=0):  ## Included Omegay
     '''
     Generate the time-dependent Hamiltonian for 2 state electron transfer system in ordinary interaction frame,
