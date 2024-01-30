@@ -85,7 +85,7 @@ def H_sideband( ion0, laser0, normalized=False,sb_type=0):
     Heff: Qutip operator
         Effective Hamiltonian in resonant frame
     '''
-    Heff = Isp.H_sideband(ion0, laser0, normalized,sb_type=0)
+    Heff = Isp.H_sideband(ion0, laser0, normalized,sb_type)
     return Heff
     
 def H_ord(Omegax, Omegay,Omegaz, ion0, laser0, i_type=0):  ## Included Omegay
