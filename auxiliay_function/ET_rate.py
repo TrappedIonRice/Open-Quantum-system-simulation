@@ -182,4 +182,35 @@ def ET_2level(t,V,gamma,nu,gf,cutoff):
     d = np.sqrt(gamma**2 - 4*V**2 * FC_coeff+0j)
     pd = np.exp(-gamma*t) * (np.cosh(d*t/2) + gamma/d * np.sinh(d*t/2))**2
     return pd
+
+
+def ET_rate_QA(V,gamma,nu,gf,cutoff):
+    '''
     
+
+    Parameters
+    ----------
+    V : float
+        Site coupling strength in 2pi kHz, coefficient for sigma_x
+    gamma : float
+        dissipation rate in 2pi kHz
+    nu : int
+        initial vibrational state
+    gf : float
+        effective s-p coupling factor
+    cutoff : int
+        cutoff of SHO operator
+ 
+ 
+
+    Returns
+    -------
+    kQA : TYPE
+        DESCRIPTION.
+
+    '''
+    FC_coeff = FC_matrix(cutoff,gf)[0,nu]
+    eta = gamma/(np.abs(V)*np.sqrt((FC_coeff+0j)**2))
+    kQA = gamma * (1 + eta**2)/(1 + (1/2)*eta**4)
+    return kQA
+        
