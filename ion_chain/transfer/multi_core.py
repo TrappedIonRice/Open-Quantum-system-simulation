@@ -186,7 +186,7 @@ def ME_multi_H(task,Hlist,sim_para):
     
     sresult = []
     for H in Hlist:
-        result = mesolve(H,rho_s,t_array_s,clist_s,elist_s,progress_bar=True,options=Options(nsteps=100000))
+        result = mesolve(H,rho_s,t_array_s,clist_s,elist_s,progress_bar=False,options=Options(nsteps=100000))
         rhoee = result.expect[0]
         sresult.append(rhoee)
     return {task:sresult}       

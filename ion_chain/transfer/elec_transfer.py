@@ -66,6 +66,28 @@ def H_res( ion0, laser0, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normalized=False)
     H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
     Heff = H_s+ Isp.H_res(ion0, laser0, i_type, normalized)
     return Heff
+def H_res_multi_mode( ion0, lasers, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normalized=False):
+    '''
+    Generate time-independent Hamiltonian for 2 state electron transfer system in resonant interaction frame
+
+    Parameters
+    ----------
+    Omegax : float 
+        coupling coefficient between the doner and acceptor state [kHz]
+    Omegaz : float
+        energy difference between the doner and acceptor state  [kHz]
+    ion0 : ion class object
+    laser0: laser class object
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    Heff: Qutip operator
+        Effective Hamiltonian in resonant frame
+    '''
+    H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
+    Heff = H_s+ Isp.H_res_multi_mode(ion0,lasers,i_type,normalized=False)
+    return Heff
     
 def H_sideband( ion0, laser0, normalized=False,sb_type=0):
     '''

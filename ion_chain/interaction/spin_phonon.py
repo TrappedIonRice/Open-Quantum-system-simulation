@@ -347,8 +347,8 @@ def H_td_arg(ion0,laser0,las_label=''):
 
 def H_res(ion0,laser0,i_type,normalized=False):
     '''
-    Compute the time-independent Hamiltonian e for ion-laser
-    interaction with a single drive in resonant frame  
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction in resonant frame, assuming only one drive in the system  
 
     Parameters
     ----------
@@ -376,7 +376,65 @@ def H_res(ion0,laser0,i_type,normalized=False):
             sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)
-    
+
+def H_res_multi_mode(ion0,lasers,i_type,normalized=False):
+    '''
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction in resonant frame, considering a near reasont drive on mode m
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    lasers : list of laser class objects, should be smaller than the mode number
+    i_type: int default as 0
+        type of interaction, 
+        0 for sigma_z
+        set to 1 for ising interactions (sigma_phi)   
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    None.
+
+    '''
+    H = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
+    mindex = 0 #this index is used for phonon operators
+    for m in sp_op.ph_list(ion0):
+        H = H + H_res_m(ion0,lasers[mindex],m,mindex,i_type,normalized)
+        mindex = mindex + 1
+    return H
+def H_res_m(ion0,laser0,m,mindex,i_type,normalized=False):
+    '''
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction in resonant frame, considering a near reasont drive on mode m
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    laser0 : laser class object
+    m: int
+        phonon space index
+    mindex: int
+        index to construct phonon operator
+    i_type: int default as 0
+        type of interaction, 
+        0 for sigma_z
+        set to 1 for ising interactions (sigma_phi)   
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    None.
+
+    '''
+    spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
+    sindex = 0 #this index is used for spin operators
+    for i in laser0.laser_couple:
+        spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
+        sindex = sindex + 1
+    return spterm - H_harmonic(ion0,laser0,[m,mindex])
 def H_sideband(ion0,laser0,normalized=False,sb_type=0):
     '''
     Compute the time-independent Hamiltonian for ion-laser
@@ -732,24 +790,34 @@ def H_PA_td(ion0, pa_index=0, df=1):
         mindex +=  1
     return Hlist, padic
 
-def H_harmonic(ion0,laser0):
+def H_harmonic(ion0,laser0,mode='all'):
     '''
     Compute the harmonic part of the spin-phonon interaction Hamiltonian in
     resonant frame
     Input: 
         ion0: ion class object
+        mode: str/list
+                if 'all', sum harmonic part for all modes
+                if list, compute for a single mode, the first index for m, mode index
+                the second for mindex, index for phonon operator
     Output:
         Qutip operator
     '''
     p_df = laser0.wavevector
-    hterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #compensation for change of interaction frame
-    mindex = 0 #this index is used for phonon operators
     dlist = laser0.detuning(ion0)
-    for m in sp_op.ph_list(ion0):
-        hterm = (hterm + dlist[m]
+    if mode == 'all':
+        hterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #compensation for change of interaction frame
+        mindex = 0 #this index is used for phonon operators
+        for m in sp_op.ph_list(ion0):
+            hterm = (hterm + dlist[m]
+                     *tensor(spin.sI(ion0.df_spin),
+                             sp_op.p_ladder(ion0,p_df,mindex,1)*sp_op.p_ladder(ion0,p_df,mindex,0)))    
+            mindex = mindex+1
+    else:
+        m = mode[0]; mindex = mode[1]
+        hterm = (dlist[m]
                  *tensor(spin.sI(ion0.df_spin),
-                         sp_op.p_ladder(ion0,p_df,mindex,1)*sp_op.p_ladder(ion0,p_df,mindex,0)))    
-        mindex = mindex+1
+                         sp_op.p_ladder(ion0,p_df,mindex,1)*sp_op.p_ladder(ion0,p_df,mindex,0))) 
     return hterm
 
 def H_td_argdic_general(ion0,laser_list,df_lab=''):    
