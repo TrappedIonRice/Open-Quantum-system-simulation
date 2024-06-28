@@ -6,6 +6,7 @@ functions: up, down, zero_op, pI, phip, inip_thermal
 """
 import numpy as np
 from qutip import *
+import matplotlib.pyplot as plt
 def summary():
     print("____________________________________________________________________")
     print("function: up")
@@ -88,6 +89,39 @@ def down(m=0,cutoff=[2],N=1):
             else:
                ldown = tensor(ldown,nextop)
     return ldown
+def oper(op_func,m=0,cutoff=[2],N=1):
+    '''
+    generate some type of operator acting on the mth phonon mode of a system of N modes
+    Input: (m,cutoff,N)
+    Parameters
+    ----------
+    op_func: func
+        name of the qutip function to be used
+    m : int
+        python index of the ion that the operator acts on
+    cutoff : list of int
+        cut off level of each phonon space 
+    N : int
+       total number of phonon spaces
+
+    Returns
+    -------
+    Qutip Operator
+
+    '''
+    if N == 1: 
+        op = op_func(cutoff[0])
+    else:
+        for j in range(N):
+            if j == m:
+                nextop = op_func(cutoff[j])
+            else:
+                nextop = qeye(cutoff[j])
+            if j == 0:
+               op = nextop
+            else:
+               op = tensor(op,nextop)
+    return op
 def displacement(m=0,alpha = 0, cutoff=[2],N=1):
     '''
     generate the displacement operator acting on the mth phonon mode of a system of N modes
@@ -230,11 +264,35 @@ def p_thermal(cutoff,nbar):
     np array, each element is the probability of a correponding fock state
 
     '''
-    pdis = np.array([])
-    for i in range(cutoff):
-        pdis = np.append(pdis,(1/nbar + 1)**(-i))
-    pdis = pdis/np.sum(pdis)
-    return pdis    
+    if nbar == 0:
+        pdis = np.zeros(cutoff)
+        pdis[0] = 1
+    else:
+        pdis = np.array([])
+        for i in range(cutoff):
+            pdis = np.append(pdis,(1/nbar + 1)**(-i))
+        pdis = pdis/np.sum(pdis)
+    return pdis
+def plot_thermal(cutoff,nbar,xlim='all',log=False):
+     plt.figure()
+     xplot = np.arange(0,cutoff)
+     yplot = p_thermal(cutoff,nbar)
+     plt.bar(xplot,yplot)
+     plt.rcParams['figure.dpi']= 100
+     plt.xlabel('Fock number',fontsize = 14)
+     plt.ylabel(r'$P$',fontsize = 14)
+     plt.title(r'thermal distribution with $\bar{n}=$'+str(nbar))
+     plt.grid() 
+     plt.yticks(fontsize = 13)
+     plt.xticks(fontsize = 13)
+     if log:
+         plt.yscale('log')
+         plt.ylim(np.min(yplot),1)
+     else:
+         plt.ylim(0,1)
+     if xlim != 'all':
+         plt.xlim(xlim)
+     plt.show()    
 def inip_thermal(cutoff=2,nbar=1,ket=False):
     '''
     generate the initial density matirx/pure quantum state ket for a single phonon space 

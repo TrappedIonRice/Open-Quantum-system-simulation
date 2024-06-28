@@ -12,13 +12,55 @@ import imageio
 import matplotlib as mpl
 from datetime import datetime
 import os
-
+from itertools import product
 
 #phase space coordinates for ploting Wigner function
 xvec = np.linspace(-5,5,200)
 X, Y = np.meshgrid(xvec, xvec) 
 
+def xket(x,cut):
+    '''
+    compute the representation of a position eigenket |x> in Fock space
 
+    Parameters
+    ----------
+    x : float
+        eigenvalue of position ket
+    cut : int
+        cut off of the fock space 
+
+    Returns
+    -------
+    qutip ket
+        
+    '''
+    gop = -0.5*(create(cut)-np.sqrt(2)*x)**2
+    rstate = gop.expm()*fock(cut,0)
+    return rstate/rstate.norm()
+
+def position_sample(rho,cut,sample):
+    '''
+    sample a 2D position space density for a density matrix in Fock representation
+    Parameters
+    ----------
+    rho : Qutip operator
+        density matrix of 2 modes
+    cut : int
+        cut off of Fock space
+    sample : np array
+        sample points
+    Returns
+    -------
+    result : 
+        2d np array
+
+    '''
+    result = np.zeros( (len(sample),)*2 )
+    for i, j in product(range(len(sample)),repeat=2):
+        x_ket = tensor(xket(sample[i],cut),xket(sample[j],cut))
+        result[j,i] = np.real(expect(x_ket*x_ket.dag(),rho))
+    return result
+        
 #function for plotting Wigner function at a specfic frame 
 def generate_wplot(t_index, sim_time, result, proj, p_index, 
                    state_type=0,save=False, img_index = 0):

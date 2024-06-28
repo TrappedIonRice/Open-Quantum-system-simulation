@@ -48,15 +48,15 @@ def Jt(ion0,laser0):
     np array object that represents N by N matrix J, unit of [kHz]
 
     '''
-    N = ion0.df_spin; 
-    Omega0 = (laser0.Omega(ion0)*1000)**2
+    N = ion0.N; 
     emat = ion0.radial_mode
     J = np.zeros((N,N))
     for i in range(N):
         for j in range(N):
             if i != j:
                 eij = 0
-                for m in range (N):
+                for m in range (ion0.N):
+                    Omega0 = (laser0.Omega(ion0,m)*1000)**2
                     numer = laser0.R * Omega0 * emat[m,i] * emat[m,j]
                     demon = 1e6*((fr_conv(laser0.mu,'Hz'))**2 - (fr_conv(efreq(ion0,laser0)[m],'kHz'))**2)
                     eij = eij + (numer/demon)
