@@ -149,7 +149,7 @@ def generate_task(core_num, var_list, para_list=()):
     tdict = {}
     for i in range(core_num):
         new_vlist = itemgetter(*list(inlist[i]))(var_list)
-        print(isinstance(new_vlist, tuple))
+        #print(isinstance(new_vlist, tuple))
         if not isinstance(new_vlist, tuple):
             new_vlist= (new_vlist,)
             
@@ -186,7 +186,7 @@ def ME_multi_H(task,Hlist,sim_para):
     
     sresult = []
     for H in Hlist:
-        result = mesolve(H,rho_s,t_array_s,clist_s,elist_s,progress_bar=False,options=Options(nsteps=100000))
+        result = mesolve(H,rho_s,t_array_s,clist_s,elist_s,options=Options(nsteps=100000))
         rhoee = result.expect[0]
         sresult.append(rhoee)
     return {task:sresult}       

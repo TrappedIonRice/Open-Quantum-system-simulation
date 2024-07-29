@@ -102,6 +102,28 @@ def sz(N=1,i=0):
         else:
             opsz = tensor(opsz, op_list[m])
     return opsz
+def J_tot(N,oper,normalized = False):
+    """
+    Construct total angular momentum operator of the system
+
+    Parameters
+    ----------
+    N : int
+        total number of spins in the system
+    oper : func
+        the angular momentum operator function acting on a single spin subspace
+        can be sx, sy, sz
+    noramlized: bool
+        if true, return the ammt operator with normalization 0.5
+    Returns
+    -------
+    Q-operator
+
+    """
+    Jop = oper(N,0)
+    for i in range(1,N):
+        Jop += oper(N,i)
+    return Jop
 def sry(N=1,i=0,phi=0):
     '''
     generate the y rotation operator acting on the ith (python index) spin 1/2

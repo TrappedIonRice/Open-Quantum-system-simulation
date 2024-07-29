@@ -39,7 +39,7 @@ simulation for time-depedent Hamiltonian under RWA
 #construct Hamiltonian 
 Heff,arg0 = iscc.H_ord(Bz,ion_sys,laser1) #construct time-dependent H
 #construct initial state (initialized as up up)
-spin_config = np.array([0,0])
+spin_config = ["z0"]*2
 psi1 = sp_op.ini_state(ion_sys,spin_config,[[0,0]],1)
 elist1 = [tensor(spin.sz(N,0),sp_op.p_I(ion_sys)),tensor(spin.sz(N,1),sp_op.p_I(ion_sys))]
 #solve time dependent SE
@@ -73,7 +73,7 @@ result2 = sesolve(Heff2,psi1,times,e_ops=elist1,args = arg2,progress_bar=True,op
 '''
 simulation with a pure spin approximation
 '''
-psi0 = spin.spin_state(N,[0,0])  
+psi0 = spin.spin_state(spin_config)  
 J = iscp.Jt(ion_sys,laser1)
 elist2 = [spin.sz(N,0),spin.sz(N,1)]
 H = iscp.Hps(J,ion_sys,Bz)
@@ -84,9 +84,9 @@ result = mesolve(H,psi0,times,e_ops=elist2,progress_bar=True, options=Options(ns
 #plot result
 p0 = 0.5*(result.expect[0]+result.expect[1])
 p1 = 0.5*(result1.expect[0]+result1.expect[1])
-p2 = 0.5*(result2.expect[0]+result2.expect[1])
+#p2 = 0.5*(result2.expect[0]+result2.expect[1])
 plt.plot(times,p0,label = 'Spin')
-plt.plot(times,p2,label = 'Complete')
+plt.plot(times,p1,label = 'Complete')
 plt.xlabel(r'$t$ [ms]',fontsize = 14)
 #title = r'$\delta_{com} = $'+str(ion_sys.delta)+' kHz'
 plt.ylabel(r'$<\sigma_{zz}>$',fontsize = 14)

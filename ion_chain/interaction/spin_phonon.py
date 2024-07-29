@@ -208,7 +208,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
     else:    
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
-    return g(ion0,laser0,i,m)*H 
+    return g(ion0,laser0,i,m,True)*H 
 def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
