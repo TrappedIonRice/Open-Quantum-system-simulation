@@ -89,3 +89,100 @@ def L_imbalance(ini_spin,ion0):
     s_op = s_op1 - s_op2
     L_op = tensor(s_op, sp_op.p_I(ion0)) 
     return L_op 
+def one_mode_L_surf(x, E0, g, V, omega):
+    sqrt_term = np.sqrt(E0**2 + 4 * E0 * g * x + 4 * (V**2 + g**2 * x**2))
+    result = -(1/2) * sqrt_term + x**2 * omega
+    return result
+def one_mode_ode(t, z, E0, g, V, omega):
+    x, v = z  # z contains [x, v] where v = dx/dt
+    # Compute the second derivative of x
+    sqrt_term = np.sqrt(E0**2 + 4 * E0 * g * x + 4 * (V**2 + g**2 * x**2))
+    dv_dt = (4 * E0 * g + 8 * g**2 * x) / (4 * sqrt_term) - 2 * x * omega
+    
+    return [v, dv_dt]  # Return dx/dt = v and dv/dt
+def two_mode_L_surf(x, y, E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0):
+    '''
+    compute the energy at the lower adiabatic surface given coordinate (x,y)
+
+    Parameters
+    ----------
+    x : float
+        x coord
+    y : TYPE
+        y coord
+    E0 : float, optional
+        site energy splitting. The default is 0.
+    V : float, optional
+        site coupling, The default is 0.
+    gx : float, optional
+        x spin-boson coupling The default is 0.
+    gy : float, optional
+        y spin-boson coupling The default is 0.
+    omega_x : float, optional
+        x harmonic energy The default is 0.
+    omega_y : float, optional
+        y harmonic energy The default is 0.
+
+    Returns
+    -------
+    result : float
+        energy at point x,y
+    '''
+
+    sqrt_term = np.sqrt(E0**2 + 4 * E0 * (gx * x + gy * y) + 4 * (V**2 + (gx * x + gy * y)**2))
+    
+
+    result = -(1/2) * sqrt_term + (x**2 * omega_x) + (y**2 * omega_y)
+    
+    return result
+
+
+def two_mode_U_surf(x, y, E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0):
+    # First term involving the square root
+    sqrt_term = np.sqrt(E0**2 + 4 * E0 * (gx * x + gy * y) + 4 * (V**2 + (gx * x + gy * y)**2))
+    
+    # The final expression
+    result = (1/2) * sqrt_term + (x**2 * omega_x) + (y**2 * omega_y)
+    
+    return result
+def two_mode_ode(t, z, E0, V, gx, gy,  omega_x, omega_y):
+    '''
+    generate EOM to be solved for 2 mode 
+
+    Parameters
+    ----------
+    t : float
+        time
+    z : list
+        LHS of the equation
+    E0 : float, optional
+        site energy splitting. The default is 0.
+    V : float, optional
+        site coupling, The default is 0.
+    gx : float, optional
+        x spin-boson coupling The default is 0.
+    gy : float, optional
+        y spin-boson coupling The default is 0.
+    omega_x : float, optional
+        x harmonic energy The default is 0.
+    omega_y : float, optional
+        y harmonic energy The default is 0.
+
+    Returns
+    -------
+    result : list
+        RHS of the equation
+    '''
+    # Extract x, y, vx, vy from z
+    x, y, vx, vy = z
+
+    # Common term
+    common_term = np.sqrt(E0**2 + 4 * E0 * (gx * x + gy * y) + 4 * (V**2 + (gx * x + gy * y)**2))
+
+    # Second derivative for x
+    dvx_dt = ((4 * E0 * gx + 8 * gx * (gx * x + gy * y)) / (4 * common_term)) - 2 * x * omega_x
+
+    # Second derivative for y
+    dvy_dt = ((4 * E0 * gy + 8 * gy * (gx * x + gy * y)) / (4 * common_term)) - 2 * y * omega_y
+
+    return [vx, vy, dvx_dt, dvy_dt]

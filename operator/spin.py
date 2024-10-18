@@ -339,3 +339,27 @@ def Jn_operator(n_vec,N):
         Jz += sz(N,i)
     Jn = 0.5*(n_vec[0]*Jx + n_vec[1]*Jy+ n_vec[2]*Jz)
     return Jn
+def Dicke(N,m):
+    '''
+    Construct a Dickes state with N total spins with m spin in spin up
+
+    Parameters
+    ----------
+    N : int
+        total number of spins
+    m : int
+        number of spins in excited state
+    Returns
+    -------
+    Qutip-state
+
+    '''
+    if m > N/2:
+        a_times = N-m
+        ini_state = tensor([basis(2,0)]*N)
+        result = (J_tot(N,down)**a_times*ini_state).unit()
+    else:
+        a_times = m
+        ini_state = tensor([basis(2,1)]*N)
+        result = (J_tot(N,up)**a_times*ini_state).unit()
+    return result
