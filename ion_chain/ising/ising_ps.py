@@ -130,4 +130,20 @@ def Hps(J=np.array([]),ion0=None,B0=0):
             submat = submat + J[i,j]*spin.sx(Ns,i)*spin.sx(Ns,j)
         H = H + submat
     return 2*np.pi*H + HBz(ion0,B0)
- 
+def mcoef(phase):
+    '''
+    Compute the motional phase modulation coefficients
+
+    Parameters
+    ----------
+    phase : np array
+        motional phase for each site
+
+    Returns
+    -------
+    np matrix, element ij a coefficient for site i and j 
+
+    '''
+    n = np.size(phase)
+    coef_mat = np.array( [[np.cos(phase[i]-phase[j]) for j in range(n)] for i in range(n)])
+    return coef_mat

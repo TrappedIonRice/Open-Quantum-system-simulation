@@ -209,7 +209,7 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
     return g(ion0,laser0,i,m,True)*H 
-def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
+def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False,phase=0):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
     which describes the coupling between ion i and mode m
@@ -227,6 +227,8 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
             type of interaction, 
             0 for sigma_z
             set to 1 for ising interactions (sigma_phi)
+        phase: float default as 0
+            the motional phase used for discretization
        noramlized: bool
             if True, normalize the coefficient with the corresponding eigenmode index
     Output:
@@ -234,7 +236,8 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False):
     '''
     #set coefficient constants according to the coupling degree of freedom
     p_df = laser0.wavevector
-    p_opa = sp_op.p_ladder(ion0,p_df,mindex,0) + sp_op.p_ladder(ion0,p_df,mindex,1)
+    p_opa = (sp_op.p_ladder(ion0,p_df,mindex,0)*np.exp(-1j*phase) 
+             + sp_op.p_ladder(ion0,p_df,mindex,1)*np.exp(+1j*phase))
     if i_type == 1:
         s_oper = sigma_phi(ion0.df_spin,sindex,laser0.phase)#laser0.phase=0->sx, #laser0.phase=np.pi/2->sy
     else:
@@ -435,6 +438,69 @@ def H_res_m(ion0,laser0,m,mindex,i_type,normalized=False):
         spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
         sindex = sindex + 1
     return spterm - H_harmonic(ion0,laser0,[m,mindex])
+
+def H_trot_m(ion0,laser0,m,mindex,i_type,t,normalized=False):
+    '''
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction in ordinary frame at a point of time t
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    laser0 : laser class object
+    m: int
+        phonon space index
+    mindex: int
+        index to construct phonon operator
+    i_type: int default as 0
+        type of interaction, 
+        0 for sigma_z
+        set to 1 for ising interactions (sigma_phi)   
+    t: float
+        time at which the approximate time-independent H is calculated 
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    None.
+    '''
+    phase = -1*t*laser0.detuning(ion0)[m] #the harmonic term is -\delta_m
+    spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
+    sindex = 0 #this index is used for spin operators
+    for i in laser0.laser_couple:
+        spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized,phase)
+        sindex = sindex + 1
+    return spterm 
+def H_trot_multi_mode(ion0,lasers,i_type,t,normalized=False):
+    '''
+    Compute the time-independent Hamiltonian for ion-laser
+    interaction in ordinary frame at a point of time t, considering a near reasont drive on mode m
+
+    Parameters
+    ----------
+    ion0 : ion class object
+
+    lasers : list of laser class objects, should be smaller than the mode number
+    i_type: int default as 0
+        type of interaction, 
+        0 for sigma_z
+        set to 1 for ising interactions (sigma_phi)   
+    t: float
+        time at which the approximate time-independent H is calculated 
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    None.
+
+    '''
+    H = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
+    mindex = 0 #this index is used for phonon operators
+    for m in sp_op.ph_list(ion0):
+        H = H + H_trot_m(ion0,lasers[mindex],m,mindex,i_type,t,normalized)
+        mindex += 1
+    return H
 def H_sideband(ion0,laser0,normalized=False,sb_type=0):
     '''
     Compute the time-independent Hamiltonian for ion-laser

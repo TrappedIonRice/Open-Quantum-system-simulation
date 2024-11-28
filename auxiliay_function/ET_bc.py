@@ -32,5 +32,5 @@ def d_red(V,gf,gamma,times):
         rho11.append(rhot[0])
         rho22.append(rhot[2])
         rho33.append(1-rhot[0]-rhot[2])
-    return rho11,rho22,rho33
+    return np.array(rho11),np.array(rho22),np.array(rho33)
             

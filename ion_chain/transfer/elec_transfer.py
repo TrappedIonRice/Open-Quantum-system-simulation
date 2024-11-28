@@ -88,7 +88,32 @@ def H_res_multi_mode( ion0, lasers, Omegax=0, Omegay=0,Omegaz=0, i_type=0,normal
     H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
     Heff = H_s+ Isp.H_res_multi_mode(ion0,lasers,i_type,normalized=False)
     return Heff
-    
+def H_trot_multi_mode( ion0, lasers, Omegax=0, Omegay=0,Omegaz=0, i_type=0, t= 0, normalized=False):
+    '''
+    Generate time-independent Hamiltonian for 2 state electron transfer system in ordinary 
+    frame at a time point t
+
+    Parameters
+    ----------
+    Omegax : float 
+        coupling coefficient between the doner and acceptor state [kHz]
+    Omegaz : float
+        energy difference between the doner and acceptor state  [kHz]
+    ion0 : ion class object
+    laser0: laser class object
+    t: float
+        time at which the approximate time-independent H is calculated 
+    noramlized: bool
+         if True, normalize the coefficient with the corresponding eigenmode index
+    Returns
+    -------
+    Heff: Qutip operator
+        Effective Hamiltonian in resonant frame
+    '''
+    H_s =  Is.single_site(ion0,Omegax, Omegay,Omegaz)
+    Heff = H_s+ Isp.H_trot_multi_mode(ion0,lasers,i_type,t,normalized=False)
+    return Heff
+
 def H_sideband( ion0, laser0, normalized=False,sb_type=0):
     '''
     Generate time-independent sideband Hamiltonian
