@@ -92,10 +92,14 @@ def generate_wplot(t_index, sim_time, result, proj, p_index,
 
     '''
     new_st = result.states[t_index]
-    if state_type == 0:
-        new_st = new_st*new_st.dag()*proj
+    p = expect(proj,new_st)
+    if p!=0:
+        if state_type == 0:
+            new_st = (proj*new_st)/np.sqrt(p)
+        else:
+            new_st = (proj*new_st)/p
     else:
-        new_st = new_st*proj
+        new_st = 0*new_st
     rho_p = new_st.ptrace(p_index) #trace out phonon dm0
     wdist = wigner(rho_p, xvec, xvec)
     fig, ax = plt.subplots(1, 1, figsize=(6, 6))
@@ -186,7 +190,7 @@ def wigner_evol_frames(n_frames,sim_time,result, proj, p_index,
             last_report = i;
             bar = bar + 10;
         generate_wplot(wplot_times[i], sim_time, result, proj, p_index, 
-                           state_type=0,save=True, img_index = i)
+                           state_type,save=True, img_index = i)
     print('All tasks finished.')
 def wiger_evol_gif(n_frames,gif_name,frame_duration=0.5,remove_frame = False):
     '''
