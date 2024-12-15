@@ -91,7 +91,7 @@ def dephasing(ion0, clist = [], gamma_deph=0.0, deph_type=0):
     clist.append(coeff*cm)                                         
     return clist
 
-def motional_dephasing(ion0, clist = [], gamma_motiondeph=0.0):
+def motional_dephasing(ion0, clist = [], df=1, mindex=0, gamma_motiondeph=0.0):
     '''
     Construct the dephasing collapse operator for the transfer systems
     Parameters
@@ -104,7 +104,7 @@ def motional_dephasing(ion0, clist = [], gamma_motiondeph=0.0):
     -------
     List of Qutip operators
     '''
-    cm = tensor(spin.sI(ion0.df_spin), sp_op.p_ladder(ion0, atype=1)*sp_op.p_ladder(ion0, atype=0)+sp_op.p_ladder(ion0, atype=0)*sp_op.p_ladder(ion0, atype=1))
+    cm = tensor(spin.sI(ion0.df_spin), sp_op.p_ladder(ion0,df,mindex,atype=1)*sp_op.p_ladder(ion0,df,mindex,atype=0)+sp_op.p_ladder(ion0,df,mindex,atype=0)*sp_op.p_ladder(ion0,df,mindex,atype=1))
     coeff = np.sqrt(fr_conv(gamma_motiondeph,'Hz'))
     clist.append(coeff*cm)                                         
     return clist
