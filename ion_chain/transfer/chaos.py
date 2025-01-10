@@ -93,6 +93,14 @@ def one_mode_L_surf(x, E0, g, V, omega):
     sqrt_term = np.sqrt(E0**2 + 4 * E0 * g * x + 4 * (V**2 + g**2 * x**2))
     result = -(1/2) * sqrt_term + x**2 * omega
     return result
+
+def one_mode_lev(E0, g, V, omega, cutoff):
+    x = create(cutoff) + destroy(cutoff)
+    sqrt_term = E0**2 + 4*V**2 + 2*E0*g*x + g**2 * x**2
+    Hlow = -(1/2) * sqrt_term.sqrtm() +  omega *(0.5+ num(cutoff))
+    result = Hlow.eigenenergies()
+    return result
+
 def one_mode_ode(t, z, E0, g, V, omega):
     x, v = z  # z contains [x, v] where v = dx/dt
     # Compute the second derivative of x
@@ -100,6 +108,28 @@ def one_mode_ode(t, z, E0, g, V, omega):
     dv_dt = (4 * E0 * g + 8 * g**2 * x) / (4 * sqrt_term) - 2 * x * omega
     
     return [v, dv_dt]  # Return dx/dt = v and dv/dt
+
+def two_mode_complete_lev(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
+    Hspin =  tensor(0.5*E0*sigmaz() + V*sigmax(),qeye(cut) , qeye(cut))
+    xop = create(cut)+destroy(cut)
+    Hx = 0.5 * gx * tensor(sigmaz(),xop,qeye(cut)) + omega_x * (0.5+tensor(qeye(2),num(cut),qeye(cut)))
+    Hy = 0.5 * gy * tensor(sigmaz(),qeye(cut),xop) + omega_y * (0.5+tensor(qeye(2),qeye(cut),num(cut)))
+    Htot = Hspin+Hx+Hy
+    return Htot.eigenenergies()
+
+def two_mode_L_lev(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
+    x0 = create(cut) + destroy(cut)
+    x = tensor(x0,qeye(cut)); y = tensor(qeye(cut),x0)
+    sqrt_term = (E0**2 + 4*V**2 
+                 + 2*E0*(gx*x+gy*y) 
+                 + gx**2*x**2 + gy**2*y**2+
+                 2*gx*gy*x*y)
+    Hlow = (-0.5* sqrt_term.sqrtm() 
+            +  omega_x * (0.5+ tensor(num(cut),qeye(cut)))
+            +  omega_y * (0.5+ tensor(qeye(cut),num(cut))) )
+    result = Hlow.eigenenergies()
+    return result
+
 def two_mode_L_surf(x, y, E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0):
     '''
     compute the energy at the lower adiabatic surface given coordinate (x,y)
