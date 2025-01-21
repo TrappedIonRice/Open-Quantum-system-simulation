@@ -9,6 +9,7 @@ import Qsim.operator.spin as spin
 import Qsim.operator.phonon as phon
 import numpy as np
 import matplotlib.pyplot as plt
+from itertools import product
 
 def FC_matrix(cutoff,gf):
     #compute Franck-Condon matrix in fock state representation
@@ -69,6 +70,56 @@ def FC_sum(cutoff,E_split,gf,nbar,state_type='thermal'):
             break
         result +=  pdist[i]*(np.abs(aop[i,i + E_split]))**2
     return result
+def ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y):
+    # compute the ET rate k given a set {nx_d,ny_d,nx_a,ny_a}
+    fc = (np.abs(dmat_x[nx_a,nx_d] * dmat_y[ny_a,ny_d] ))**2
+    result = (2*np.pi)**2*V_fac**2*pdist_x[nx_d]*pdist_y[ny_d]*fc
+    return result
+def ET_rate_dist_2D(p_cut,n_cut,omega_x,omega_y,gx,gy,V_fac,nbar_x,nbar_y):
+    '''
+    calculate transfer rate in the perturbation regime for ET system with 2 modes
+
+    Parameters
+    ----------
+    p_cut : int
+        cutoff for each phonon space
+    n_cut : int
+        cutoff for fock state used for computing energy
+    omega_x : float
+        frequency of x mode
+    omega_y : float
+        frequency for y mode
+    gx : float
+        normalized sp coupling for x mode (gx/omega_x)
+    gy : float
+        normalized sp coupling for y mode (gy/omega_y)
+    V_fac : float
+        coefficient for sigma_x 
+    nbar_x : float
+        average phonon numebr for x mode
+    nbar_y : TYPE
+        average phonon numebr for y mode
+
+    Returns
+    -------
+    result_dic : dic
+        keys are resonant DeltaE, values are transfer rate
+
+    '''
+    # store results in a hash map {Delta E : k}
+    result_dic = {}; 
+    # displacement opeartor for x,y mode
+    dmat_x = displace(p_cut,-gx); dmat_y = displace(p_cut,-gy)
+    # thermal distribution for x,y mode
+    pdist_x = phon.p_thermal(p_cut,nbar_x); pdist_y = phon.p_thermal(p_cut,nbar_y)
+    for nx_d, ny_d, nx_a, ny_a in product(range(n_cut), repeat=4):
+        #check if the donor energy is smaller than the acceptor (difference to be compensate by E)
+        DeltaE = (nx_a-nx_d)*omega_x + (ny_a-ny_d)*omega_y
+        if  (DeltaE>0 and pdist_x[nx_d]*pdist_y[ny_d]>0 ):
+            new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
+            result_dic[DeltaE] = result_dic.get(DeltaE, 0) + new_k
+    return result_dic
+
 def ET_rate_Fermi(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
     '''
     Compute normalized electron transfer rate 2pi k / omega_0
