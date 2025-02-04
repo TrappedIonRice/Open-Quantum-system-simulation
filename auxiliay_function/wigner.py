@@ -38,7 +38,7 @@ def xket(x,cut):
     rstate = gop.expm()*fock(cut,0)
     return rstate/rstate.norm()
 
-def position_sample(rho,cut,sample):
+def position_sample(rho,cut,sample,method = 0):
     '''
     sample a 2D position space density for a density matrix in Fock representation
     Parameters
@@ -49,6 +49,9 @@ def position_sample(rho,cut,sample):
         cut off of Fock space
     sample : np array
         sample points
+    method: int, default as 0
+        if 0, use a more efficient method but cost more memory
+        if 1, cost less memory but more computation time
     Returns
     -------
     result : 
@@ -56,11 +59,17 @@ def position_sample(rho,cut,sample):
 
     '''
     result = np.zeros( (len(sample),)*2 )
-    for i, j in product(range(len(sample)),repeat=2):
-        x_ket = tensor(xket(sample[i],cut),xket(sample[j],cut))
-        result[j,i] = np.real(expect(x_ket*x_ket.dag(),rho))
+    if method == 0:
+        #construct x,y position kets and store them 
+        xket_list = [xket(sample[i],cut) for i in range(len(sample))]
+        for i, j in product(range(len(sample)),repeat=2):
+            x_ket = tensor(xket_list[i],xket_list[j])
+            result[j,i] = np.real(expect(x_ket*x_ket.dag(),rho))
+    else:
+        for i, j in product(range(len(sample)),repeat=2):
+            x_ket = tensor(xket(sample[i],cut),xket(sample[j],cut))
+            result[j,i] = np.real(expect(x_ket*x_ket.dag(),rho))
     return result
-        
 #function for plotting Wigner function at a specfic frame 
 def generate_wplot(t_index, sim_time, result, proj, p_index, 
                    state_type=0,save=False, img_index = 0):

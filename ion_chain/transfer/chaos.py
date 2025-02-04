@@ -108,13 +108,15 @@ def one_mode_ode(t, z, E0, g, V, omega):
     dv_dt = (4 * E0 * g + 8 * g**2 * x) / (4 * sqrt_term) - 2 * x * omega
     
     return [v, dv_dt]  # Return dx/dt = v and dv/dt
-
-def two_mode_complete_lev(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
+def two_mode_model(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
     Hspin =  tensor(0.5*E0*sigmaz() + V*sigmax(),qeye(cut) , qeye(cut))
     xop = create(cut)+destroy(cut)
     Hx = 0.5 * gx * tensor(sigmaz(),xop,qeye(cut)) + omega_x * (0.5+tensor(qeye(2),num(cut),qeye(cut)))
     Hy = 0.5 * gy * tensor(sigmaz(),qeye(cut),xop) + omega_y * (0.5+tensor(qeye(2),qeye(cut),num(cut)))
     Htot = Hspin+Hx+Hy
+    return Htot
+def two_mode_complete_lev(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
+    Htot = two_mode_model(E0, V, gx, gy, omega_x, omega_y,cut)
     return Htot.eigenenergies()
 
 def two_mode_L_lev(E0=0, V=0, gx=0, gy=0, omega_x=0, omega_y=0,cut=0):
