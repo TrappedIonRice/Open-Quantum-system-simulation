@@ -119,6 +119,53 @@ def ET_rate_dist_2D(p_cut,n_cut,omega_x,omega_y,gx,gy,V_fac,nbar_x,nbar_y):
             new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
             result_dic[DeltaE] = result_dic.get(DeltaE, 0) + new_k
     return result_dic
+def Lorentz(gamma, E,E0):
+    return (gamma/(2*np.pi))/( (gamma/2)**2 + (E-E0)**2/(2*np.pi) )
+def ET_rate_dist_2D_Lor(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
+    '''
+    calculate transfer rate in the perturbation regime for ET system with 2 modes
+
+    Parameters
+    ----------
+    p_cut : int
+        cutoff for each phonon space
+    n_cut : int
+        cutoff for fock state used for computing energy
+    omega : list of float
+        frequency of [x,y] mode
+    g : list of float
+        normalized sp coupling for [x,y] mode (gx/omega_x,gy/omega_y)
+    V_fac : float
+        coefficient for sigma_x 
+    nbar : list of float
+        average phonon numebr for [x,y] mode
+    gamma: list of float
+        dissipation rate for [x,y] mode
+    Eplot: np array
+        array of Delta E used for plot
+    n_dep: bool
+        if true, include the fock number of acceptor state
+    Returns
+    -------
+    np array: transfer rate evaluated at each point of Eplot
+
+    '''
+    # result transfer rate plot
+    kplot = np.zeros(np.shape(Eplot))
+    # displacement opeartor for x,y mode
+    dmat_x = displace(p_cut,-g[0]); dmat_y = displace(p_cut,-g[1])
+    # thermal distribution for x,y mode
+    pdist_x = phon.p_thermal(p_cut,nbar[0]); pdist_y = phon.p_thermal(p_cut,nbar[1])
+    for nx_d, ny_d, nx_a, ny_a in product(range(n_cut), repeat=4):
+        #check if the donor energ[1] is smaller than the acceptor (difference to be compensate by E)
+        DeltaE = (nx_a-nx_d)*omega[0] + (ny_a-ny_d)*omega[1]
+        if  (DeltaE>0 and pdist_x[nx_d]*pdist_y[ny_d]>0 ):
+            new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
+            if n_dep:
+                kplot += new_k*Lorentz(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)/(2*np.pi)
+            else:
+                kplot += new_k*Lorentz(gamma[0] + gamma[1], Eplot,DeltaE)/(2*np.pi)
+    return kplot
 
 def ET_rate_Fermi(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
     '''
