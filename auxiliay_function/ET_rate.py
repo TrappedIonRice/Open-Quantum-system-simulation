@@ -119,8 +119,55 @@ def ET_rate_dist_2D(p_cut,n_cut,omega_x,omega_y,gx,gy,V_fac,nbar_x,nbar_y):
             new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
             result_dic[DeltaE] = result_dic.get(DeltaE, 0) + new_k
     return result_dic
+'''
+def check_first_order_trans(ni,nf,j):
+    #given a pair of arrays ni=[ni_1,ni_2],nf=[nf_1,nf_2] and a indice j, check if VAET
+    #ni[j]->nf[j] can be induced by first order coupling (a+a^\dag)
+    mask = np.ones_like(ni, dtype=bool) ; mask[j] = False
+    if np.array_equal(ni[mask], nf[mask]):
+        result = ni[j]*float(nf[j]-ni[j]+1) + nf[j]*float(nf[j]-ni[j]-1)
+    else:
+        result = 0
+    return result
+    
+def VAET_2mode_point(ni,nf,gfac,pdist):
+    #given a pair of arrays ni=[ni_1,ni_2],nf=[nf_1,nf_2], parameters Vfac, g=[g1,g2], pdist=[pdist1,pdist2] 
+    #(without prefactors)
+    result = 0
+    for j in range(2):
+        result += gfac[j]**2 * check_first_order_trans(ni,nf,j)
+    return pdist[0][ni[0]]*pdist[1][ni[1]]*result 
+'''
+def VAET_2mode_point(ni,nf,gfac,pdist):
+    # notice this function is used for valid pairs of ni,nf
+    #given a pair of arrays ni=[ni_1,ni_2],nf=[nf_1,nf_2], parameters Vfac, g=[g1,g2], pdist=[pdist1,pdist2] 
+    #(without prefactors)
+    result = 0
+    for j in range(2):
+        result += gfac[j]**2 * (ni[j]*float(nf[j]-ni[j]+1==0) + nf[j]*float(nf[j]-ni[j]-1==0))
+    return pdist[0][ni[0]]*pdist[1][ni[1]]*result 
 def Lorentz(gamma, E,E0):
     return (gamma/(2*np.pi))/( (gamma/2)**2 + (E-E0)**2/(2*np.pi) )
+
+def VAET_rate_dist_2D_Lor(p_cut,n_cut,omega,V_fac,gfac,nbar,gamma,Eplot):
+    kplot = np.zeros(np.shape(Eplot))
+    # thermal distribution for x,y mode
+    pdist = [phon.p_thermal(p_cut,nbar[0]), phon.p_thermal(p_cut,nbar[1])]
+    # generate all possible initial states
+    x, y = np.meshgrid(np.arange(n_cut), np.arange(n_cut))
+    ni_mat = np.column_stack((x.ravel(), y.ravel()))
+    dif_mat = np.array([[1,0],[0,1]]) # exchange spin energy E to gain 1 phonon for mode 1/2
+    #dif_mat_1 = np.array([[0,1],[0,-1]]) # gain/loss 1 phonon for mode 2
+    for ni in ni_mat:
+        for k in range(2):
+            nf = ni + dif_mat[k]
+            #print(VAET_2mode_point(ni,nf,gfac,pdist))
+            #on resonance 2E = \omega
+            pre_fac =  (2*np.pi) * V_fac**2 / omega[k]**2
+            kplot += (pre_fac*VAET_2mode_point(ni,nf,gfac,pdist)
+                          *Lorentz(gamma[k] , Eplot, omega[k]))
+    return kplot            
+        
 def ET_rate_dist_2D_Lor(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
     '''
     calculate transfer rate in the perturbation regime for ET system with 2 modes
