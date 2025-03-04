@@ -13,7 +13,8 @@ import multiprocessing as mp
 from tqdm import tqdm
 import datetime
 import pandas as pd
-from operator import itemgetter 
+from operator import itemgetter
+from concurrent.futures import ProcessPoolExecutor, as_completed
 #from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN
 
 def split(a, n):
@@ -97,7 +98,8 @@ def generate_fplist(peaks,sep,r):
     for ele in peaks:
         nflist = np.arange(ele-r,ele+r+sep,sep)
         farray =  np.concatenate((farray,nflist))
-    return np.unique(farray)  
+    return np.unique(farray)
+    
 def generate_task(core_num, var_list, para_list=()):
     '''
     generate an np array that has higher resolution at expected position of the peaks 
@@ -238,3 +240,102 @@ def multi_H_parallel(task_func,sim_para,Hlist,n_cpu):
     print('________________________________________________________________')   
     print('all computation completed')    
     return sevl
+    
+def ME_multi_H_VAET(task,Hlist,rholist,elist,sim_para):
+    '''
+    solve time evolution for a single energy splitting
+    Parameters
+    ----------
+    task : string 
+        task name
+    Hlist : list of Qutip operators
+        Hamiltonians to be simulated
+    sim_para : dict 
+        A dictionary that takes the following format:
+           {
+            'rho' : , (initial density matrix)
+            't_array':, (time array for sampling dynamics)
+            'elist' : , (list of observables to be evaluated)
+            'clist' :  (list of collapse operators to construct Lindbladian operator)
+            }
+    Returns
+    -------
+        task: task name
+        sresult: a list of arrays that represents updown state population
+        evolution at different deltaE
+    '''
+    #read parameters:
+    rho_s = rholist ; t_array_s = sim_para['t_array'] ; 
+    clist_s = sim_para['clist'] ; elist_s = elist; 
+    
+    sresult = []
+    for i in range(len(Hlist)):
+        result = mesolve(H[i],rho_s[i],t_array_s,clist_s,options=Options(nsteps=100000))
+        rhoee = expect(elist_s[i],result.states)
+        sresult.append(rhoee)
+    return {task:sresult}
+
+def multi_H_parallel_VAET(task_func, sim_para, Hlist, rholist, elist, n_cpu):
+    '''
+    Simulate electron transfer given a list of Hamiltonians using parallel computing
+    
+    Parameters
+    ----------
+    task_func : function
+        Function to be called for simulation.
+    sim_para : dict 
+        A dictionary containing simulation parameters:
+            {
+             'rho' : , (initial density matrix)
+             't_array':, (time array for sampling dynamics)
+             'elist' : , (list of observables to be evaluated)
+             'clist' :  (list of collapse operators to construct the Lindbladian operator)
+             }
+    Hlist : list of qutip.Qobj
+        The list of Hamiltonians to be simulated.
+    rholist : list of qutip.Qobj
+        The list of initial density matrices corresponding to each Hamiltonian.
+    elist : list of qutip.Qobj
+        The list of observables to be evaluated.
+    n_cpu : int
+        Number of CPU cores to be used for simulation.
+    
+    Returns
+    -------
+    list
+        All simulation results combined.
+    '''
+    # Distribute tasks among CPUs
+    tdict_H = generate_task(n_cpu, Hlist)
+    tdict_rho = generate_task(n_cpu, rholist)
+    tdict_e = generate_task(n_cpu, elist)
+
+    print('Start parallel computing')
+    print('Number of cores used:', n_cpu, '/', mp.cpu_count())
+
+    start_t = datetime.datetime.now()  # Record starting time
+    results = []
+
+    with ProcessPoolExecutor(max_workers=n_cpu) as executor:
+        future_to_task = {
+            executor.submit(task_func, ntask, tdict_H[ntask], tdict_rho[ntask], tdict_e[ntask], sim_para): ntask
+            for ntask in tdict_H.keys()
+        }
+
+        # Progress bar that updates dynamically
+        for future in tqdm(as_completed(future_to_task), total=len(future_to_task), desc="Processing tasks"):
+            results.append(future.result())
+
+    end_t = datetime.datetime.now()
+    elapsed_sec = (end_t - start_t).total_seconds()
+    print(f"Time consumed: {elapsed_sec:.2f} s")    
+
+    # Combine results
+    sevl = []
+    for result in results:
+        for key in result:
+            sevl.extend(result[key])  # Flatten result list
+
+    print('________________________________________________________________')   
+    print('All computations completed')    
+    return sevl   
