@@ -270,8 +270,10 @@ def ME_multi_H_VAET(task,Hlist,rholist,elist,sim_para):
     
     sresult = []
     for i in range(len(Hlist)):
-        result = mesolve(H[i],rho_s[i],t_array_s,clist_s,options=Options(nsteps=100000))
-        rhoee = expect(elist_s[i],result.states)
+        result = mesolve(Hlist[i],rho_s[i],t_array_s,clist_s,options=Options(nsteps=100000))
+        obsop = elist_s[i]
+        rhoee = expect(obsop[0],result.states)
+        #rhoee = result.expect[0]
         sresult.append(rhoee)
     return {task:sresult}
 
@@ -309,7 +311,7 @@ def multi_H_parallel_VAET(task_func, sim_para, Hlist, rholist, elist, n_cpu):
     print('number of cores used:',n_cpu,'/',mp.cpu_count())
     start_t = datetime.datetime.now() #record starting time
     pool = mp.Pool(n_cpu)
-    results = [pool.apply_async(task_func, args=(ntask, tdict_H[ntask], tdict_rho[ntask], tdict_e[ntask], sim_para)) 
+    results = [pool.apply_async(task_func, args=(ntask, tdict_H.get(str(ntask)), tdict_rho.get(str(ntask)), tdict_e.get(str(ntask)), sim_para)) 
                for ntask in tdict_H.keys()]
     pool.close()
     result_list_tqdm = [] #generate progress bar
