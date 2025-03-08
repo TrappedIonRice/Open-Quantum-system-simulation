@@ -70,11 +70,19 @@ def FC_sum(cutoff,E_split,gf,nbar,state_type='thermal'):
             break
         result +=  pdist[i]*(np.abs(aop[i,i + E_split]))**2
     return result
-def ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y):
+    
+def ET_rate_point_2D_norm(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y):
     # compute the ET rate k given a set {nx_d,ny_d,nx_a,ny_a}
     fc = (np.abs(dmat_x[nx_a,nx_d] * dmat_y[ny_a,ny_d] ))**2
     result = (2*np.pi)**2*V_fac**2*pdist_x[nx_d]*pdist_y[ny_d]*fc
     return result
+    
+def ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y):
+    # compute the ET rate k given a set {nx_d,ny_d,nx_a,ny_a}
+    fc = (np.abs(dmat_x[nx_a,nx_d] * dmat_y[ny_a,ny_d] ))**2
+    result = (2*np.pi)*(2*np.pi*V_fac)**2*pdist_x[nx_d]*pdist_y[ny_d]*fc
+    return result
+    
 def ET_rate_dist_2D(p_cut,n_cut,omega_x,omega_y,gx,gy,V_fac,nbar_x,nbar_y):
     '''
     calculate transfer rate in the perturbation regime for ET system with 2 modes
@@ -138,16 +146,52 @@ def VAET_2mode_point(ni,nf,gfac,pdist):
         result += gfac[j]**2 * check_first_order_trans(ni,nf,j)
     return pdist[0][ni[0]]*pdist[1][ni[1]]*result 
 '''
-def VAET_2mode_point(ni,nf,gfac,pdist):
+def VAET_2mode_point_norm(ni,nf,gfac,pdist):
     # notice this function is used for valid pairs of ni,nf
     #given a pair of arrays ni=[ni_1,ni_2],nf=[nf_1,nf_2], parameters Vfac, g=[g1,g2], pdist=[pdist1,pdist2] 
     #(without prefactors)
     result = 0
     for j in range(2):
         result += gfac[j]**2 * (ni[j]*float(nf[j]-ni[j]+1==0) + nf[j]*float(nf[j]-ni[j]-1==0))
-    return pdist[0][ni[0]]*pdist[1][ni[1]]*result 
-def Lorentz(gamma, E,E0):
+    return pdist[0][ni[0]]*pdist[1][ni[1]]*result
+
+def VAET_2mode_point(ni,nf,gfac,pdist):
+    # notice this function is used for valid pairs of ni,nf
+    #given a pair of arrays ni=[ni_1,ni_2],nf=[nf_1,nf_2], parameters Vfac, g=[g1,g2], pdist=[pdist1,pdist2] 
+    #(without prefactors)
+    result = 0
+    for j in range(2):
+        result += (2*np.pi*gfac[j])**2 * (ni[j]*float(nf[j]-ni[j]+1==0) + nf[j]*float(nf[j]-ni[j]-1==0))
+    return pdist[0][ni[0]]*pdist[1][ni[1]]*result
+
+def Lorentz_norm(gamma, E,E0):
     return (gamma/(2*np.pi))/( (gamma/2)**2 + (E-E0)**2/(2*np.pi) )
+    
+def Lorentz(gamma, E,E0):
+    return ((2*np.pi*gamma)/(2*np.pi))/( 2*np.pi*(2*np.pi*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    
+def Lorentz_VAET(gamma, E,E0,V):
+    epsilon = np.sqrt(E**2/4 + V**2)
+    return ((2*np.pi*gamma)/(2*np.pi))/( 2*np.pi*(2*np.pi*gamma/2)**2 + (2*np.pi*(2*epsilon-E0))**2)
+    
+def VAET_rate_dist_2D_Lor_norm(p_cut,n_cut,omega,V_fac,gfac,nbar,gamma,Eplot):
+    kplot = np.zeros(np.shape(Eplot))
+    # thermal distribution for x,y mode
+    pdist = [phon.p_thermal(p_cut,nbar[0]), phon.p_thermal(p_cut,nbar[1])]
+    # generate all possible initial states
+    x, y = np.meshgrid(np.arange(n_cut), np.arange(n_cut))
+    ni_mat = np.column_stack((x.ravel(), y.ravel()))
+    dif_mat = np.array([[1,0],[0,1]]) # exchange spin energy E to gain 1 phonon for mode 1/2
+    #dif_mat_1 = np.array([[0,1],[0,-1]]) # gain/loss 1 phonon for mode 2
+    for ni in ni_mat:
+        for k in range(2):
+            nf = ni + dif_mat[k]
+            #print(VAET_2mode_point(ni,nf,gfac,pdist))
+            #on resonance 2E = \omega
+            pre_fac =  (2*np.pi) * (V_fac)**2 / omega[k]**2
+            kplot += (pre_fac*VAET_2mode_point_norm(ni,nf,gfac,pdist)
+                          *Lorentz_norm(gamma[k], Eplot, omega[k]))
+    return kplot
 
 def VAET_rate_dist_2D_Lor(p_cut,n_cut,omega,V_fac,gfac,nbar,gamma,Eplot):
     kplot = np.zeros(np.shape(Eplot))
@@ -163,10 +207,56 @@ def VAET_rate_dist_2D_Lor(p_cut,n_cut,omega,V_fac,gfac,nbar,gamma,Eplot):
             nf = ni + dif_mat[k]
             #print(VAET_2mode_point(ni,nf,gfac,pdist))
             #on resonance 2E = \omega
-            pre_fac =  (2*np.pi) * V_fac**2 / omega[k]**2
+            pre_fac =  (2*np.pi) * (2*np.pi*V_fac)**2 / (2*np.pi*omega[k])**2
             kplot += (pre_fac*VAET_2mode_point(ni,nf,gfac,pdist)
-                          *Lorentz(gamma[k] , Eplot, omega[k]))
-    return kplot            
+                          *Lorentz_VAET(gamma[k], Eplot, omega[k],V_fac))
+    return kplot
+
+def ET_rate_dist_2D_Lor_norm(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
+    '''
+    calculate transfer rate in the perturbation regime for ET system with 2 modes
+
+    Parameters
+    ----------
+    p_cut : int
+        cutoff for each phonon space
+    n_cut : int
+        cutoff for fock state used for computing energy
+    omega : list of float
+        frequency of [x,y] mode
+    g : list of float
+        normalized sp coupling for [x,y] mode (gx/omega_x,gy/omega_y)
+    V_fac : float
+        coefficient for sigma_x 
+    nbar : list of float
+        average phonon numebr for [x,y] mode
+    gamma: list of float
+        dissipation rate for [x,y] mode
+    Eplot: np array
+        array of Delta E used for plot
+    n_dep: bool
+        if true, include the fock number of acceptor state
+    Returns
+    -------
+    np array: transfer rate evaluated at each point of Eplot
+
+    '''
+    # result transfer rate plot
+    kplot = np.zeros(np.shape(Eplot))
+    # displacement opeartor for x,y mode
+    dmat_x = displace(p_cut,-g[0]); dmat_y = displace(p_cut,-g[1])
+    # thermal distribution for x,y mode
+    pdist_x = phon.p_thermal(p_cut,nbar[0]); pdist_y = phon.p_thermal(p_cut,nbar[1])
+    for nx_d, ny_d, nx_a, ny_a in product(range(n_cut), repeat=4):
+        #check if the donor energ[1] is smaller than the acceptor (difference to be compensate by E)
+        DeltaE = (nx_a-nx_d)*omega[0] + (ny_a-ny_d)*omega[1]
+        if  (DeltaE>0 and pdist_x[nx_d]*pdist_y[ny_d]>0 ):
+            new_k = ET_rate_point_2D_norm(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
+            if n_dep:
+                kplot += new_k*Lorentz_norm(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)/(2*np.pi)
+            else:
+                kplot += new_k*Lorentz_norm(gamma[0] + gamma[1], Eplot,DeltaE)/(2*np.pi)
+    return kplot    
         
 def ET_rate_dist_2D_Lor(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
     '''
@@ -209,9 +299,9 @@ def ET_rate_dist_2D_Lor(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
         if  (DeltaE>0 and pdist_x[nx_d]*pdist_y[ny_d]>0 ):
             new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
             if n_dep:
-                kplot += new_k*Lorentz(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)/(2*np.pi)
+                kplot += new_k*Lorentz(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)
             else:
-                kplot += new_k*Lorentz(gamma[0] + gamma[1], Eplot,DeltaE)/(2*np.pi)
+                kplot += new_k*Lorentz(gamma[0] + gamma[1], Eplot,DeltaE)
     return kplot
 
 def ET_rate_Fermi(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
