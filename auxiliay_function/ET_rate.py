@@ -167,8 +167,41 @@ def VAET_2mode_point(ni,nf,gfac,pdist):
 def Lorentz_norm(gamma, E,E0):
     return (gamma/(2*np.pi))/( (gamma/2)**2 + (E-E0)**2/(2*np.pi) )
     
+def lorentz_schlawin_norm(gamma, E,E0):
+    #use with ET_rate_Fermi_norm
+    #return (gamma/2)**2/( (gamma/2)**2 + (E-E0)**2 )
+    #return (gamma/2)/( (gamma)**2 + (E-E0)**2 )/np.pi
+    #return (2*np.pi*gamma)**2/( (2*np.pi*gamma)**2 + (E-E0)**2 )
+    return 1/(gamma) * 1/(((E-E0)/(gamma))**2 +1)/np.pi/(2*np.pi)
+    
+def Lorentz_ETpaper_norm(gamma, E,E0):
+    #inconsistent unit
+    return (gamma/2)**2/( (gamma/2)**2 + (E-E0)**2 )
+
 def Lorentz(gamma, E,E0):
     return ((2*np.pi*gamma)/(2*np.pi))/( 2*np.pi*(2*np.pi*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    
+def Lorentz_test(gamma, E,E0):
+    #return ((2*np.pi*gamma*np.pi/2)/(2*np.pi))/( (2*np.pi*gamma*np.pi/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*2*np.pi*gamma)/(2*np.pi))/( (2*2*np.pi*gamma)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi*gamma)/(np.pi)**2)/( (2*np.pi*gamma)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi*np.sqrt(gamma))/(2*(np.pi)**2))/( (2*np.pi*np.sqrt(gamma)/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi*2*gamma)/(2*(np.pi)**2))/( (2*np.pi*2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi**2*gamma)/(2*(np.pi)**2))/( (2*np.pi**2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi**2*gamma)/(2**2*(np.pi)))/( (2*np.pi**2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*2*np.pi*gamma)/(2*(np.pi)**2))/( (2*2*np.pi*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2**2*np.pi**2*gamma)/(2*(np.pi)**2))/( (2**2*np.pi**2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2**2*np.pi**2*gamma)/(2*(np.pi)**2))/( (2**2*np.pi**2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    #return ((2*np.pi)**2*gamma/(2*np.pi**2))/( ((2*np.pi)**2*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    return ((2*np.pi*np.pi*gamma)/(2*np.pi))/( (2*np.pi*np.pi*gamma/2)**2 + (2*np.pi*(E-E0))**2 )
+    
+def Lorentz_schlawin(gamma, E,E0):
+    #can be use with standard units (kHz)
+    return ((2*np.pi*gamma)/(np.pi))/( (2*np.pi*gamma)**2 + (2*np.pi*(E-E0))**2 )
+
+def Lorentz_ETpaper_norm(gamma, E,E0):
+    #inconsistent unit
+    return (2*np.pi*gamma/2)**2/( (2*np.pi*gamma/2)**2 + (2*np.pi*E-E0)**2 )
     
 def Lorentz_VAET(gamma, E,E0,V):
     epsilon = np.sqrt(E**2/4 + V**2)
@@ -209,7 +242,9 @@ def VAET_rate_dist_2D_Lor(p_cut,n_cut,omega,V_fac,gfac,nbar,gamma,Eplot):
             #on resonance 2E = \omega
             pre_fac =  (2*np.pi) * (2*np.pi*V_fac)**2 / (2*np.pi*omega[k])**2
             kplot += (pre_fac*VAET_2mode_point(ni,nf,gfac,pdist)
-                          *Lorentz_VAET(gamma[k], Eplot, omega[k],V_fac))
+                          *Lorentz_test(gamma[k], Eplot, omega[k],V_fac))
+            #kplot += (pre_fac*VAET_2mode_point(ni,nf,gfac,pdist)
+            #              *Lorentz_schlawin(gamma[k], Eplot, omega[k]))
     return kplot
 
 def ET_rate_dist_2D_Lor_norm(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
@@ -299,9 +334,10 @@ def ET_rate_dist_2D_Lor(p_cut,n_cut,omega,g,V_fac,nbar,gamma,Eplot,n_dep=False):
         if  (DeltaE>0 and pdist_x[nx_d]*pdist_y[ny_d]>0 ):
             new_k = ET_rate_point_2D(nx_d,ny_d,nx_a,ny_a,V_fac,pdist_x,pdist_y,dmat_x,dmat_y)
             if n_dep:
-                kplot += new_k*Lorentz(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)
+                kplot += new_k*Lorentz_test(nx_a * gamma[0] + ny_a * gamma[1], Eplot,DeltaE)
             else:
-                kplot += new_k*Lorentz(gamma[0] + gamma[1], Eplot,DeltaE)
+                #kplot += new_k*Lorentz(gamma[0] + gamma[1], Eplot,DeltaE)
+                kplot += new_k*Lorentz_test(gamma[0] + gamma[1], Eplot,DeltaE)
     return kplot
 
 def ET_rate_Fermi(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
@@ -335,6 +371,39 @@ def ET_rate_Fermi(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
         return 0
     else:
         return (2*np.pi)**2*V_fac**2*FC_sum(cutoff,E_split,g_fac,nbar,state_type)
+        
+def ET_rate_Fermi_Marcus(cutoff,E_split,g_fac,V_fac,nbar,state_type='thermal'):
+    '''
+    Compute normalized electron transfer rate 2pi k / omega_0
+    based on Fermi golden rule, assuming V<<gamma.
+    This model assumes Delta E = n omega_0
+    g,V factors are in terms of hbar\omega
+    Parameters
+    ----------
+    cutoff : int
+        cutoff of SHO operator
+    E_split : int
+        Energy splitting factor, equals the number of 
+        SHO energy levels required to compensate the energy gap
+    gf : float
+        effective s-p coupling factor
+    Vf : float
+        Site coupling factor, coefficient for sigma_x
+    nbar : float
+        Initial average phonon number
+    state_type: str
+        specify the type of initial state, 
+         can be 'thermal' or 'fock'
+    Returns
+    -------
+    Float
+    '''
+    if state_type == 'fock' and not(isinstance(nbar,int)):
+        print('fock state phonon number must be integer')
+        return 0
+    else:
+        return (2*np.pi)*V_fac**2*FC_sum(cutoff,E_split,g_fac,nbar,state_type)
+        
 def plot_ET_rate_Fermi(E_start,E_end,p_cutoff,g_fac,V_fac,nbar,state_type='thermal'):
     '''
     Plot normalized electron transfer rate 2pi k / omega_0
@@ -385,6 +454,10 @@ def plot_ET_rate_Fermi(E_start,E_end,p_cutoff,g_fac,V_fac,nbar,state_type='therm
         #plt.legend(fontsize = 15)
         plt.grid()
         plt.show()
+        
+def marcus(ll,kBT, V, E):
+    U=((ll-E)**2)/(4*ll)
+    return  V**2/np.sqrt(4*np.pi*ll*kBT)*np.exp(-U/(kBT)) *2*np.pi
 
 def ET_2level(t,V,gamma,nu,gf,cutoff):
     '''
