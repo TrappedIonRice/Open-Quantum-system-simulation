@@ -243,7 +243,7 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False,ph
     else:
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
-    return 0.5*np.abs(g(ion0,laser0,i,m,normalized))*H
+    return 0.5*g(ion0,laser0,i,m,normalized)*H
 
 def Him_bsb(ion0, laser0, i=0,m=0,sindex=0,mindex=0,normalized=False):
     '''
