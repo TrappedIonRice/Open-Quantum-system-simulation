@@ -984,7 +984,7 @@ class Ions_asy(ions):
 class Laser():
     def __init__(self,
                  config = {'Omega_eff':10,'wavevector':1,'Dk':2*2*np.pi / (355*10**(-9)),
-                           'laser_couple':[0,1],'mu':1e3,'phase':0},
+                           'laser_couple':[0,1],'mu':1e3,'s_phase':0,'m_phase':0},
                  ):
         '''
         Initialize laser class object with given parameters
@@ -1028,7 +1028,8 @@ class Laser():
             self.wavevector = config['wavevector']
             self.laser_couple = config['laser_couple']
             self.mu = config['mu']
-            self.phase = config['phase']
+            self.s_phase = config['s_phase']
+            self.m_phase = config['m_phase']
             self.Dk = config['Dk'] 
         self.R = self.Recoil_freq()#recoil frequency constant, SI 
         if print_text:
@@ -1105,7 +1106,7 @@ class Laser():
         print('index of ions that couple to the laser field: ',self.laser_couple)
         print('Effective rabi frequency ', np.round(self.Omega_eff,2),' [kHz]')
         print('Effective laser frequency ', np.round(self.mu,2),' [kHz]')
-        print('Laser phase phis',np.round(self.phase*180/np.pi,2))
+        print('Laser spin phase phis',np.round(self.s_phase*180/np.pi,2))
         print('(input in rad but displayed in degs)')
 
 

@@ -204,12 +204,12 @@ def Him_ord(ion0,laser0, atype=0,i=0,m=0,sindex=0,mindex=0,i_type=0):
     p_df = laser0.wavevector #phonons coupled to the lasers
     p_opa = sp_op.p_ladder(ion0,p_df,mindex,atype)
     if i_type == 1:
-        s_oper = sigma_phi(ion0.df_spin,sindex,laser0.phase)
+        s_oper = sigma_phi(ion0.df_spin,sindex,laser0.s_phase)
     else:    
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
     return g(ion0,laser0,i,m,True)*H 
-def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False,phase=0):
+def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False,m_phase=0):
     '''
     Compute the i,m th component for ion-laser interaction  Hamiltonian in resonant frame, 
     which describes the coupling between ion i and mode m
@@ -236,10 +236,10 @@ def Him_res(ion0, laser0, i=0,m=0,sindex=0,mindex=0,i_type=0,normalized=False,ph
     '''
     #set coefficient constants according to the coupling degree of freedom
     p_df = laser0.wavevector
-    p_opa = (sp_op.p_ladder(ion0,p_df,mindex,0)*np.exp(-1j*phase) 
-             + sp_op.p_ladder(ion0,p_df,mindex,1)*np.exp(+1j*phase))
+    p_opa = (sp_op.p_ladder(ion0,p_df,mindex,0)*np.exp(-1j*m_phase) 
+             + sp_op.p_ladder(ion0,p_df,mindex,1)*np.exp(+1j*m_phase))
     if i_type == 1:
-        s_oper = sigma_phi(ion0.df_spin,sindex,laser0.phase)#laser0.phase=0->sx, #laser0.phase=np.pi/2->sy
+        s_oper = sigma_phi(ion0.df_spin,sindex,laser0.s_phase)#s_phase=0->sx, #s_phase=np.pi/2->sy
     else:
         s_oper = spin.sz(ion0.df_spin,sindex)
     H = tensor(s_oper,p_opa)
@@ -375,7 +375,7 @@ def H_res(ion0,laser0,i_type,normalized=False):
     for m in sp_op.ph_list(ion0):
         sindex = 0 #this index is used for spin operators
         for i in laser0.laser_couple:
-            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
+            spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized,laser0.m_phase)
             sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)
@@ -435,7 +435,7 @@ def H_res_m(ion0,laser0,m,mindex,i_type,normalized=False):
     spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
     sindex = 0 #this index is used for spin operators
     for i in laser0.laser_couple:
-        spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized)
+        spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized,laser0.m_phase)
         sindex = sindex + 1
     return spterm - H_harmonic(ion0,laser0,[m,mindex])
 
@@ -580,11 +580,11 @@ def Him_td_fir_ord(ion0, laser0, stype = 0,i=0,m=0,sindex=0,mindex = 0, las_labe
     if stype == 1:
         s_op = spin.up(ion0.df_spin,sindex)
         nu_expr = '* exp( -1 * (t * ' + ustr +' ) )'; u_coef = -1
-        coef =  1j/2 * g(ion0,laser0,i,m) * np.exp(1j*laser0.phase)
+        coef =  1j/2 * g(ion0,laser0,i,m) * np.exp(1j*laser0.m_phase)
     if stype == 0:
         s_op = spin.down(ion0.df_spin,sindex)
         nu_expr = '* exp( 1 * t * ' + ustr +' )'; u_coef = 1
-        coef =  -1j/2* g(ion0,laser0, i,m) * np.exp(-1j*laser0.phase)    
+        coef =  -1j/2* g(ion0,laser0, i,m) * np.exp(-1j*laser0.m_phase)    
     p_up = sp_op.p_ladder(ion0,p_df,mindex,1); p_down = sp_op.p_ladder(ion0,p_df,mindex,0)
     exp_plus = 'exp(t * ' +  mstr + ' )'; exp_minus = 'exp(-1 * t * ' +  mstr + ' )'
     H1 = [coef*tensor(s_op,p_up),exp_plus+nu_expr]
@@ -652,11 +652,11 @@ def Him_td_sec_ord(ion0, laser0, stype = 0,i=0,sindex=0, mindex_list=[0,0,0,0], 
     if stype == 1:
         s_op = spin.up(ion0.df_spin,sindex)
         nu_expr = '* exp( -1 * (t * ' + ustr +' ) )'; u_coef = -1
-        coef =  coef0  * np.exp(1j*laser0.phase)
+        coef =  coef0  * np.exp(1j*laser0.m_phase)
     if stype == 0:
         s_op = spin.down(ion0.df_spin,sindex)
         nu_expr = '* exp( 1 * t * ' + ustr +' )'; u_coef = 1
-        coef =  coef0 * np.exp(-1j*laser0.phase)
+        coef =  coef0 * np.exp(-1j*laser0.m_phase)
     
     p_up_a = sp_op.p_ladder(ion0,p_df,mindex_a,1); 
     p_down_a = sp_op.p_ladder(ion0,p_df,mindex_a,0)
