@@ -373,10 +373,9 @@ def H_res(ion0,laser0,i_type,normalized=False):
     spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
     mindex = 0 #this index is used for phonon operators
     for m in sp_op.ph_list(ion0):
-        sindex = 0 #this index is used for spin operators
         for i in laser0.laser_couple:
+            sindex = ion0.active_spin.index(i) #this index is used for spin operators
             spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized,laser0.m_phase)
-            sindex = sindex + 1
         mindex = mindex + 1
     return spterm - H_harmonic(ion0,laser0)
 
@@ -433,10 +432,9 @@ def H_res_m(ion0,laser0,m,mindex,i_type,normalized=False):
 
     '''
     spterm = tensor(spin.zero_op(ion0.df_spin),sp_op.p_zero(ion0)) #laser-ion interaction term 
-    sindex = 0 #this index is used for spin operators
     for i in laser0.laser_couple:
+        sindex = ion0.active_spin.index(i)
         spterm = spterm + Him_res(ion0,laser0,i,m,sindex,mindex,i_type,normalized,laser0.m_phase)
-        sindex = sindex + 1
     return spterm - H_harmonic(ion0,laser0,[m,mindex])
 
 def H_trot_m(ion0,laser0,m,mindex,i_type,t,normalized=False):
