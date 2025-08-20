@@ -128,6 +128,65 @@ def fit_et_decay(tdata,pdata,fit_interval='all',plot=False,
         return coef, pcov
     else:
         return coef[1]
+        
+def fit_et_decay_nonorm(tdata,pdata,fit_interval='all',plot=False,
+                 all_parameter=False):
+    '''
+    Fit electron transfer excited state population with a exponential 
+    decay in form A*np.exp(-k*t) + B 
+    Parameters
+    ----------
+    tdata : np array
+        normalized time
+    pdata : np array
+        excited state population
+    fit_interval : string/list, optional
+         Interval for data fitting, 
+         If 'all',
+         all input data points will be used for
+         fitting.
+         To specify the interval, input a list of 
+         two array index as start and end points.
+         EX: for an time array of 1000 element,
+         fit_interval = [100,200] means points with index 100~200
+         will be used for fitting.
+         The default is 'all'.
+    plot : bool, optional
+         If true, plot the fitted curve on the raw data
+    all_parameter : bool, optional
+        if true, return all parameters fitted for the model
+        if false, return the normalized decay rate only
+    Returns
+    -------
+    float, arrays of float
+        normalized decay rate/ all parameters of the model 
+
+    '''
+    if fit_interval == 'all':
+        start = 0; end = np.size(tdata)-1
+    else:
+        start = fit_interval[0]; end = fit_interval[1]
+    ftdata = tdata[start:end]; fpdata = pdata[start:end]
+    coef, pcov=curve_fit(et_decay,ftdata,fpdata,p0=[1,0,0],
+                         bounds=([0,0,0], [20,100,20]),maxfev=5000)
+    if plot:
+        plt.figure()
+        #plot raw data
+        plt.plot(tdata,pdata,label='data')
+        #plot fit
+        plt.plot(tdata, norm_et_decay(tdata, *coef), 'r--',
+         label='fit: A=%5.3f, k=%5.3f, B=%5.3f' % tuple(coef))
+        plt.ylabel(r'$p_\uparrow$',fontsize = 13)      
+        plt.xticks(fontsize = 13)  
+        plt.yticks(fontsize = 13)  
+        plt.xlabel(r'$\omega_0t/(2\pi)$',fontsize = 13)
+        plt.grid()    
+        plt.legend()
+        plt.show()
+    if all_parameter:
+        return coef, pcov
+    else:
+        return coef
     
 def fit_et_osc_decay(tdata,pdata,fit_interval='all',plot=False,
                  all_parameter=False,

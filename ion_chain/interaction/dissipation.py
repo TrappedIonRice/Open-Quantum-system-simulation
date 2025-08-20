@@ -64,6 +64,27 @@ def heating(ion0, hr_list, df=1):
         clist.append(coeff*cm)
         clist.append(coeff*cm.dag())
         mindex = mindex + 1                                            
+    return clist    
+def heating_combine(ion0, clist = [], hr_list=[], df=1):
+    '''
+    Construct the collapse operator for simulating in trapped ion system
+    ----------
+    ion0 : ion class object
+    hr_list: list of float
+        list of effective heating rate, [kHz]
+    df: int
+        specify the motional degree of freedom on which the heating is acted on
+    Returns
+    -------
+    List of Qutip operators
+    '''
+    mindex = 0
+    for m in sp_op.ph_list(ion0,df):
+        cm = tensor(spin.sI(ion0.df_spin), sp_op.p_ladder(ion0,df,mindex,0))
+        coeff = np.sqrt(fr_conv(hr_list[m],'Hz'))
+        clist.append(coeff*cm)
+        clist.append(coeff*cm.dag())
+        mindex = mindex + 1                                            
     return clist
 def dephasing(ion0, clist = [], gamma_deph=0.0, deph_type=0):
     '''
